@@ -1,0 +1,144 @@
+Package: beep
+Title: Pacote de inclusão de fontes de dados, indicadores, e filtros de variáveis
+Version: 0.8.1.9000
+Date: 2026-10-02
+Authors@R: 
+    c(person(given = "Rodrigo",
+             family = "Borges",
+             role = c("aut", "cre"),
+             email = "rodrigo@borges.net.br"))
+Description: AED interativa e adição de dados. beep é o acrônimo de
+    'Back-End de Exploração e Painéis de dados'. Sucessor do pacote AEDi
+    (https://github.com/DistintiveLab/AEDi).
+License: MIT + file LICENSE
+URL: https://github.com/DistintiveLab/beep
+BugReports: https://github.com/DistintiveLab/beep/issues
+Imports: 
+    callr,
+    config,
+    data.table,
+    datasus,
+    DBI,
+    desc,
+    digest,
+    dplyr,
+    DT,
+    edubr,
+    fs,
+    futile.logger,
+    httr,
+    htmltools,
+    htmlwidgets,
+    janitor,
+    jsonlite,
+    latexr,
+    lifecycle,
+    lubridate,
+    openxlsx,
+    plotly,
+    purrr,
+    readr,
+    rio,
+    RPostgres,
+    leaflet,
+    RPostgreSQL,
+    RSQLite,
+    rvest,
+    sf,
+    shiny,
+    shinybusy,
+    shinyGovBRstyle,
+    shinydashboard,
+    shinydashboardPlus,
+    shinyFiles,
+    shinyjs,
+    shinymath,
+    shinyWidgets,
+    sidra,
+    sortable,
+    stringr,
+    summarytools,
+    tibble,
+    tidyr,
+    xml2
+Suggests: 
+    attachment,
+    golem,
+    pkgload,
+    processx,
+    testthat,
+    usethis
+RdMacros: 
+    lifecycle
+Encoding: UTF-8
+Language: pt-BR
+LazyData: true
+Remotes:
+    rodrigoesborges/datasus@2ff4449,
+    rodrigoesborges/edubr,
+    tomicapretto/shinymath,
+    DistintiveLab/shinyGovBRstyle
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Collate: 
+    'beep-package.R'
+    'admin_app.R'
+    'beep_tema.R'
+    'app_config.R'
+    'branding.R'
+    'controle_execucao.R'
+    'create_extend_geogroup_view.R'
+    'data_summary.R'
+    'dbdatawriter.R'
+    'dbprepare.R'
+    'dependencias.R'
+    'deploy_admin.R'
+    'deploy_panel.R'
+    'executa_atualizacao.R'
+    'explorar_indicadores.R'
+    'gravar_serie_dw.R'
+    'grupos_catalogo.R'
+    'header_buttons_module.R'
+    'incorporar_municipio_ibge.R'
+    'mod_atualizacao.R'
+    'mod_explorar_bivar.R'
+    'mod_explorar_dicionario.R'
+    'mod_explorar_dist.R'
+    'mod_explorar_matriz.R'
+    'mod_explorar_preditores.R'
+    'mod_explorar_univar.R'
+    'mod_panel_baixar.R'
+    'mod_panel_globe.R'
+    'mod_panel_map.R'
+    'mod_panel_regiao.R'
+    'mod_panel_sobre.R'
+    'painel_admin.R'
+    'painel_basemap.R'
+    'painel_branding.R'
+    'painel_cache.R'
+    'painel_dw.R'
+    'painel_ui.R'
+    'painel_xlsx.R'
+    'raismetadatalayoute.R'
+    'raismetadatalayoutv.R'
+    'run_app.R'
+    'run_panel.R'
+    'server_app.R'
+    'sidra_prepare.R'
+    'ui_app.R'
+    'ui_body.R'
+    'ui_header.R'
+    'ui_helpers.R'
+    'ui_rightbar.R'
+    'ui_sidebar.R'
+    'ui_zcontact_dropdown.R'
+    'upload_data_module.R'
+    'upload_datasus.R'
+    'upload_inep.R'
+    'upload_raispsql.R'
+    'upload_sidraibge.R'
+    'utils-pipe.R'
+    'utils.R'
+    'verifica_fonte.R'
+Depends: 
+    R (>= 2.10)

@@ -1,0 +1,42 @@
+.Rproj.user
+.Rhistory
+.RData
+*.RData
+*.Rda
+*.Rda.RData
+
+# Credenciais e segredos - nunca commitar
+.Renviron
+.env
+
+# Bancos de dados locais
+*.sqlite
+*.sqlite3
+
+# Caches de dados brutos (volumosos, regeneráveis)
+manipula/cache/
+documenta/cache/
+visualiza/cache/
+
+# Workspace de execução do beep (coleta gerada na raiz de onde o app roda;
+# o lote versionado vive no projeto concreto)
+coleta/
+
+# Logs gerados pelos scripts de coleta
+*.R.log
+*.log
+
+# Artefatos temporários de consolidação
+_consolidacao/
+
+# Microdados RAIS brutos (volumosos, ~99 MB; ficam só na máquina local)
+data-raw/testdata/**/*.7z
+
+# Rascunhos e backups locais (não são fonte do pacote)
+AGENTSbckp.md
+data/sidrameta_bckp.rda
+
+# Site pkgdown (build local) e cache do assistente
+docs/
+.crush/
+_targets/

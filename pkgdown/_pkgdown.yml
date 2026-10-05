@@ -1,0 +1,7 @@
+url: https://distintivelab.github.io/beep/
+template:
+  bootstrap: 5
+  light-switch: yes
+development:
+  mode: auto
+
