@@ -1,0 +1,12 @@
+# Carrega o .Renviron da raiz do projeto no processo atual
+
+O painel dispara a atualizacao em subprocesso (callr::r_bg), que le
+apenas o ~/.Renviron do usuario; o .Renviron da raiz so e lido quando o
+R inicia com cwd na raiz. Sem isso, credenciais como as do banco RAIS
+ficam ausentes no subprocesso mesmo existindo no arquivo.
+
+## Usage
+
+``` r
+.carregar_renviron(raiz)
+```

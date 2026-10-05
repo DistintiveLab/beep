@@ -1,696 +1,234 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://distintivelab.github.io/beep/404.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/AGENTS.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/index.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/add_external_resources.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/admin_app.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/anos_rais.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/aplicar_retencao_dumps.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/app_server.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/app_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/aquecer_painel.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/atualizar_grupos_indicadores.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/atualizar_indicadores.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/atualizar_painel.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/beep-package.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/beep_tema_botao.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/beep_tema_paleta_default.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/beep_tema_recursos.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/body_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/carregar_dependencias.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/contact_item.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/contact_menu.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/contatos_header.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/controle_con.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/controle_fim.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/controle_inicio.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/controle_preparar.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/db_datawrite.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/definir_dependencias.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/definir_tipo_grafico.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/definir_visibilidade.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/deploy_admin.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/deploy_panel.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-anexar_pacotes_script.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-arg_call.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-artefato_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-assunto_educabr.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-avaliar_dependencias.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-baixar_json_ibge.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-baixar_malha_ibge.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-carregar_renviron.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-classifica_chamada.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-estado_atual_indicador.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-familia_por_nome.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-frescor_series.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-grupo_por_nome.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-heads_bare.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-leitores_url.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-ler_manifesto_arquivo.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-metainep_edubr.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-nome_projeto.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-normalizar_registro.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-preparar_cache_script.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-primeira_chamada_coleta.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-probe_educabr.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-probe_sidra.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-probe_url.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-prover_objetos_sessao.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-registro_dependencias.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-reguas_dependencia.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-series_proprias_manifesto.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-series_proprias_script.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/dot-source_script_coleta.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/espelhar_dumps.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/executar_script_coleta.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_badge_n.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_con.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_cor.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_degeneradas.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_dicionario.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_ficha.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_leituras.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_matriz.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_n_min.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_nomes_locais.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_pares.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_preditores.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/explorar_wide.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/fingerprint_beepdb.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/flucol.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/garantir_indice_valores.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/gravar_serie_dw.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/grupos_catalogo_definicao.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/grupos_catalogo_plano.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/grupos_catalogo_tribbles.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/hash_coleta_csv.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/header_buttons.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/header_buttons_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/header_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/icon_text.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/incorporar_municipio_ibge.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/insert_logo.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/ler_controle.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/ler_dependencias.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/listar_scripts_coleta.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/logo_header_tag.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/logo_rodape_tag.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_bivar_server.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_bivar_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_dicionario_server.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_dicionario_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_dist_server.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_dist_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_matriz_server.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_matriz_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_preditores_server.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_preditores_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_univar_server.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_explorar_univar_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/mod_panel_globe_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/montar_lookup_locais.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_abas.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_anos.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_anos_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_aviso_carregando.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_basemap_adicionar.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_basemap_tipo.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_brand_apoio.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_brand_apoio_box.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_brand_apoios.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_brand_contato.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_brand_equipe.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_brand_paleta.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_brand_subtitulo.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_brand_titulo.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_cache_chave.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_cache_dir.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_cache_get.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_cache_limpar.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_carto_chave.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_codigo_mun.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_codigo_mun_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_com_con.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_compostos.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_compostos_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_con.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_delta_camadas.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_filtrar_ano.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_local.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_local_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_mun.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_mun_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_mun_uf.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_mun_uf_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_nivel.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_nivel_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_pai_uf.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_pai_uf_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_uf.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_uf_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geo_vazio.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_geojson.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_grupo_indicador.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_grupo_raiz.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_grupos_selecao.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_hierarquia.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_hierarquia_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_indicador_default.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_locais.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_locais_com_dados.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_locais_com_dados_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_locais_nivel.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_locais_nivel_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_local_top.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_local_top_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_local_top_uf.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_local_top_uf_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_logo_src.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_marca_src.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_mdata.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_mdata_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_mdata_extras.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_municipio_filtro.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_niveis.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_niveis_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_nivel_default.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_nivel_parse.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_nome_indicador.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_num.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_opcoes_indicador.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_opcoes_select.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_paleta.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_plot_banda.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_plot_indicador.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_ranking_local.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_ranking_local_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_ranking_texto.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_ranking_vazio.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_recursos.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_resumo_grupos.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_rodape.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_rotulo_tempo.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_slug.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_tipo_grafico.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_topbar.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_ufs_com_dados.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_ufs_com_dados_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_ultimo_por_ano.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_valores.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_valores_ano.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_valores_ano_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_valores_local.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_valores_local_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_valores_local_todos.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_valores_local_todos_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_valores_por_ano.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_valores_por_ano_cache.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_xlsx_indicador.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/painel_xlsx_regiao.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/panel_app.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/panel_server.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/panel_sobre_server.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/panel_sobre_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/prepare_db.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/rep_br.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/resolver_logo_src.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/resumo_indicadores_dw.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/right_sidebar_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/run_app.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/run_panel.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/sidebar_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/upload_data_ui.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/verificar_dependencias.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/verificar_necessidade_atualizacao.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/verificar_novidade_fonte.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/versao_carga_fim.html</loc>
-  </url>
-  <url>
-    <loc>https://distintivelab.github.io/beep/reference/versao_carga_inicio.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://distintivelab.github.io/beep/404.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/AGENTS.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/LICENSE-text.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/LICENSE.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/authors.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/index.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/news/index.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/add_external_resources.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/admin_app.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/anos_rais.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/aplicar_retencao_dumps.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/app_server.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/app_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/aquecer_painel.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/atualizar_grupos_indicadores.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/atualizar_indicadores.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/atualizar_painel.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/beep-package.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/beep_tema_botao.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/beep_tema_paleta_default.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/beep_tema_recursos.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/body_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/carregar_dependencias.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/contact_item.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/contact_menu.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/contatos_header.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/controle_con.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/controle_fim.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/controle_inicio.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/controle_preparar.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/db_datawrite.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/definir_dependencias.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/definir_tipo_grafico.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/definir_visibilidade.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/deploy_admin.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/deploy_panel.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-anexar_pacotes_script.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-arg_call.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-artefato_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-assunto_educabr.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-avaliar_dependencias.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-baixar_json_ibge.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-baixar_malha_ibge.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-carregar_renviron.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-classifica_chamada.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-estado_atual_indicador.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-familia_por_nome.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-frescor_series.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-grupo_por_nome.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-heads_bare.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-leitores_url.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-ler_manifesto_arquivo.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-metainep_edubr.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-nome_projeto.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-normalizar_registro.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-preparar_cache_script.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-primeira_chamada_coleta.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-probe_educabr.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-probe_sidra.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-probe_url.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-prover_objetos_sessao.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-registro_dependencias.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-reguas_dependencia.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-series_proprias_manifesto.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-series_proprias_script.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/dot-source_script_coleta.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/espelhar_dumps.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/executar_script_coleta.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_badge_n.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_con.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_cor.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_degeneradas.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_dicionario.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_ficha.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_leituras.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_matriz.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_n_min.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_nomes_locais.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_pares.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_preditores.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/explorar_wide.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/fingerprint_beepdb.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/flucol.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/garantir_indice_valores.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/gravar_serie_dw.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/grupos_catalogo_definicao.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/grupos_catalogo_plano.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/grupos_catalogo_tribbles.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/hash_coleta_csv.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/header_buttons.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/header_buttons_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/header_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/icon_text.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/incorporar_municipio_ibge.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/index.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/insert_logo.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/ler_controle.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/ler_dependencias.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/listar_scripts_coleta.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/logo_header_tag.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/logo_rodape_tag.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_bivar_server.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_bivar_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_dicionario_server.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_dicionario_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_dist_server.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_dist_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_matriz_server.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_matriz_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_preditores_server.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_preditores_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_univar_server.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_explorar_univar_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/mod_panel_globe_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/montar_lookup_locais.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_abas.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_anos.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_anos_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_aviso_carregando.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_basemap_adicionar.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_basemap_tipo.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_brand_apoio.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_brand_apoio_box.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_brand_apoios.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_brand_contato.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_brand_equipe.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_brand_paleta.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_brand_subtitulo.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_brand_titulo.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_cache_chave.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_cache_dir.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_cache_get.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_cache_limpar.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_carto_chave.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_codigo_mun.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_codigo_mun_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_com_con.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_compostos.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_compostos_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_con.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_delta_camadas.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_filtrar_ano.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_local.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_local_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_mun.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_mun_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_mun_uf.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_mun_uf_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_nivel.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_nivel_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_pai_uf.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_pai_uf_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_uf.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_uf_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geo_vazio.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_geojson.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_grupo_indicador.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_grupo_raiz.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_grupos_selecao.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_hierarquia.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_hierarquia_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_indicador_default.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_locais.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_locais_com_dados.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_locais_com_dados_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_locais_nivel.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_locais_nivel_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_local_top.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_local_top_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_local_top_uf.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_local_top_uf_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_logo_src.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_marca_src.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_mdata.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_mdata_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_mdata_extras.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_municipio_filtro.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_niveis.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_niveis_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_nivel_default.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_nivel_parse.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_nome_indicador.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_num.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_opcoes_indicador.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_opcoes_select.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_paleta.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_plot_banda.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_plot_indicador.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_ranking_local.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_ranking_local_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_ranking_texto.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_ranking_vazio.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_recursos.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_resumo_grupos.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_rodape.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_rotulo_tempo.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_slug.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_tipo_grafico.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_topbar.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_ufs_com_dados.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_ufs_com_dados_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_ultimo_por_ano.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_valores.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_valores_ano.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_valores_ano_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_valores_local.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_valores_local_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_valores_local_todos.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_valores_local_todos_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_valores_por_ano.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_valores_por_ano_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_xlsx_indicador.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/painel_xlsx_regiao.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/panel_app.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/panel_server.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/panel_sobre_server.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/panel_sobre_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/prepare_db.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/rep_br.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/resolver_logo_src.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/resumo_indicadores_dw.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/right_sidebar_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/run_app.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/run_panel.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/sidebar_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/upload_data_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/verificar_dependencias.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/verificar_necessidade_atualizacao.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/verificar_novidade_fonte.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/versao_carga_fim.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/reference/versao_carga_inicio.html</loc></url>
 </urlset>
+

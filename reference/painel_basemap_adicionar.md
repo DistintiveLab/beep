@@ -1,0 +1,14 @@
+# Adiciona o basemap ao mapa leaflet: tiles voyager do Carto com a chave em ?key= quando disponivel, ou fundo neutro sem tiles (padrao do labourvaluesdatapanel) com o contorno das UFs em um pane acima da camada municipal. `contorno_uf` e uma funcao sem argumentos que devolve as geometrias das UFs (por exemplo `painel_geo_uf_cache`): so e chamada no modo neutro, para nao consultar o DW a toa quando ha tiles.
+
+Adiciona o basemap ao mapa leaflet: tiles voyager do Carto com a chave
+em ?key= quando disponivel, ou fundo neutro sem tiles (padrao do
+labourvaluesdatapanel) com o contorno das UFs em um pane acima da camada
+municipal. `contorno_uf` e uma funcao sem argumentos que devolve as
+geometrias das UFs (por exemplo `painel_geo_uf_cache`): so e chamada no
+modo neutro, para nao consultar o DW a toa quando ha tiles.
+
+## Usage
+
+``` r
+painel_basemap_adicionar(mapa, contorno_uf = NULL)
+```
