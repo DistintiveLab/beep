@@ -1,3 +1,26 @@
+# beep 0.9.0.9000
+
+## Novas fontes de dados: TSE (via tsebr) e Censo IBGE (via censoagg)
+
+- Aba "Inserção de Fonte" ganha os tipos **14=tse** e **15=censo**,
+  no mesmo contrato dos submódulos (call string editável avaliado
+  pelo pai). Ambas degradam com aviso quando o pacote correspondente
+  não está instalado — o beep segue instalável sem elas (Suggests +
+  Remotes `DistintiveLab/tsebr` e `DistintiveLab/censoagg`).
+- **tse**: votação nominal e detalhe de seção agregados
+  seção->município (mapa TSE x IBGE), prestação de contas 2026 como
+  totais por UF; candidaturas exportam CSV de referência. Perfis do
+  eleitorado por seção ficam no pacote tsebr até o DW suportar
+  níveis submunicipais.
+- **censo**: agregados por setor censitário (Censo 2022, via censobr)
+  colapsados por município ou setor, uma série (`mdata`) por
+  variável; dicionário de variáveis escolhível no painel. Microdado
+  público 2022 não traz code_muni/pesos (limitação do IBGE,
+  sinalizada na interface).
+- Datasources `TSE` e `IBGE Censo` criados sob demanda no DW,
+  idempotentes pelo nome.
+
+
 # beep 0.8.1.9000
 
 ## Contatos do header com logo configurável
