@@ -1,0 +1,15 @@
+# Grupo de um indicador do catalogo (Eixo N, Objetivo N ou Estratos PNAD) pela convencao de orig_name; NA para os indicadores de apoio
+
+O catalogo do DW e montado por convencao de nome (educ1..4 + comp_educ
+no Eixo 1, objetivo2_1..3 + comp_objetivo2 no Objetivo 2, pnadc1..7 +
+comp_pnadc8..14 nos Estratos PNAD): a tabela mdata_group existe, mas
+esta populada so parcialmente (verificado 2026-09-22: 7 dos 35
+indicadores dos eixos), entao nao serve de fonte da hierarquia.
+Variacoes de trabalho (`_via_beep`, `_v0`) ficam fora do catalogo, que e
+o que o painel publica.
+
+## Usage
+
+``` r
+painel_grupo_indicador(orig_name)
+```

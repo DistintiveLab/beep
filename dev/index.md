@@ -1,0 +1,91 @@
+# beep ![](reference/figures/beep.svg)
+
+O `beep` (acrônimo de **B**ack-**E**nd de **E**xploração e **P**ainéis
+de dados) é um pacote R para **Análise Exploratória de Dados e
+indicadores** — um backend amigável para inclusão de fontes de dados,
+indicadores e filtros de variáveis em painéis.
+
+> **Proveniência:** o `beep` é o **sucessor do
+> [AEDi](https://github.com/DistintiveLab/AEDi)** — renomeação completa
+> do pacote em setembro de 2026, mantendo funcionalidade e numeração de
+> versões. O predecessor original do AEDi foi o
+> [owEDA](https://github.com/jimbriggs/EDA).
+
+### Objetivo Principal
+
+O objetivo do `beep` é:
+
+- Economizar tempo
+- Melhorar a eficiência
+- Aprimorar a qualidade da análise de projetos
+- Produzir artefatos para exportação interna e externa para Excel,
+  PowerPoint e Word
+
+### Versão em Inglês (English Version)
+
+`beep` (**B**ack-**E**nd for **E**xploratory analysis and **P**anels) is
+an R package for **Exploratory Data Analysis and indicators** — a
+friendly backend for adding data sources, indicators and variable
+filters to dashboards. It is the **successor of
+[AEDi](https://github.com/DistintiveLab/AEDi)** (full rename, September
+2026), which in turn derived from
+[owEDA](https://github.com/jimbriggs/EDA).
+
+## Instalação
+
+Você pode instalar a versão de desenvolvimento a partir do
+[GitHub](https://github.com/) com:
+
+``` r
+
+# install.packages("pak")
+pak::pak("distintivelab/beep")
+
+# ou
+require(devtools)
+devtools::install_github("DistintiveLab/beep")
+```
+
+## Execução do Aplicativo
+
+Após instalar o pacote, você pode executar os aplicativos com:
+
+``` r
+
+beep::run_app()    # app de análise exploratória (upload de dados)
+beep::run_panel()  # painel de indicadores
+```
+
+## Roadmap
+
+O `beep` deseja fornecer os seguintes recursos:
+
+- Gerenciamento de upload de dados:
+
+  - Suporte para upload fácil de dados para vários tipos de dados
+    possíveis (xlsx, csv, txt, etc.).
+
+  - Suporte a configurações avançadas para upload de diferentes tipos de
+    dados (por exemplo, mesclar em guias do Excel, cabeçalhos, linhas
+    para pular, etc.).
+
+  - Implementar um recurso de “totais de controle” que permite ao
+    usuário visualizar as somas das colunas numéricas e validar /
+    reconciliar.
+
+  - Permitir ao usuário criar seus próprios conjuntos de dados a partir
+    de arquivos carregados por meio da mesclagem e transformação deles.
+
+  - Fornecer estatísticas de resumo iniciais sobre os dados e visualizar
+    os próprios dados.
+
+- Diagnóstico de Dados
+
+- Dicionário de Dados
+
+- Relatório de Validação de Dados
+
+- **Scaffolding de projetos com
+  [targets](https://docs.ropensci.org/targets/)**: a pré-configuração de
+  pipelines reproduzíveis (o foco original do protótipo `beep`) está
+  planejada como uma opção futura do pacote.

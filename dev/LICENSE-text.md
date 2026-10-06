@@ -1,0 +1,6 @@
+# License
+
+    YEAR: 2025
+    COPYRIGHT HOLDER: autores do beep (Distintive Lab)
+
+    Obra derivada de jimbriggs/EDA (via AEDi), licenciada sob MIT.
