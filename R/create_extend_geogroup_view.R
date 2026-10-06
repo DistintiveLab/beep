@@ -171,7 +171,7 @@ colselect <- paste(
     "JOIN pg_matviews v ON v.matviewname = c.relname",
     "AND v.schemaname = c.relnamespace::regnamespace::text",
     "WHERE d.refclassid = 'pg_class'::regclass",
-    "AND d.refobjid = 'recortes_geograficos'::regclass",
+    "AND d.refobjid = to_regclass('public.recortes_geograficos')",
     "AND d.deptype = 'n'"))
   idx <- if (nrow(deps)) {
     DBI::dbGetQuery(con, sprintf(paste(

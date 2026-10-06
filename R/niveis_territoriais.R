@@ -205,18 +205,29 @@ proximo_local_id_bloco <- function(con, tipo) {
 }
 
 #' Recria as matviews salvas em ordem de dependencia: passadas sucessivas
-#' tentando criar cada uma ate todas existirem (ou estourar o limite)
+#' tentando criar cada uma ate todas existirem (ou estourar o limite).
+#' Cada tentativa roda entre SAVEPOINT/ROLLBACK TO: a funcao e chamada
+#' dentro da transacao da migracao e, no PostgreSQL, UMA instrucao falha
+#' aborta a transacao inteira ("current transaction is aborted") — sem
+#' savepoint, a primeira tentativa prematura derrubaria todas as demais.
 #' @keywords internal
 .recriar_dependentes_tabelas <- function(con, salvos) {
   pendentes <- salvos$defs
   for (passo in seq_len(length(pendentes) + 1L)) {
     if (!length(pendentes)) break
     for (nm in names(pendentes)) {
+      sp <- sprintf("sp_recria_%s", nm)
+      DBI::dbExecute(con, sprintf("SAVEPOINT %s", sp))
       ok <- tryCatch({
         DBI::dbExecute(con, sprintf(
           "CREATE MATERIALIZED VIEW %s AS %s", nm, pendentes[[nm]]))
+        DBI::dbExecute(con, sprintf("RELEASE SAVEPOINT %s", sp))
         TRUE
-      }, error = function(e) FALSE)
+      }, error = function(e) {
+        try(DBI::dbExecute(con, sprintf("ROLLBACK TO SAVEPOINT %s", sp)),
+            silent = TRUE)
+        FALSE
+      })
       if (ok) pendentes[[nm]] <- NULL
     }
   }
