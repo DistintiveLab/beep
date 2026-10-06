@@ -89,11 +89,15 @@ if(sanitize){
   print("sanitizing locals")
   ##PROCESS - PAIR LOC NAME WITH LOCAL ID
   locais <- DBI::dbGetQuery(condw,"select local_id,local_name,geoloc_id from local")
+  # zona de carga municipal: municipios + agregados convencionais + faixa
+  # PNAD historica, SEM os blocos submunicipais (o prefixo 6d de um setor
+  # e o codigo do municipio — nao pode vazar para o join). A fronteira
+  # superior segue a linha "Brasil" (dinamica; ver gravar_serie_dw)
   limite_br <- suppressWarnings(DBI::dbGetQuery(condw,
     "SELECT local_id FROM local WHERE local_name = 'Brasil' LIMIT 1")$local_id[1])
   if (is.na(limite_br)) limite_br <- 7087
-  locais <- locais|>dplyr::filter(local_id<6000 | local_id>=limite_br)|>
-    dplyr::mutate(geoloc_idc=as.numeric(substr(`geoloc_id`,1,6)))
+  locais <- locais|>dplyr::filter(eh_zona_carga_municipal(local_id, bloco_fim = limite_br))|>
+    dplyr::mutate(geoloc_idc=as.numeric(substr(normalizar_codigo_geoloc(geoloc_id),1,6)))
   idbrasil <- locais[locais$local_name=="Brasil",]$local_id
 
   if(!is.numeric(datadf$local)) {
@@ -101,12 +105,24 @@ if(sanitize){
     tidyr::separate_wider_delim(local,delim=" ",names=c("geoloc_idc","local_nome"),too_many="merge",too_few="align_end") |>
     dplyr::mutate(geoloc_idc=ifelse(local_nome=="Brasil",idbrasil,geoloc_idc))|>
     dplyr::mutate(across(geoloc_idc,as.numeric))|>
-    dplyr::left_join(locais|>dplyr::filter(local_id<5800|local_id>=idbrasil),by="geoloc_idc")
+    dplyr::left_join(locais|>dplyr::filter((local_id<5800|local_id>=idbrasil)&local_id<niveis_submunicipal_inicio),by="geoloc_idc")
   } else {
-    if(unique(nchar(datadf$local)==6)) {
+    chaves_num <- normalizar_codigo_geoloc(datadf$local)
+    if(identical(unique(nchar(chaves_num)),6L)) {
       print("local numérico codigo IBGE 6")
       datadf <- datadf|>
         dplyr::left_join(locais,by = c("local"="geoloc_idc"))
+    } else if (any(nchar(chaves_num) > 8L)) {
+      # codigo longo (setor 15-16d, area de ponderacao 13d, bairro 11-12d):
+      # resolve pelo geoloc_id completo como texto, sobre TODAS as
+      # localidades (submunicipais incluidas)
+      print("local numérico codigo longo (nivel submunicipal)")
+      locais_todos <- DBI::dbGetQuery(condw,"select local_id,geoloc_id from local")|>
+        dplyr::mutate(geoloc_txt=normalizar_codigo_geoloc(geoloc_id))
+      datadf$geoloc_txt <- chaves_num
+      datadf <- datadf|>
+        dplyr::left_join(dplyr::select(locais_todos,local_id,geoloc_txt),by="geoloc_txt")|>
+        dplyr::select(-geoloc_txt)
     } else {
       datadf <- datadf|>
         dplyr::left_join(locais,by = c("local"="geoloc_id"))

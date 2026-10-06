@@ -31,10 +31,14 @@ if (con_propria) con <- .con_recortes()
 if (is.null(con)) return(invisible(NULL))
 numero_municipios <- 5571
 # municipios = bloco 2024 (1..5571) MAIS os incorporados com append
-# apos o bloco PNAD (7088, 7089, ...; ver incorporar_municipio_ibge)
+# apos o bloco PNAD (7088, 7089, ...; ver incorporar_municipio_ibge).
+# Niveis submunicipais (blocos a partir de 100000; ver niveis_territoriais.R)
+# ficam de fora — a visao e uma linha por municipio de proposito
 pnad_bloco_fim <- 7087
-municipios_filtro <- sprintf("(local.local_id < %d OR local.local_id > %d)",
-                             numero_municipios + 1, pnad_bloco_fim)
+submunicipal_inicio <- 100000
+municipios_filtro <- sprintf("(local.local_id < %d OR (local.local_id > %d AND local.local_id < %d))",
+                             numero_municipios + 1, pnad_bloco_fim,
+                             submunicipal_inicio)
 
 consulta_inicial <- paste('(SELECT geoloc.geoloc_id codigo_ibge,',
                           "ST_X(ST_Centroid(geoloc.geometry)) longitude,",

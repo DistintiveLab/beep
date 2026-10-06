@@ -89,8 +89,9 @@ Remotes:
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Collate: 
-    'beep-package.R'
     'admin_app.R'
+    'ampliar_nivel_territorial.R'
+    'beep-package.R'
     'beep_tema.R'
     'app_config.R'
     'branding.R'
@@ -120,6 +121,7 @@ Collate:
     'mod_panel_map.R'
     'mod_panel_regiao.R'
     'mod_panel_sobre.R'
+    'niveis_territoriais.R'
     'painel_admin.R'
     'painel_basemap.R'
     'painel_branding.R'

@@ -322,6 +322,10 @@ painel_ranking_texto <- function(rank_uf, n_uf, rank_br, n_br) {
 # local_id (6941..7086) — publicadas so pelos indicadores pnadc*/comp_pnadc*
 # (verificado 2026-09-22: nenhum indicador municipal publica nelas, e nenhum
 # pnadc publica em municipio).
+# Niveis submunicipais (roadmap-niveis-submunicipais): bairro 11-12,
+# area de ponderacao 13, setor censitario 15-16 digitos — larguras que nao
+# colidem entre si nem com 1..8. Manter sincrono com R/niveis_territoriais.R
+# (o esqueleto do painel e autocontido de proposito).
 painel_niveis_rotulo <- c(
   "1" = "Região",
   "2" = "Unidade da Federação",
@@ -330,7 +334,12 @@ painel_niveis_rotulo <- c(
   "6" = "Região geográfica imediata",
   "7" = "Município",
   "7p" = "Região de interesse PNAD",
-  "8" = "Mesorregião")
+  "8" = "Mesorregião",
+  "11" = "Bairro",
+  "12" = "Bairro",
+  "13" = "Área de ponderação",
+  "15" = "Setor censitário",
+  "16" = "Setor censitário")
 
 # Fronteira entre os municipios e as regioes de interesse em PNAD Contínua
 # dentro da largura 7 do geoloc_id — mesma convencao adotada pelo
@@ -344,13 +353,19 @@ painel_niveis_rotulo <- c(
 # mantinha fora da zona PNAD de qualquer forma. No numeracao nova o
 # Brasil/imediatas/intermediarias caem depois dos estratos e seguem
 # fora pelo mesmo gate ou pelo limite.
+# Niveis submunicipais ganham blocos proprios a partir de 100000 (setores,
+# bairros 1000000+, areas de ponderacao 2000000+) e ficam FORA deste
+# filtro — copia local de niveis_submunicipal_inicio
+# (R/niveis_territoriais.R): o esqueleto do painel e autocontido.
 painel_municipio_limite_id <- 5572L
 painel_pnad_bloco_fim <- 7087L
+painel_submunicipal_inicio <- 100000L
 
 #' Fragmento SQL que seleciona apenas municipios (alias `l` no chamador)
 painel_municipio_filtro <- function(alias = "l") {
-  sprintf("(%s.local_id < %d OR %s.local_id > %d)",
-          alias, painel_municipio_limite_id, alias, painel_pnad_bloco_fim)
+  sprintf("(%s.local_id < %d OR (%s.local_id > %d AND %s.local_id < %d))",
+          alias, painel_municipio_limite_id, alias, painel_pnad_bloco_fim,
+          alias, painel_submunicipal_inicio)
 }
 
 #' Decodifica a chave de nivel territorial do painel
@@ -411,6 +426,10 @@ painel_niveis <- function(con) {
     "WHERE EXISTS (SELECT 1 FROM data_values v WHERE v.local_id = l.local_id)",
     "GROUP BY 1 ORDER BY 1"))
   q$rotulo <- unname(painel_niveis_rotulo[q$nivel_id])
+  # largura fora do registro nao some: rótulo generico mantem o nivel
+  # visivel no painel ate o registro ser atualizado
+  falta <- is.na(q$rotulo) & grepl("^[0-9]+$", q$nivel_id)
+  q$rotulo[falta] <- paste0("Nível de ", q$nivel_id[falta], " dígitos")
   q[!is.na(q$rotulo), ]
 }
 
