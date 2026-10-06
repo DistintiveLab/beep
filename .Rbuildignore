@@ -14,5 +14,6 @@
 ^documenta$
 ^visualiza$
 ^modprov$
+^ROADMAP-.*\.md$
 ^AGENTSbckp\.md$
 ^dev$
