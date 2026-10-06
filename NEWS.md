@@ -1,3 +1,58 @@
+# beep 0.9.2.9000
+
+## Níveis territoriais submunicipais no DW (setor, área de ponderação, bairro)
+
+Implementação do ROADMAP-niveis-submunicipais.md (F1-F4):
+
+- **Migração do schema** — `preparar_niveis_submunicipais()`: `geoloc.geoloc_id`
+  vira BIGINT e `local` ganha `nivel_tipo`, tudo em uma transação que
+  salva e recria matviews dependentes e FKs; bancos já migrados são
+  no-op. Novos blocos de `local_id`: setor 100000-999999 (geoloc_id
+  15-16d), bairro 1000000-1999999 (11-12d) e área de ponderação
+  2000000-2999999 (13d); o município pai é sempre o prefixo 7d do
+  código. A tabela `niveis_carga` registra o que foi carregado, de onde
+  e quando (insumo para remoção/atualização seletiva).
+- **Carregadores** — `incorporar_setores_censitarios()` e
+  `incorporar_areas_ponderacao()` (malhas do Censo via geobr, por
+  UF/município) e `incorporar_bairros()` (bairros derivados do atributo
+  de bairro dos setores, por dissolve: código município 7d + sequencial
+  4-5d, ou código completo 11-12d; setores sem bairro ficam de fora —
+  bairro nunca é inferido). A máquina genérica é
+  `ampliar_nivel_territorial()` (idempotente por código, inserção
+  set-based); `gravar_serie_dw()` resolve códigos longos (ex.: setor
+  15d) direto para o local_id.
+- **Auxiliares TSE** (internos `beep:::`, para a frente eleitoral) —
+  `tse_normalizar_nome()`, `tse_casar_bairros()` (casamento por
+  município + nome normalizado, com relatório de não-casados e
+  homônimos ambíguos), `tse_mapa_secao_bairro()` (perfil do eleitorado
+  por seção; seções com bairros múltiplos ficam sem bairro e listadas)
+  e `tse_agregar_votacao()` (votos por bairro, com a zona como fallback
+  auditável das seções sem bairro determinável). As premissas e limites
+  da correspondência seção↔bairro estão documentadas no cabeçalho de
+  `R/tse_auxiliares.R` — nenhuma inferência silenciosa.
+- **Painel** — a aba Baixar traduz códigos submunicipais
+  (setor/bairro/AP) pelo geoloc_id; o globo passa a enviar como "malha"
+  os vizinhos do mesmo nível dentro do município em foco
+  (`painel_geo_irmaos_mun()`, simplificação + teto de feições) e a
+  reenvia a cada troca de destaque (também corrige município que
+  "sumia" ao trocar de foco dentro da mesma UF). Níveis sem malha ou
+  rótulo degradam graciosamente (Sem dados).
+- **Correções de compatibilidade PostgreSQL** incluídas no caminho da
+  migração: recriação de matviews dependentes entre SAVEPOINT/ROLLBACK
+  TO (uma instrução que falha não aborta a transação inteira).
+- **Mudanças de comportamento**: o mapa de prefixo 6d da RAIS cobre só
+  municípios (geoloc_id de 7 dígitos — regiões PNAD e agregados ficam
+  fora; códigos 6d de entrada continuam significando município); o
+  filtro de zona municipal do `db_datawrite()` exclui os blocos
+  submunicipais (`local_id >= 100000`).
+- **Fronteira municipal (malha 2024)**: municípios 1..5571, estratos
+  PNAD a partir de 5572 e fronteira superior dinâmica pelo `local_id`
+  da linha "Brasil" — `eh_municipio_id()` e `eh_zona_carga_municipal()`
+  ganham o argumento `bloco_fim` (fallback estático 7087). Os blocos
+  submunicipais ficam fora de todos os filtros municipais, inclusive
+  no painel.
+
+
 # beep 0.9.1.9006
 
 ## populate_initialdb: pré-aquecimento do cache do geobr

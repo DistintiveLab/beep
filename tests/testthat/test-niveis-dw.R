@@ -416,7 +416,7 @@ test_that("T7: painel traduz codigos submunicipais e desenha irmaos do foco", {
   r_dois <- r$local_id[r$codigo %in% c("130260305020001", "130260305020002")]
 
   ## aba Baixar: setor (15d) e municipio (7d) traduzidos pelo geoloc_id;
-  ## PNAD (largura 7, bloco 5571..7087) segue mostrando o local_id
+  ## PNAD (largura 7, bloco 5572..7087) segue mostrando o local_id
   cod <- beep:::painel_codigo_mun(con)
   expect_identical(unname(cod["1"]), "1100203")
   expect_setequal(unname(cod[as.character(r$local_id)]),

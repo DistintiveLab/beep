@@ -181,6 +181,35 @@ Data is stored in **long/tidy format** and denormalized via materialized views:
 - `datasource` / `datasource_type` / `institution` / `officialer` — provenance.
 - `data_class` / `data_freq` / `data_type` — classification lookups.
 
+### Territorial levels and `local_id` blocks
+
+`R/niveis_territoriais.R` is the single source of the conventions below
+(ROADMAP-niveis-submunicipais.md). `geoloc.geoloc_id` is BIGINT and
+`local.nivel_tipo` records the level; submunicipal codes carry their own
+municipality as the 7-digit prefix:
+
+| Level | `geoloc_id` width | `local_id` block | Notes |
+|---|---|---|---|
+| municipality | 7 | malha 2024 1..5571, PNAD 5572..7087 (or up to the "Brasil" row), then append after it | 6-digit codes always mean municipality (RAIS prefix map) |
+| bairro | 11-12 | 1000000..1999999 | derived from the Census (dissolve of tracts), `incorporar_bairros()` |
+| area de ponderacao | 13 | 2000000..2999999 | `incorporar_areas_ponderacao()` |
+| setor censitario | 15-16 | 100000..999999 | `incorporar_setores_censitarios()` |
+
+Loads are **append-only** (`local_id` is never renumbered — `data_values`
+references it) and idempotent by code via `ampliar_nivel_territorial()`.
+Provenance goes to `niveis_carga (nivel_tipo, fonte, escopo, ano,
+n_localidades, carregado_em)`. Submunicipal levels deliberately have **no
+row in `recortes_geograficos`** (one row per municipality by design); the
+painel resolves their context via the 7-digit prefix. Note
+`R/painel_dw.R` keeps a local copy of the block limits so the painel
+skeleton stays self-contained — mirror changes in both
+(`tests/testthat/test-painel-esqueleto.R` enforces file sync, not this).
+
+For TSE electoral data by bairro, the pure helpers in
+`R/tse_auxiliares.R` (internal) match `(municipio, normalized name)` and
+map seção→bairro from the voter-profile files; premises and limits are
+documented in that file's header — never infer a bairro silently.
+
 **Materialized views** (refresh after writes):
 
 - `named_datavalues` — joins `data_values` → `mdata` → `mdata_exts` → `datasource`.
