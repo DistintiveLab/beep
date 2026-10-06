@@ -47,7 +47,8 @@ ampliar_nivel_territorial <- function(dados, tipo,
 
   if (is.null(col_codigo)) {
     padrao <- switch(tipo,
-                     setor = "setor", area_ponderacao = "ponder|weight",
+                     setor = "setor|tract|census",
+                     area_ponderacao = "ponder|weight",
                      bairro = "bairro")
     cand <- grep(padrao, names(dados), value = TRUE,
                  ignore.case = TRUE)

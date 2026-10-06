@@ -302,3 +302,96 @@ test_that("T4: gravar_serie_dw resolve setor (15d) e municipio (7d)", {
     "WHERE orig_name = 'teste_setor_dw'"))
   expect_identical(as.numeric(ndv$n), 2)
 })
+
+test_that("T5: incorporar_setores_censitarios (geobr mockado) registra niveis_carga", {
+  skip_if(!nzchar(Sys.getenv("BEEP_TEST_DW")),
+          "DW de teste local ausente (defina BEEP_TEST_DW)")
+  skip_if(!requireNamespace("geobr", quietly = TRUE), "geobr ausente")
+  .fixture_niveis_dw()
+
+  malha <- sf::st_sf(
+    code_tract = c("110020325020001", "110020325020002"),
+    geometry = sf::st_as_sfc(c(
+      "POLYGON((-63.2 -8.2, -63.1 -8.2, -63.1 -8.3, -63.2 -8.3, -63.2 -8.2))",
+      "POLYGON((-63.1 -8.2, -63.0 -8.2, -63.0 -8.3, -63.1 -8.3, -63.1 -8.2))")),
+    crs = 4326)
+  fake_tract <- function(code_tract, year, simplified, showProgress, zone = NULL)
+    malha
+  testthat::local_mocked_bindings(read_census_tract = fake_tract,
+                                  .package = "geobr")
+
+  con <- .con_niveis_dw()
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+
+  r <- withCallingHandlers(
+    incorporar_setores_censitarios(con = con, ufs = "11", ano = 2010),
+    message = function(m) invokeRestart("muffleMessage"))
+
+  expect_identical(r$escopo, "11")
+  expect_identical(r$n_localidades, 2L)
+  ids <- DBI::dbGetQuery(con, paste(
+    "SELECT local_id, nivel_tipo FROM local",
+    "WHERE geoloc_id IN (110020325020001, 110020325020002)"))
+  expect_true(all(ids$local_id >= 100000L & ids$local_id <= 999999L))
+  expect_identical(ids$nivel_tipo, c("setor", "setor"))
+
+  carga <- DBI::dbGetQuery(con, paste(
+    "SELECT nivel_tipo, fonte, escopo, ano, n_localidades FROM niveis_carga",
+    "WHERE nivel_tipo = 'setor'"))
+  expect_identical(nrow(carga), 1L)
+  expect_identical(carga$fonte, "geobr/setores_censitarios")
+  expect_identical(carga$escopo, "11")
+  expect_identical(as.integer(carga$ano), 2010L)
+  expect_identical(as.integer(carga$n_localidades), 2L)
+
+  ## re-carga e idempotente: mesmos ids, upsert em niveis_carga
+  r2 <- withCallingHandlers(
+    incorporar_setores_censitarios(con = con, ufs = "11", ano = 2010),
+    message = function(m) invokeRestart("muffleMessage"))
+  expect_identical(r2$n_localidades, 2L)
+  expect_identical(DBI::dbGetQuery(con, paste(
+    "SELECT local_id FROM local WHERE geoloc_id IN",
+    "(110020325020001, 110020325020002) ORDER BY local_id"))$local_id,
+    ids$local_id[order(ids$local_id)])
+  expect_identical(as.numeric(DBI::dbGetQuery(con, paste(
+    "SELECT count(*) AS n FROM niveis_carga",
+    "WHERE nivel_tipo = 'setor'"))$n), 1)
+})
+
+test_that("T6: incorporar_areas_ponderacao (geobr mockado) usa bloco AP", {
+  skip_if(!nzchar(Sys.getenv("BEEP_TEST_DW")),
+          "DW de teste local ausente (defina BEEP_TEST_DW)")
+  skip_if(!requireNamespace("geobr", quietly = TRUE), "geobr ausente")
+  .fixture_niveis_dw()
+
+  malha <- sf::st_sf(
+    code_weighting = "1100203250501",
+    geometry = sf::st_as_sfc(
+      "POLYGON((-63.3 -8.0, -63.2 -8.0, -63.2 -8.1, -63.3 -8.1, -63.3 -8.0))"),
+    crs = 4326)
+  fake_wa <- function(code_weighting, year, simplified, showProgress) malha
+  testthat::local_mocked_bindings(read_weighting_area = fake_wa,
+                                  .package = "geobr")
+
+  con <- .con_niveis_dw()
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+
+  r <- withCallingHandlers(
+    incorporar_areas_ponderacao(con = con, ufs = 11),
+    message = function(m) invokeRestart("muffleMessage"))
+
+  expect_identical(r$escopo, "11")
+  expect_identical(r$n_localidades, 1L)
+  ids <- DBI::dbGetQuery(con, paste(
+    "SELECT local_id, nivel_tipo FROM local",
+    "WHERE geoloc_id = 1100203250501"))
+  expect_true(ids$local_id >= 2000000L & ids$local_id <= 2999999L)
+  expect_identical(ids$nivel_tipo, "area_ponderacao")
+  carga <- DBI::dbGetQuery(con, paste(
+    "SELECT nivel_tipo, escopo, ano FROM niveis_carga",
+    "WHERE nivel_tipo = 'area_ponderacao'"))
+  expect_identical(nrow(carga), 1L)
+  expect_identical(carga$escopo, "11")
+  expect_identical(as.integer(carga$ano), 2010L)
+})
+

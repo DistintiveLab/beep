@@ -280,8 +280,13 @@ preparar_niveis_submunicipais <- function(con = NULL) {
   tem_nivel_tipo <- length(DBI::dbGetQuery(con, paste(
     "SELECT 1 FROM information_schema.columns",
     "WHERE table_name = 'local' AND column_name = 'nivel_tipo'"))[[1]]) > 0
+  tem_niveis_carga <- length(DBI::dbGetQuery(con, paste(
+    "SELECT 1 FROM information_schema.tables",
+    "WHERE table_name = 'niveis_carga'"))[[1]]) > 0
 
-  if (!precisa_bigint && tem_nivel_tipo) return(invisible(TRUE))
+  if (!precisa_bigint && tem_nivel_tipo && tem_niveis_carga) {
+    return(invisible(TRUE))
+  }
 
   # FKs que referenciam geoloc(geoloc_id): salvar definicao, dropar,
   # recriar apos o ALTER
@@ -337,6 +342,17 @@ preparar_niveis_submunicipais <- function(con = NULL) {
       niveis_municipio_limite_id, niveis_pnad_bloco_fim))
     DBI::dbExecute(con, paste(
       "CREATE INDEX IF NOT EXISTS local_nivel_tipo_idx ON local (nivel_tipo)"))
+    # proveniencia das cargas submunicipais (o que entrou, de onde, quando)
+    # — insumo para remocao/atualizacao seletiva (roadmap F2)
+    DBI::dbExecute(con, paste(
+      "CREATE TABLE IF NOT EXISTS niveis_carga (",
+      "nivel_tipo TEXT NOT NULL,",
+      "fonte TEXT NOT NULL,",
+      "escopo TEXT NOT NULL,",
+      "ano INTEGER,",
+      "n_localidades INTEGER,",
+      "carregado_em TIMESTAMP NOT NULL DEFAULT now(),",
+      "CONSTRAINT niveis_carga_un UNIQUE (nivel_tipo, fonte, escopo, ano))"))
     DBI::dbCommit(con)
   }, error = function(e) {
     try(DBI::dbRollback(con), silent = TRUE)
