@@ -437,3 +437,67 @@ test_that("T7: painel traduz codigos submunicipais e desenha irmaos do foco", {
     con, mun = "1302603", larg = 15, max_feicoes = 1L)), 0L)
 })
 
+test_that("T8: incorporar_bairros dissolve setores e registra niveis_carga", {
+  skip_if(!nzchar(Sys.getenv("BEEP_TEST_DW")),
+          "DW de teste local ausente (defina BEEP_TEST_DW)")
+  .fixture_niveis_dw()
+
+  # municipio proprio do teste (3509502): bairros e irmaos deterministicos
+  polis <- c(
+    "POLYGON((-47.2 -23.6, -47.1 -23.6, -47.1 -23.7, -47.2 -23.7, -47.2 -23.6))",
+    "POLYGON((-47.1 -23.6, -47.0 -23.6, -47.0 -23.7, -47.1 -23.7, -47.1 -23.6))",
+    "POLYGON((-46.9 -23.6, -46.8 -23.6, -46.8 -23.7, -46.9 -23.7, -46.9 -23.6))")
+  setores <- sf::st_sf(
+    code_tract = c("350950205001001", "350950205001002", "350950205002001"),
+    nm_bairro = c("Centro Teste", "Centro Teste", "Jardim Teste"),
+    code_bairro = c("1", "1", "2"),
+    geometry = sf::st_as_sfc(polis), crs = 4326)
+  con <- .con_niveis_dw()
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+
+  r <- withCallingHandlers(
+    incorporar_bairros(setores, con = con, ano = 2022),
+    message = function(m) invokeRestart("muffleMessage"))
+
+  expect_identical(r$escopo, "3509502")
+  expect_identical(r$n_localidades, 2L)
+  loc <- DBI::dbGetQuery(con, paste(
+    "SELECT local_id, local_name, nivel_tipo FROM local",
+    "WHERE geoloc_id IN (35095020001, 35095020002)",
+    "ORDER BY geoloc_id"))
+  expect_true(all(loc$local_id >= 1000000L & loc$local_id <= 1999999L))
+  expect_identical(loc$nivel_tipo, c("bairro", "bairro"))
+  expect_identical(loc$local_name, c("Centro Teste", "Jardim Teste"))
+
+  # dissolve: o bairro 1 cobre as duas quadras contiguas (area ~2x)
+  area <- as.numeric(DBI::dbGetQuery(con, paste(
+    "SELECT ST_Area(geometry) AS a FROM geoloc",
+    "WHERE geoloc_id = 35095020001"))$a)
+  expect_true(area > 0.015)
+
+  carga <- DBI::dbGetQuery(con, paste(
+    "SELECT fonte, escopo, ano, n_localidades FROM niveis_carga",
+    "WHERE nivel_tipo = 'bairro'"))
+  expect_identical(nrow(carga), 1L)
+  expect_identical(carga$fonte, "dissolve_setores")
+  expect_identical(carga$escopo, "3509502")
+  expect_identical(as.integer(carga$ano), 2022L)
+  expect_identical(as.integer(carga$n_localidades), 2L)
+
+  ## re-carga e idempotente: mesmos ids, upsert em niveis_carga, e o
+  ## painel (F3) tesselam os bairros como irmaos do municipio em foco
+  r2 <- withCallingHandlers(
+    incorporar_bairros(setores, con = con, ano = 2022),
+    message = function(m) invokeRestart("muffleMessage"))
+  expect_identical(r2$n_localidades, 2L)
+  expect_identical(DBI::dbGetQuery(con, paste(
+    "SELECT local_id FROM local WHERE geoloc_id IN",
+    "(35095020001, 35095020002) ORDER BY local_id"))$local_id,
+    loc$local_id[order(loc$local_id)])
+  expect_identical(as.numeric(DBI::dbGetQuery(con, paste(
+    "SELECT count(*) AS n FROM niveis_carga",
+    "WHERE nivel_tipo = 'bairro'"))$n), 1)
+  expect_identical(nrow(beep:::painel_geo_irmaos_mun(
+    con, mun = "3509502", larg = 11)), 2L)
+})
+
