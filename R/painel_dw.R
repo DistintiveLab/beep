@@ -119,14 +119,19 @@ painel_locais <- function(con) {
            paste0(loc$local_name, " (id ", loc$local_id, ")"))
 }
 
-#' Codigo IBGE dos municipios (geoloc_id de 7 digitos) indexado pelo
-#' local_id — traduz a coluna "Codigo" das planilhas da aba Baixar
+#' Codigo IBGE das localidades com codigo externo, indexado pelo local_id —
+#' traduz a coluna "Codigo" das planilhas da aba Baixar: municipios
+#' (geoloc_id de 7 digitos) e niveis submunicipais (setor, bairro, area de
+#' ponderacao; larguras acima de 10, cujos geoloc_id sao os codigos
+#' divulgados pelo IBGE). Os demais niveis (UF, regioes, PNAD) nao tem
+#' codigo externo e continuam mostrando o local_id.
 #' @keywords internal
 painel_codigo_mun <- function(con) {
   cod <- DBI::dbGetQuery(con, paste(
     "SELECT l.local_id, g.geoloc_id::text AS codigo",
     "FROM local l JOIN geoloc g USING (geoloc_id)",
     "WHERE", painel_municipio_filtro(),
+    "OR length(g.geoloc_id::text) > 10",
     "ORDER BY l.local_id"))
   setNames(cod$codigo, as.character(cod$local_id))
 }
@@ -607,6 +612,39 @@ painel_geo_mun_uf <- function(con, uf) {
             painel_municipio_filtro()),
     "ORDER BY l.local_id"),
     uf), quiet = TRUE)
+  geo$code <- as.character(geo$local_id)
+  geo$label <- geo$local_name
+  geo[, c("code", "label", "geometry")]
+}
+
+#' Feicoes submunicipais do mesmo nivel dentro de um municipio (prefixo de
+#' 7 digitos do geoloc_id — setor, bairro e area de ponderacao codificam o
+#' municipio nos primeiros digitos), simplificadas no SQL — malha do globo
+#' quando o destaque e submunicipal: as feicoes do nivel tesselam o
+#' municipio em foco. Acima do teto de feicoes volta vazio e o globo fica
+#' apenas com o destaque sobre a UF (degradacao).
+#' @keywords internal
+painel_geo_irmaos_mun <- function(con, mun, larg = NULL, max_feicoes = 2000L) {
+  mun <- trimws(as.character(mun)[1])
+  if (is.na(mun) || !grepl("^[0-9]{7}$", mun)) return(painel_geo_vazio())
+  escopo <- sprintf("left(g.geoloc_id::text, 7) = '%s'", mun)
+  escopo <- if (!is.null(larg))
+    paste(escopo, sprintf("AND length(g.geoloc_id::text) = %d",
+                          as.integer(larg)))
+  else paste(escopo, "AND length(g.geoloc_id::text) > 10")
+  n_geo <- DBI::dbGetQuery(con, sprintf(paste(
+    "SELECT count(*)::int AS n FROM local l",
+    "JOIN geoloc g USING (geoloc_id) WHERE %s"), escopo))$n
+  if (!length(n_geo) || is.na(n_geo) || n_geo < 1L || n_geo > max_feicoes) {
+    return(painel_geo_vazio())
+  }
+  geo <- sf::st_read(con, query = sprintf(paste(
+    "SELECT l.local_id, l.local_name,",
+    "ST_SimplifyPreserveTopology(g.geometry, 0.0005) AS geometry",
+    "FROM local l JOIN geoloc g USING (geoloc_id)",
+    "WHERE %s",
+    "ORDER BY l.local_id"),
+    escopo), quiet = TRUE)
   geo$code <- as.character(geo$local_id)
   geo$label <- geo$local_name
   geo[, c("code", "label", "geometry")]
@@ -1139,6 +1177,38 @@ painel_geo_mun_uf_cache <- function(local_id) {
     painel_cache_ttl[["geo"]],
     function() painel_com_con(function(con) painel_geo_mun_uf(con, uf)))
   malha[malha$code != as.character(local_id), , drop = FALSE]
+}
+
+#' Malha decorativa do globo em torno da localidade em foco: selecao
+#' municipal desenha as bordas dos demais municipios do estado
+#' ([painel_geo_mun_uf_cache()]); selecao submunicipal (setor, bairro,
+#' area de ponderacao — geoloc_id com mais de 10 digitos) troca as bordas
+#' pelas proprias feicoes do nivel dentro do municipio em foco
+#' ([painel_geo_irmaos_mun()]), que tesselam o municipio inteiro. A feicao
+#' do destaque sai fora do cache (cada selecao exclui a si mesma), como em
+#' [painel_geo_mun_uf_cache()].
+#' @keywords internal
+painel_geo_malha_foco_cache <- function(local_id) {
+  local_id <- suppressWarnings(as.integer(local_id))[1]
+  if (is.na(local_id)) return(painel_geo_vazio())
+  codigo <- painel_com_con(function(con) DBI::dbGetQuery(con, sprintf(paste(
+    "SELECT g.geoloc_id::text AS codigo",
+    "FROM local l JOIN geoloc g USING (geoloc_id)",
+    "WHERE l.local_id = %d"),
+    local_id))$codigo)
+  codigo <- as.character(codigo)[1]
+  if (is.na(codigo) || !nzchar(codigo)) return(painel_geo_vazio())
+  if (nchar(codigo) > 10L) {
+    larg <- nchar(codigo)
+    mun <- substr(codigo, 1, 7)
+    malha <- painel_cache_get(
+      painel_cache_chave(sprintf("geo_irmaos_%d_%s", larg, mun)),
+      painel_cache_ttl[["geo"]],
+      function() painel_com_con(function(con)
+        painel_geo_irmaos_mun(con, mun = mun, larg = larg)))
+    return(malha[malha$code != as.character(local_id), , drop = FALSE])
+  }
+  painel_geo_mun_uf_cache(local_id)
 }
 
 #' UFs com dados num nivel, cacheado

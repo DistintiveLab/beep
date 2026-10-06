@@ -395,3 +395,45 @@ test_that("T6: incorporar_areas_ponderacao (geobr mockado) usa bloco AP", {
   expect_identical(as.integer(carga$ano), 2010L)
 })
 
+test_that("T7: painel traduz codigos submunicipais e desenha irmaos do foco", {
+  skip_if(!nzchar(Sys.getenv("BEEP_TEST_DW")),
+          "DW de teste local ausente (defina BEEP_TEST_DW)")
+  .fixture_niveis_dw()
+
+  # municipios proprios do teste (1302603, 1400283): irmaos deterministicos
+  # mesmo acumulando estado dos testes anteriores
+  polis <- c(
+    "POLYGON((-51.2 1.0, -51.1 1.0, -51.1 0.9, -51.2 0.9, -51.2 1.0))",
+    "POLYGON((-51.1 1.0, -51.0 1.0, -51.0 0.9, -51.1 0.9, -51.1 1.0))",
+    "POLYGON((-61.1 2.0, -61.0 2.0, -61.0 1.9, -61.1 1.9, -61.1 2.0))")
+  setores <- sf::st_sf(
+    code_tract = c("130260305020001", "130260305020002", "140028305020001"),
+    geometry = sf::st_as_sfc(polis), crs = 4326)
+  con <- .con_niveis_dw()
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+  r <- ampliar_nivel_territorial(setores, "setor",
+                                 col_codigo = "code_tract", con = con)
+  r_dois <- r$local_id[r$codigo %in% c("130260305020001", "130260305020002")]
+
+  ## aba Baixar: setor (15d) e municipio (7d) traduzidos pelo geoloc_id;
+  ## PNAD (largura 7, bloco 5571..7087) segue mostrando o local_id
+  cod <- beep:::painel_codigo_mun(con)
+  expect_identical(unname(cod["1"]), "1100203")
+  expect_setequal(unname(cod[as.character(r$local_id)]),
+                  as.character(r$codigo))
+  expect_false("5600" %in% names(cod))
+
+  ## globo: irmaos do municipio em foco tesselam o nivel (mesma largura,
+  ## mesmo prefixo 7d); municipio sem feicoes do nivel ou acima do teto
+  ## volta vazio (degradacao)
+  irmaos <- beep:::painel_geo_irmaos_mun(con, mun = "1302603", larg = 15)
+  expect_setequal(as.integer(irmaos$code), r_dois)
+  expect_true(all(grepl("^1302603", sf::st_drop_geometry(irmaos)$label)))
+  expect_identical(nrow(beep:::painel_geo_irmaos_mun(
+    con, mun = "1400283", larg = 15)), 1L)
+  expect_identical(nrow(beep:::painel_geo_irmaos_mun(
+    con, mun = "1302603", larg = 13)), 0L)
+  expect_identical(nrow(beep:::painel_geo_irmaos_mun(
+    con, mun = "1302603", larg = 15, max_feicoes = 1L)), 0L)
+})
+
