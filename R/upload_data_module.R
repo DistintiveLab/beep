@@ -54,7 +54,9 @@ upload_data_ui <- function(id) {
               "url de pasta ou combinada" = 10,
               "datasus" = 11,
               "raispsql" = 12,
-              "inep" = 13),
+              "inep" = 13,
+              "tse" = 14,
+              "censo" = 15),
             selected=11),
           shiny::textInput(ns("nomefonte"),"Nome curto para fonte","nova_fonte",width="200px","Indique um nome para a fonte"),
           shiny::uiOutput(ns("cargatipo")),
@@ -444,6 +446,24 @@ tipocarga <- reactive({
   } else if (input$sourcetype == "13") {
     upload_inep_server("inep",parent_session = session)
     upload_inep_ui(shiny::NS(id,"inep"),parent_session='data')
+  } else if (input$sourcetype == "14") {
+    if (requireNamespace("tsebr", quietly = TRUE)) {
+      upload_tsebr_server("tsebr",parent_session = session)
+      upload_tsebr_ui(shiny::NS(id,"tsebr"),parent_session=session)
+    } else {
+      shiny::helpText("Fonte desabilitada: instale o pacote tsebr ",
+                      "(remotes::install_github('DistintiveLab/tsebr')) ",
+                      "para habilitar dados do TSE.")
+    }
+  } else if (input$sourcetype == "15") {
+    if (requireNamespace("censoagg", quietly = TRUE)) {
+      upload_censobr_server("censo",parent_session = session)
+      upload_censobr_ui(shiny::NS(id,"censo"),parent_session=session)
+    } else {
+      shiny::helpText("Fonte desabilitada: instale os pacotes censoagg ",
+                      "(remotes::install_github('DistintiveLab/censoagg')) ",
+                      "e censobr para habilitar dados do Censo.")
+    }
   }
 
 })
@@ -912,6 +932,77 @@ tipocarga <- reactive({
 
             db_datawrite(list(mdatainep,mdata_extrinep),tabela,tttex)
 
+
+          } else if (input$sourcetype == 14 ) {
+            # tsebr: 1a linha do call string e o marcador de familia
+            if (!requireNamespace("tsebr", quietly = TRUE)) {
+              print("Fonte tse desabilitada: instale o pacote tsebr")
+            } else {
+            fam <- sub("^# tsebr-familia: ([a-z_]+).*", "\\1", input$upload_file)
+            codigo <- sub("^[^\n]+\n", "", input$upload_file)
+            tabela <- eval(parse(text=codigo))
+
+            ####DATAFILE WRITER
+
+            readr::write_csv(tabela,narq)
+
+            if (fam != "candidaturas") {
+              ###DB DATA WRITER (familias agregadas: municipio ou UF)
+
+              dsnid <- garantir_datasource_tse()
+
+              mdatatse <- data.frame(
+                orig_name=input$nomefonte,
+                data_name=paste0("tse_",fam,"_",input$nomefonte),
+                data_desc="auto import tse via tsebr - check source")
+
+              mdata_exstse <- data.frame(
+                data_class_id=1,
+                data_freq_id=9,
+                data_type_id=1,
+                datasource_id=dsnid,
+                data_url=input$upload_file)
+
+              db_datawrite(list(mdatatse,mdata_exstse),tabela,input$upload_file)
+            }
+            }
+
+          } else if (input$sourcetype == 15 ) {
+            # censoagg: eval devolve lista nomeada variavel -> long
+            if (!requireNamespace("censoagg", quietly = TRUE)) {
+              print("Fonte censo desabilitada: instale censoagg e censobr")
+            } else {
+            tabela <- eval(parse(text=input$upload_file))
+            if (!inherits(tabela, "list")) tabela <- list(censo=tabela)
+
+            combinada <- data.table::rbindlist(
+              lapply(names(tabela), \(nm)
+                     transform(tabela[[nm]], variavel = nm)),
+              fill = TRUE)
+
+            ####DATAFILE WRITER
+
+            readr::write_csv(combinada,narq)
+
+            ###DB DATA WRITER (uma serie por variavel)
+
+            dsnidc <- garantir_datasource_censo()
+
+            for (nm in names(tabela)) {
+              tt <- tabela[[nm]]
+              mdatac <- data.frame(
+                orig_name=input$nomefonte,
+                data_name=paste0(input$nomefonte,"_",nm),
+                data_desc="auto import censo via censoagg - check source")
+              mdata_extc <- data.frame(
+                data_class_id=1,
+                data_freq_id=9,
+                data_type_id=1,
+                datasource_id=dsnidc,
+                data_url=input$upload_file)
+              db_datawrite(list(mdatac,mdata_extc),tt,input$upload_file)
+            }
+            }
 
           }
 

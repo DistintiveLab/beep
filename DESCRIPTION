@@ -67,6 +67,8 @@ Suggests:
     pkgload,
     processx,
     testthat,
+    censoagg,
+    tsebr,
     usethis
 RdMacros: 
     lifecycle
@@ -77,7 +79,9 @@ Remotes:
     rodrigoesborges/datasus@2ff4449,
     rodrigoesborges/edubr,
     tomicapretto/shinymath,
-    DistintiveLab/shinyGovBRstyle
+    DistintiveLab/shinyGovBRstyle,
+    DistintiveLab/tsebr,
+    DistintiveLab/censoagg
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Collate: 
@@ -133,10 +137,12 @@ Collate:
     'ui_sidebar.R'
     'ui_zcontact_dropdown.R'
     'upload_data_module.R'
+    'upload_censobr.R'
     'upload_datasus.R'
     'upload_inep.R'
     'upload_raispsql.R'
     'upload_sidraibge.R'
+    'upload_tsebr.R'
     'utils-pipe.R'
     'utils.R'
     'verifica_fonte.R'

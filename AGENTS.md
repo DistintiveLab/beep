@@ -113,13 +113,25 @@ are dynamically injected inside `upload_data_module` based on `input$sourcetype`
 | 11 | DATASUS | `upload_datasus.R` | `datasus::<func>(...)` call string |
 | 12 | RAIS (PostgreSQL) | `upload_raispsql.R` | RAIS query call string |
 | 13 | INEP / IDEB | `upload_inep.R` | `educabR::le_ideb(...)` call string |
+| 14 | TSE (via `tsebr`) | `upload_tsebr.R` | call string com marcador `# tsebr-familia:` -> séries municipais/UF (`tse_resultados_municipio`, `tse_detalhe_municipio`, `tse_prestacao_uf`); candidaturas = só CSV de referência |
+| 15 | IBGE Censo (via `censoagg`/`censobr`) | `upload_censobr.R` | call string com marcador `# censo-origem:` -> lista nomeada variável -> long; uma série (`mdata`) por variável |
 | 1/2/9 | URL / local upload / server file | inline in `upload_data_module.R` | file path |
 
 **Key pattern:** Submodules do *not* fetch data themselves. They build an **R
 expression as a text string** and write it into the parent module's `upload_file`
 input via `updateTextInput(session = parent_session, "upload_file", value = ...)`.
 The parent's `selected_files()` reactive then does `eval(parse(text = input$upload_file))`
-to actually execute it. New source types must follow this contract.
+to actually execute it. New source types must follow this contract. Os
+submódulos 14/15 prefixam o call string com um **marcador na primeira linha**
+(`# tsebr-familia:` / `# censo-origem:`) que o ramo do `selected_files` consome
+(e remove antes do eval) para decidir o reshape/escrita.
+
+Datasources `TSE` e `IBGE Censo` são criados sob demanda no DW por
+`garantir_datasource_tse()` / `garantir_datasource_censo()` (idempotentes pelo
+nome; types 4=ckan e 6=ibge_ftp). Dados por seção eleitoral/setor censitário
+**não** entram no DW ainda (não há níveis submunicipais no `local`): perfis do
+eleitorado por seção ficam no pacote (`tsebr::tse_perfis_secao`) até o trilho
+territorial ser implementado.
 
 ### Data write pipeline
 
