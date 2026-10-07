@@ -44,3 +44,11 @@ test_that("contrato do branch: lista vira serie por variavel (mirror)", {
   expect_setequal(combinada$variavel, c("V0001", "V0002"))
   expect_identical(nrow(combinada), 2L)
 })
+
+test_that("UI do submodulo censo renderiza com parent_session real", {
+  sess_fake <- list(ns = function(x) paste0("data:", x))
+  ui <- upload_censobr_ui(shiny::NS("data", "censo"), parent_session = sess_fake)
+  expect_s3_class(ui, "shiny.tag.list")
+  html <- paste(capture.output(print(ui)), collapse = " ")
+  expect_match(html, "data:upload_file", fixed = TRUE)
+})

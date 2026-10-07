@@ -42,3 +42,11 @@ test_that("familia desconhecida aborta", {
   expect_error(gerar_call_tsebr("perfil_secao", 2026, "DF"),
                "familia desconhecida")
 })
+
+test_that("UI do submodulo renderiza com parent_session real (nao string)", {
+  sess_fake <- list(ns = function(x) paste0("data:", x))
+  ui <- upload_tsebr_ui(shiny::NS("data", "tsebr"), parent_session = sess_fake)
+  expect_s3_class(ui, "shiny.tag.list")
+  html <- paste(capture.output(print(ui)), collapse = " ")
+  expect_match(html, "data:upload_file", fixed = TRUE)
+})

@@ -17,7 +17,7 @@
 
 upload_tsebr_ui <- function(id, parent_session) {
   ns <- shiny::NS(id)
-  nsp <- shiny::NS(parent_session)
+  nsp <- parent_session$ns
   tagList(
     shiny::selectizeInput(
       ns("tsefam"), "Família de dados",

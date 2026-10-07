@@ -54,9 +54,13 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   geobrimmediater <- geobr::read_immediate_region(year = 2020, simplified = TRUE)
   geobrintermr <- geobr::read_intermediate_region(year = 2020)
   geobrstates <- geobr::read_state(year = 2020)
-  geobrcitiesm <- geobr::read_municipal_seat(year = 2010)
-  geobrsemiarid <- geobr::read_semiarid(year = 2022)
-  geobramazonia_legal <- geobr::read_amazon(year = 2012)
+  ## cargas opcionais (recortes): falha de download nao aborta o
+  ## seeder — o bloco correspondente e pulado com aviso e a matview
+  ## recortes_geograficos nasce sem a coluna
+  geobrsemiarid <- tryCatch(geobr::read_semiarid(year = 2022),
+    error = \(e) { warning("semiarido indisponivel: ", conditionMessage(e)); NULL })
+  geobramazonia_legal <- tryCatch(geobr::read_amazon(year = 2012),
+    error = \(e) { warning("amazonia legal indisponivel: ", conditionMessage(e)); NULL })
 
   ## niveles -> leitor geobr + colunas de codigo/nome
   espec_retwritegeo <- list(
@@ -70,6 +74,14 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
                        code = "code_state", nome = "name_state"),
     Region      = list(dados = function() geobr::read_region(year = 2020),
                        code = "code_region", nome = "name_region"))
+
+  ## buffer em metros: CRS geografico exige projecao metrica
+  ## (o original bufferizava 500 GRAUS em SIRGAS 2000)
+  buffer_metrico <- \(geom, metros) {
+    sf::st_transform(
+      sf::st_buffer(sf::st_transform(geom, 5880), metros),
+      crs = "+proj=longlat +datum=WGS84 +no_defs")
+  }
 
   retwritegeo <- \(levelgeo = "City") {
     esp <- espec_retwritegeo[[levelgeo]]
@@ -128,28 +140,34 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
 
   ## 4) Regioes imediatas/intermediarias (geobr 2020) ----------------
   ## SUDENE (ODS do geoftp IBGE)
-  tmp_file_sudene <- tempfile(fileext = ".ods")
-  download.file("http://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/area_atuacao_SUDENE/2021/SUDENE_2021.ods",
-                tmp_file_sudene)
-  ibgesudene <- readODS::read_ods(tmp_file_sudene)
+  ibgesudene <- tryCatch({
+    tmp_file_sudene <- tempfile(fileext = ".ods")
+    download.file("http://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/area_atuacao_SUDENE/2021/SUDENE_2021.ods",
+                  tmp_file_sudene)
+    readODS::read_ods(tmp_file_sudene)$CD_MUN
+  }, error = \(e) { warning("SUDENE indisponivel: ", conditionMessage(e)); NULL })
 
   ## Faixa de Fronteira (shapefile do geoftp IBGE)
-  dir.create('/tmp/ffront', showWarnings = FALSE)
-  f <- "/tmp/ffront/ffront.zip"
-  download.file("https://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/municipios_da_faixa_de_fronteira/2022/Sedes_Municipios_Faixa_de_Fronteira_Cidades_Gemeas_2022_shp.zip", f)
-  utils::unzip(f, exdir = "/tmp/ffront", overwrite = TRUE)
-  ffront <- sf::read_sf("/tmp/ffront/Sedes_Municipios_Faixa_de_Fronteira_Cidades_Gemeas_2022.shp")
-  ffront <- sf::st_transform(ffront, crs = "+proj=longlat +datum=WGS84 +no_defs")
+  ffront <- tryCatch({
+    dir.create('/tmp/ffront', showWarnings = FALSE)
+    f <- "/tmp/ffront/ffront.zip"
+    download.file("https://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/municipios_da_faixa_de_fronteira/2022/Sedes_Municipios_Faixa_de_Fronteira_Cidades_Gemeas_2022_shp.zip", f)
+    utils::unzip(f, exdir = "/tmp/ffront", overwrite = TRUE)
+    sf::st_transform(sf::read_sf("/tmp/ffront/Sedes_Municipios_Faixa_de_Fronteira_Cidades_Gemeas_2022.shp"),
+                     crs = "+proj=longlat +datum=WGS84 +no_defs")
+  }, error = \(e) { warning("faixa de fronteira indisponivel: ", conditionMessage(e)); NULL })
 
   ## associacao municipio x regioes (buffer de 500 m para casar bordas)
   juntaspa <- sf::st_join(
     geobrcities,
-    geobrimmediater |> dplyr::select(dplyr::contains("immediate")) |>
-      sf::st_buffer(500), join = sf::st_within)
+    buffer_metrico(geobrimmediater |>
+                     dplyr::select(dplyr::contains("immediate")), 500),
+    join = sf::st_within)
   juntaspa <- sf::st_join(
     juntaspa,
-    geobrintermr |> dplyr::select(dplyr::contains("intermediate")) |>
-      sf::st_buffer(500), join = sf::st_within)
+    buffer_metrico(geobrintermr |>
+                     dplyr::select(dplyr::contains("intermediate")), 500),
+    join = sf::st_within)
   juntaspa <- sf::st_transform(juntaspa, crs = "+proj=longlat +datum=WGS84 +no_defs")
 
   ## 3) Estratos PNAD Contínua ---------------------------------------
@@ -278,94 +296,107 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
     }
   }
 
+  if (!is.null(ffront)) {
   ## Faixa de Fronteira
-  maxgrpid <- DBI::dbGetQuery(con, "SELECT MAX(datagroup_id) FROM datagroup;")$max + 1
-  DBI::dbAppendTable(con, "datagroup", data.frame(
-    datagroup_id = maxgrpid:(maxgrpid + 2),
-    datagroup_name = c("Faixa de Fronteira", "em faixa de fronteira",
-                       "fora da faixa de fronteira"),
-    datagroup_desc = c("Situação Quanto à Faixa de Fronteira",
-                       "Município/Área em Faixa de Fronteira",
-                       "Município/Área Fora da Faixa de Fronteira")))
-  ffrontcdm <- (ffront |> sf::st_drop_geometry())$CD_MUN
-  dgidff <- DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup where datagroup_name LIKE '%em faixa%'")$datagroup_id
-  local_group_ff <- geobrcities |> sf::st_drop_geometry() |>
-    dplyr::left_join(mapa_mun, by = "code_muni") |>
-    dplyr::transmute(local_id,
-                     datagroup_id = dplyr::case_when(
-                       code_muni %in% ffrontcdm ~ dgidff, TRUE ~ dgidff + 1)) |>
-    dplyr::filter(!is.na(local_id))
-  DBI::dbAppendTable(con, "local_group", local_group_ff)
-  DBI::dbAppendTable(con, "group_parent", data.frame(
-    datagroup_id = dgidff,
-    datagroup_parentid = DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup WHERE datagroup_name = 'Faixa de Fronteira'")$datagroup_id))
+    ## Faixa de Fronteira
+    maxgrpid <- DBI::dbGetQuery(con, "SELECT MAX(datagroup_id) FROM datagroup;")$max + 1
+    DBI::dbAppendTable(con, "datagroup", data.frame(
+      datagroup_id = maxgrpid:(maxgrpid + 2),
+      datagroup_name = c("Faixa de Fronteira", "em faixa de fronteira",
+                         "fora da faixa de fronteira"),
+      datagroup_desc = c("Situação Quanto à Faixa de Fronteira",
+                         "Município/Área em Faixa de Fronteira",
+                         "Município/Área Fora da Faixa de Fronteira")))
+    ffrontcdm <- (ffront |> sf::st_drop_geometry())$CD_MUN
+    dgidff <- DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup where datagroup_name LIKE '%em faixa%'")$datagroup_id
+    local_group_ff <- geobrcities |> sf::st_drop_geometry() |>
+      dplyr::left_join(mapa_mun, by = "code_muni") |>
+      dplyr::transmute(local_id,
+                       datagroup_id = dplyr::case_when(
+                         code_muni %in% ffrontcdm ~ dgidff, TRUE ~ dgidff + 1)) |>
+      dplyr::filter(!is.na(local_id))
+    DBI::dbAppendTable(con, "local_group", local_group_ff)
+    DBI::dbAppendTable(con, "group_parent", data.frame(
+      datagroup_id = dgidff,
+      datagroup_parentid = DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup WHERE datagroup_name = 'Faixa de Fronteira'")$datagroup_id))
+  } else warning("faixa de fronteira indisponivel - recorte nao criado")
 
+  if (!is.null(geobramazonia_legal)) {
   ## Amazonia Legal
-  maxgrpid <- DBI::dbGetQuery(con, "SELECT MAX(datagroup_id) FROM datagroup;")$max + 1
-  DBI::dbAppendTable(con, "datagroup", data.frame(
-    datagroup_id = maxgrpid:(maxgrpid + 2),
-    datagroup_name = c("Participacação na Amazônia Legal",
-                       "faz parte da Amazônia Legal",
-                       "não faz parte da Amazônia Legal"),
-    datagroup_desc = c("Participacação na Amazônia Legal",
-                       "Município/Área faz parte da Amazônia Legal",
-                       "Município/Área não faz parte da Amazônia Legal")))
-  amlegalcm <- sf::st_within(geobrcities,
-                             sf::st_buffer(geobramazonia_legal, 500), sparse = FALSE)
-  dgidal <- DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup where datagroup_name LIKE '%faz parte da Amaz%'")$datagroup_id
-  local_group_al <- geobrcities |> sf::st_drop_geometry() |>
-    dplyr::mutate(amzlegal = as.logical(amlegalcm)) |>
-    dplyr::left_join(mapa_mun, by = "code_muni") |>
-    dplyr::transmute(local_id,
-                     datagroup_id = dplyr::case_when(
-                       amzlegal ~ dgidal[1], TRUE ~ dgidal[2])) |>
-    dplyr::filter(!is.na(local_id))
-  DBI::dbAppendTable(con, "local_group", local_group_al)
-  DBI::dbAppendTable(con, "group_parent", data.frame(
-    datagroup_id = dgidal,
-    datagroup_parentid = DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup WHERE datagroup_name LIKE '%o na Amaz%'")$datagroup_id))
+    ## Amazonia Legal
+    maxgrpid <- DBI::dbGetQuery(con, "SELECT MAX(datagroup_id) FROM datagroup;")$max + 1
+    DBI::dbAppendTable(con, "datagroup", data.frame(
+      datagroup_id = maxgrpid:(maxgrpid + 2),
+      datagroup_name = c("Participacação na Amazônia Legal",
+                         "faz parte da Amazônia Legal",
+                         "não faz parte da Amazônia Legal"),
+      datagroup_desc = c("Participacação na Amazônia Legal",
+                         "Município/Área faz parte da Amazônia Legal",
+                         "Município/Área não faz parte da Amazônia Legal")))
+    amlegalcm <- sf::st_within(geobrcities,
+                             buffer_metrico(geobramazonia_legal, 500),
+                             sparse = FALSE)
+    dgidal <- DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup where datagroup_name LIKE '%faz parte da Amaz%'")$datagroup_id
+    local_group_al <- geobrcities |> sf::st_drop_geometry() |>
+      dplyr::mutate(amzlegal = as.logical(amlegalcm)) |>
+      dplyr::left_join(mapa_mun, by = "code_muni") |>
+      dplyr::transmute(local_id,
+                       datagroup_id = dplyr::case_when(
+                         amzlegal ~ dgidal[1], TRUE ~ dgidal[2])) |>
+      dplyr::filter(!is.na(local_id))
+    DBI::dbAppendTable(con, "local_group", local_group_al)
+    DBI::dbAppendTable(con, "group_parent", data.frame(
+      datagroup_id = dgidal,
+      datagroup_parentid = DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup WHERE datagroup_name LIKE '%o na Amaz%'")$datagroup_id))
+  } else warning("amazonia legal indisponivel - recorte nao criado")
 
+  if (!is.null(geobrsemiarid)) {
   ## Semiarido
-  maxgrpid <- DBI::dbGetQuery(con, "SELECT MAX(datagroup_id) FROM datagroup;")$max + 1
-  DBI::dbAppendTable(con, "datagroup", data.frame(
-    datagroup_id = maxgrpid:(maxgrpid + 2),
-    datagroup_name = c("Participação no Semiárido", "no Semiárido", "Fora do Semiárido"),
-    datagroup_desc = c("Participação no Semiárido para Fins de Políticas Públicas",
-                       "Município/Zona no Semiárido",
-                       "Município/Zona Fora do Semiárido")))
-  semiacn <- (geobrsemiarid |> sf::st_drop_geometry())$code_muni
-  dgidsa <- DBI::dbGetQuery(con, "SELECT regexp_matches(datagroup_name,'(([^o] )|^)[dn]o Semi'), datagroup_id from datagroup")$datagroup_id
-  DBI::dbAppendTable(con, "group_parent", data.frame(
-    datagroup_id = dgidsa,
-    datagroup_parentid = DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup WHERE datagroup_name = 'Participação no Semiárido'")$datagroup_id))
-  local_group_sa <- geobrcities |> sf::st_drop_geometry() |>
-    dplyr::left_join(mapa_mun, by = "code_muni") |>
-    dplyr::transmute(local_id,
-                     datagroup_id = dplyr::case_when(
-                       code_muni %in% semiacn ~ dgidsa[1], TRUE ~ dgidsa[2])) |>
-    dplyr::filter(!is.na(local_id))
-  DBI::dbAppendTable(con, "local_group", local_group_sa)
+    ## Semiarido
+    maxgrpid <- DBI::dbGetQuery(con, "SELECT MAX(datagroup_id) FROM datagroup;")$max + 1
+    DBI::dbAppendTable(con, "datagroup", data.frame(
+      datagroup_id = maxgrpid:(maxgrpid + 2),
+      datagroup_name = c("Participação no Semiárido", "no Semiárido", "Fora do Semiárido"),
+      datagroup_desc = c("Participação no Semiárido para Fins de Políticas Públicas",
+                         "Município/Zona no Semiárido",
+                         "Município/Zona Fora do Semiárido")))
+    semiacn <- (geobrsemiarid |> sf::st_drop_geometry())$code_muni
+    dgidsa <- DBI::dbGetQuery(con, "SELECT regexp_matches(datagroup_name,'(([^o] )|^)[dn]o Semi'), datagroup_id from datagroup")$datagroup_id
+    DBI::dbAppendTable(con, "group_parent", data.frame(
+      datagroup_id = dgidsa,
+      datagroup_parentid = DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup WHERE datagroup_name = 'Participação no Semiárido'")$datagroup_id))
+    local_group_sa <- geobrcities |> sf::st_drop_geometry() |>
+      dplyr::left_join(mapa_mun, by = "code_muni") |>
+      dplyr::transmute(local_id,
+                       datagroup_id = dplyr::case_when(
+                         code_muni %in% semiacn ~ dgidsa[1], TRUE ~ dgidsa[2])) |>
+      dplyr::filter(!is.na(local_id))
+    DBI::dbAppendTable(con, "local_group", local_group_sa)
+  } else warning("semiarido indisponivel - recorte nao criado")
 
+  if (!is.null(ibgesudene)) {
   ## SUDENE
-  maxgrpid <- DBI::dbGetQuery(con, "SELECT MAX(datagroup_id) FROM datagroup;")$max + 1
-  DBI::dbAppendTable(con, "datagroup", data.frame(
-    datagroup_id = maxgrpid:(maxgrpid + 2),
-    datagroup_name = c("Participação na SUDENE", "na SUDENE", "Fora da SUDENE"),
-    datagroup_desc = c("Participação na SUDENE para Fins de Políticas Públicas",
-                       "Município/Zona na SUDENE",
-                       "Município/Zona Fora da SUDENE")))
-  ibgesudene <- ibgesudene$CD_MUN
-  dgidsudene <- DBI::dbGetQuery(con, "SELECT regexp_matches(datagroup_name,'(([^o] )|^)[dn]a SUDENE'), datagroup_id from datagroup")$datagroup_id
-  DBI::dbAppendTable(con, "group_parent", data.frame(
-    datagroup_id = dgidsudene,
-    datagroup_parentid = DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup WHERE datagroup_name = 'Participação na SUDENE'")$datagroup_id))
-  local_group_sudene <- geobrcities |> sf::st_drop_geometry() |>
-    dplyr::left_join(mapa_mun, by = "code_muni") |>
-    dplyr::transmute(local_id,
-                     datagroup_id = dplyr::case_when(
-                       code_muni %in% ibgesudene ~ dgidsudene[1], TRUE ~ dgidsudene[2])) |>
-    dplyr::filter(!is.na(local_id))
-  DBI::dbAppendTable(con, "local_group", local_group_sudene)
+    ## SUDENE
+    maxgrpid <- DBI::dbGetQuery(con, "SELECT MAX(datagroup_id) FROM datagroup;")$max + 1
+    DBI::dbAppendTable(con, "datagroup", data.frame(
+      datagroup_id = maxgrpid:(maxgrpid + 2),
+      datagroup_name = c("Participação na SUDENE", "na SUDENE", "Fora da SUDENE"),
+      datagroup_desc = c("Participação na SUDENE para Fins de Políticas Públicas",
+                         "Município/Zona na SUDENE",
+                         "Município/Zona Fora da SUDENE")))
+    dgidsudene <- DBI::dbGetQuery(con, "SELECT regexp_matches(datagroup_name,'(([^o] )|^)[dn]a SUDENE'), datagroup_id from datagroup")$datagroup_id
+    DBI::dbAppendTable(con, "group_parent", data.frame(
+      datagroup_id = dgidsudene,
+      datagroup_parentid = DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup WHERE datagroup_name = 'Participação na SUDENE'")$datagroup_id))
+    local_group_sudene <- geobrcities |> sf::st_drop_geometry() |>
+      dplyr::left_join(mapa_mun, by = "code_muni") |>
+      dplyr::transmute(local_id,
+                       datagroup_id = dplyr::case_when(
+                         code_muni %in% ibgesudene ~ dgidsudene[1], TRUE ~ dgidsudene[2])) |>
+      dplyr::filter(!is.na(local_id))
+    DBI::dbAppendTable(con, "local_group", local_group_sudene)
+  } else warning("SUDENE indisponivel - recorte nao criado")
+
 
   ## Regioes Imediatas/Intermediarias + UF + Regiao
   dgidmax <- DBI::dbGetQuery(con, "SELECT MAX(datagroup_id) from datagroup;")$max + 1
