@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9001</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,13 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.0.9002" id="beep-0909002">beep 0.9.0.9002<a class="anchor" aria-label="anchor" href="#beep-0909002"></a></h2>
+<div class="section level3">
+<h3 id="prepare_db-funciona-fora-da-raiz-do-pacote-0-9-0-9002">prepare_db funciona fora da raiz do pacote<a class="anchor" aria-label="anchor" href="#prepare_db-funciona-fora-da-raiz-do-pacote-0-9-0-9002"></a></h3>
+<ul><li>O bloco geo fazia <code>source('R/create_extend_geogroup_view.R')</code> (caminho relativo: só funcionava com o cwd na raiz do beep, quebrava com o pacote instalado ou rodando de outro projeto) e chamava <code>criar_recortes_geograficos()</code> sem conexão, caindo no banco de dev via env vars. Agora a função do namespace é chamada com a conexão corrente (<code>con</code>) da própria execução — os matviews <code>recortes_geograficos</code>/<code>geonamed_datavalues</code> nascem no banco alvo.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0.9001" id="beep-0909001">beep 0.9.0.9001<a class="anchor" aria-label="anchor" href="#beep-0909001"></a></h2>
 <div class="section level3">

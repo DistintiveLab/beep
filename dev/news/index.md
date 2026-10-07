@@ -1,5 +1,17 @@
 # Changelog
 
+## beep 0.9.0.9002
+
+### prepare_db funciona fora da raiz do pacote
+
+- O bloco geo fazia `source('R/create_extend_geogroup_view.R')` (caminho
+  relativo: só funcionava com o cwd na raiz do beep, quebrava com o
+  pacote instalado ou rodando de outro projeto) e chamava
+  `criar_recortes_geograficos()` sem conexão, caindo no banco de dev via
+  env vars. Agora a função do namespace é chamada com a conexão corrente
+  (`con`) da própria execução — os matviews
+  `recortes_geograficos`/`geonamed_datavalues` nascem no banco alvo.
+
 ## beep 0.9.0.9001
 
 ### Correções no prepare_db
