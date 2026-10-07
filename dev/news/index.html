@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9004</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,14 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.0.9005" id="beep-0909005">beep 0.9.0.9005<a class="anchor" aria-label="anchor" href="#beep-0909005"></a></h2>
+<div class="section level3">
+<h3 id="fk-de-_parentid-no-sqlite-segue-o-desenho-do-prepare_db-0-9-0-9005">FK de *_parentid no sqlite segue o desenho do prepare_db<a class="anchor" aria-label="anchor" href="#fk-de-_parentid-no-sqlite-segue-o-desenho-do-prepare_db-0-9-0-9005"></a></h3>
+<ul><li>O bloco genérico de FKs do sqlite não emite mais constraint para colunas <code>*_parentid</code> (gerava referência a coluna inexistente na tabela-pai). Quem cria o vínculo correto é o bloco especial da tabela: <code>group_parent.datagroup_id</code> E <code>datagroup_parentid</code> referenciam ambos <code>datagroup(datagroup_id)</code>, cada um como constraint própria (sem duplicação). Fluxo sqlite completo sem erros. Via pgsql inalterada (fk_relations já usava nomes únicos e referência <code>&lt;tabela&gt;_id</code>).</li>
+<li>Re-execução continua por design: erros de “already exists” em PKs/FKs são suprimidos e o estado final permanece íntegro.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0.9004" id="beep-0909004">beep 0.9.0.9004<a class="anchor" aria-label="anchor" href="#beep-0909004"></a></h2>
 <div class="section level3">

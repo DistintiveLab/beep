@@ -1,5 +1,19 @@
 # Changelog
 
+## beep 0.9.0.9005
+
+### FK de \*\_parentid no sqlite segue o desenho do prepare_db
+
+- O bloco genérico de FKs do sqlite não emite mais constraint para
+  colunas `*_parentid` (gerava referência a coluna inexistente na
+  tabela-pai). Quem cria o vínculo correto é o bloco especial da tabela:
+  `group_parent.datagroup_id` E `datagroup_parentid` referenciam ambos
+  `datagroup(datagroup_id)`, cada um como constraint própria (sem
+  duplicação). Fluxo sqlite completo sem erros. Via pgsql inalterada
+  (fk_relations já usava nomes únicos e referência `<tabela>_id`).
+- Re-execução continua por design: erros de “already exists” em PKs/FKs
+  são suprimidos e o estado final permanece íntegro.
+
 ## beep 0.9.0.9004
 
 ### Reversão das mudanças de FK do prepare_db
