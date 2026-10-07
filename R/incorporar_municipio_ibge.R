@@ -5,7 +5,11 @@
 # (local_id 7088, 7089, ...) — nunca renumerar ids existentes: data_values
 # referencia local_id e qualquer renumeracao quebraria o historico. A
 # identificacao semantica de municipio em todo o ecossistema passa a ser:
-# geoloc_id de 7 digitos E (local_id < 5571 OU local_id > 7087).
+# geoloc_id de 7 digitos E (local_id < 5572 OU local_id > id do
+# Brasil). A fronteira superior e dinamica: o local_id da linha
+# "Brasil" (7087 na numeracao antiga; 6412 na gerada pelo
+# populate_initialdb com a malha 2024, onde os municipios
+# incorporados entram apos ele).
 
 #' Baixa e le um JSON da API do IBGE com tratamento de erro
 #' @keywords internal
@@ -182,13 +186,22 @@ incorporar_municipio_ibge <- function(geoloc_id, municipio_referencia = NULL,
   id_rgint <- if (!is.na(parent_rgint))
     .grupo_por_nome(con, rgint_nome, parent_rgint) else NA_integer_
 
+  ## fronteira superior dos municipios: local_id da linha Brasil
+  ## (numericacao antiga 7087; malha 2024 do seeder 6412+)
+  limite_munis <- suppressWarnings(DBI::dbGetQuery(con, paste(
+    "SELECT local_id FROM local WHERE local_name = 'Brasil'",
+    "ORDER BY local_id LIMIT 1"))$local_id[1])
+  if (is.na(limite_munis)) limite_munis <- 7087L
+
   ref <- municipio_referencia
   if (is.null(ref) && !is.na(id_rgi)) {
     ref <- DBI::dbGetQuery(con, paste(
       "SELECT lg.local_id FROM local_group lg",
+      "JOIN local l ON l.local_id = lg.local_id",
       "WHERE lg.datagroup_id = $1",
-      "AND (lg.local_id < 5571 OR lg.local_id > 7087) LIMIT 1"),
-      params = list(id_rgi))$local_id
+      "AND length(l.geoloc_id::text) = 7",
+      "AND (lg.local_id < 5572 OR lg.local_id > $2) LIMIT 1"),
+      params = list(id_rgi, limite_munis))$local_id
     if (!length(ref)) ref <- NULL
   }
   if (is.null(ref)) {
@@ -202,7 +215,8 @@ incorporar_municipio_ibge <- function(geoloc_id, municipio_referencia = NULL,
     "WHERE local_id = $1 OR (geoloc_id = $1 AND length(geoloc_id::text) = 7)"),
     params = list(ref_num))
   if (!nrow(ref_row) ||
-      (ref_row$local_id[1] >= 5571 && ref_row$local_id[1] <= 7087)) {
+      (ref_row$local_id[1] >= 5572 &&
+       ref_row$local_id[1] <= limite_munis)) {
     stop("municipio_referencia nao encontrado ou nao e municipio")
   }
   ref_id <- as.integer(ref_row$local_id[1])
