@@ -13,8 +13,10 @@ test_that("painel_nivel_parse decodifica larguras e o subnivel PNAD", {
   expect_identical(p7$chave, "7")
   expect_identical(
     p7$filtro,
-    sprintf("length(g.geoloc_id::text) = 7 AND (l.local_id < %d OR l.local_id > %d)",
-            beep:::painel_municipio_limite_id, beep:::painel_pnad_bloco_fim))
+    sprintf(paste0("length(g.geoloc_id::text) = 7 AND ",
+                   "(l.local_id < %d OR (l.local_id > %d AND l.local_id < %d))"),
+            beep:::painel_municipio_limite_id, beep:::painel_pnad_bloco_fim,
+            beep:::painel_submunicipal_inicio))
 
   pp <- beep:::painel_nivel_parse("7p")
   expect_identical(pp$nivel, 7L)
@@ -46,6 +48,7 @@ test_that("rotulo e fronteira do subnivel PNAD estao no lugar", {
   expect_identical(unname(beep:::painel_niveis_rotulo["7p"]),
                    "Região de interesse PNAD")
   expect_identical(beep:::painel_municipio_limite_id, 5572L)
+  expect_identical(beep:::painel_submunicipal_inicio, 100000L)
 })
 
 test_that("guards dos caches com a nova chave retornam vazio sem tocar no banco", {

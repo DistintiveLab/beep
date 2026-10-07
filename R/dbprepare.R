@@ -485,6 +485,11 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
     ## mvis, datasource
     ##Error : Failed to fetch row: ERROR:  multiple primary keys for table \"data_class\" are not allowed\n\n
 
+    ## niveis submunicipais desde a criacao: geoloc_id BIGINT + nivel_tipo
+    ## (sem matviews ainda, o ALTER e imediato; a FK local->geoloc criada
+    ## acima e dropada/recriada pela propria funcao)
+    preparar_niveis_submunicipais(con = con)
+
 
     tryCatch(DBI::dbExecute(con,paste0("CREATE MATERIALIZED VIEW named_datavalues as ",
                               "SELECT datasource_name,orig_name,",

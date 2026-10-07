@@ -19,9 +19,15 @@ anos_rais <- function(con) {
 
 #' Monta o lookup de codigos de local para local_id do DW
 #'
-#' Prioridade: prefixo IBGE 6d (RAIS) > proprio local_id > geoloc_id completo.
-#' O prefixo 6d vem primeiro porque o geoloc_id das Regioes Imediatas
-#' tem 6 digitos e collide com o codigo 6d do municipio (1100023 -> 110002).
+#' Prioridade: prefixo IBGE 6d do MUNICIPIO (RAIS) > proprio local_id >
+#' geoloc_id completo (texto normalizado — códigos submunicipais de 11-16
+#' digitos resolvem aqui pelo codigo cheio). O prefixo 6d vem SOMENTE das
+#' linhas de municipio (largura 7 do geoloc_id), na ordem de local_id: um
+#' setor censitario cujo prefixo 6d e o codigo de municipio nao pode
+#' sombrear o municipio (roadmap F1), e as Regioes Imediatas (geoloc 6d que
+#' collide com o prefixo do municipio, 1100023 -> 110002) ficam fora do
+#' mapa de prefixo — codigo 6d de entrada e sempre municipio na semantica
+#' RAIS/IBGE.
 #' O local_id vem antes do geoloc_id completo porque derivacoes DW->DW
 #' (padrao A5b) repassam local_ids, e os ids pequenos dos municipios
 #' collidem com geoloc_ids de agregados (1=Alta Floresta vs 1=Norte,
@@ -37,13 +43,15 @@ anos_rais <- function(con) {
 montar_lookup_locais <- function(locais) {
   limite_br <- suppressWarnings(locais$local_id[
     locais$local_name == "Brasil"][1])
-  if (is.na(limite_br)) limite_br <- 7087
-  eh_mun <- locais$local_id < 6000 | locais$local_id > limite_br
+  if (is.na(limite_br)) limite_br <- niveis_pnad_bloco_fim
+  geo_txt <- normalizar_codigo_geoloc(locais$geoloc_id)
+  ordem <- order(locais$local_id)
+  mun7 <- ordem[eh_municipio_id(locais$local_id, bloco_fim = limite_br) &
+                  nchar(geo_txt) == 7L]
   lookup <- c(
-    setNames(locais$local_id[eh_mun],
-             as.numeric(substr(as.character(locais$geoloc_id[eh_mun]), 1, 6))),
+    setNames(locais$local_id[mun7], substr(geo_txt[mun7], 1, 6)),
     setNames(locais$local_id, as.character(locais$local_id)),
-    setNames(locais$local_id, as.character(locais$geoloc_id)))
+    setNames(locais$local_id, geo_txt))
   lookup[!duplicated(names(lookup))]
 }
 
@@ -86,7 +94,11 @@ gravar_serie_dw <- function(orig_name, serie, modo = c("replace", "append")) {
   # municipal, corrigido 2026-09-22).
   lookup <- montar_lookup_locais(locais)
 
-  lid <- lookup[as.character(as.numeric(serie$local))]
+  # chave por texto normalizado: preserva codigos submunicipais longos
+  # (15-16 digitos exatos em double, < 2^53) que as.numeric + as.character
+  # nao destruiria, mas format(scientific=FALSE) garante
+  chave <- normalizar_codigo_geoloc(serie$local)
+  lid <- lookup[chave]
   serie <- serie[!is.na(lid), ]
   lid <- lid[!is.na(lid)]
   datadf <- data.frame(local = as.numeric(lid),

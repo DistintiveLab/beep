@@ -1,6 +1,6 @@
 Package: beep
 Title: Pacote de inclusão de fontes de dados, indicadores, e filtros de variáveis
-Version: 0.9.1.9006
+Version: 0.9.2.9000
 Date: 2026-10-02
 Authors@R: 
     c(person(given = "Rodrigo",
@@ -89,8 +89,9 @@ Remotes:
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Collate: 
-    'beep-package.R'
     'admin_app.R'
+    'ampliar_nivel_territorial.R'
+    'beep-package.R'
     'beep_tema.R'
     'app_config.R'
     'branding.R'
@@ -107,7 +108,10 @@ Collate:
     'gravar_serie_dw.R'
     'grupos_catalogo.R'
     'header_buttons_module.R'
+    'incorporar_areas_ponderacao.R'
+    'incorporar_bairros.R'
     'incorporar_municipio_ibge.R'
+    'incorporar_setores_censitarios.R'
     'mod_atualizacao.R'
     'mod_explorar_bivar.R'
     'mod_explorar_dicionario.R'
@@ -120,6 +124,7 @@ Collate:
     'mod_panel_map.R'
     'mod_panel_regiao.R'
     'mod_panel_sobre.R'
+    'niveis_territoriais.R'
     'painel_admin.R'
     'painel_basemap.R'
     'painel_branding.R'
@@ -134,6 +139,7 @@ Collate:
     'run_panel.R'
     'server_app.R'
     'sidra_prepare.R'
+    'tse_auxiliares.R'
     'ui_app.R'
     'ui_body.R'
     'ui_header.R'
