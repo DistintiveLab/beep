@@ -1,3 +1,14 @@
+# beep 0.9.0.9007 → 0.9.1.9001
+
+## prepare_db em banco novo: recortes_geograficos sem dependentes
+
+- `.salvar_dependentes_recortes()` consultava dependências da matview
+  com o cast `'recortes_geograficos'::regclass`, que lança "relation
+  does not exist" quando a matview ainda não existe — ou seja, em
+  todo banco novo. Agora checa `to_regclass()` primeiro e segue sem
+  dependentes a salvar (o recriador já lida com lista vazia).
+
+
 # beep 0.9.1.9000
 
 ## populate_initialdb exportada e arqueologia do prepare_db

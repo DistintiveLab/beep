@@ -160,6 +160,15 @@ colselect <- paste(
 # salvar definicao + indexes, dropar com CASCADE e recriar sobre a nova
 # definicao — sem isso o CREATE falha por dependencia
 .salvar_dependentes_recortes <- function(con) {
+  # banco novo: a matview ainda nao existe - o cast ::regclass no
+  # WHERE lancaria "relation does not exist"; sem dependentes a salvar
+  existe <- !is.na(DBI::dbGetQuery(con,
+    "SELECT to_regclass('recortes_geograficos') AS r")$r[1])
+  if (!existe) {
+    return(list(deps = data.frame(matviewname = character(0),
+                                  def = character(0)),
+                idx = data.frame(indexdef = character(0))))
+  }
   # matviews dependem de recortes via regra de rewrite (pg_rewrite),
   # nao diretamente em pg_class; deptype 'n' exclui a regra interna da
   # propria recortes (deptype 'i')
