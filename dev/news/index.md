@@ -1,5 +1,17 @@
 # Changelog
 
+## beep 0.9.2.9002
+
+### Painel: dicionário do censo com geobr 2.1 + censoagg 0.0.1.9002
+
+- A UI da fonte censo agora filtra linhas sem variável no dicionário
+  (evita “row names contain missing values” no selectize) e depende do
+  censoagg \>= 0.0.1.9002, cujo `censo_variaveis()` lê os snapshots sem
+  anexar o pacote (get() no namespace não dispara lazy-load no R 4.5) e
+  com fallback corrigido para o data_dictionary do censobr 2.x (que
+  devolve caminho de xlsx, não data.frame).
+- readODS entra em Suggests (recorte SUDENE do populate_initialdb).
+
 ## beep 0.9.2.9001
 
 ### populate_initialdb sob geobr 2.1 e valida ponta a ponta

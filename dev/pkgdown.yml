@@ -2,7 +2,7 @@ pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles: {}
-last_built: 2026-10-07T14:27Z
+last_built: 2026-10-07T19:31Z
 urls:
   reference: https://distintivelab.github.io/beep/reference
   article: https://distintivelab.github.io/beep/articles
