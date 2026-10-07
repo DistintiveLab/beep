@@ -432,7 +432,7 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
     con <- RSQLite::dbConnect(RSQLite::SQLite(), dbname=tdbname)
     DBI::dbExecute(con, "PRAGMA journal_mode=WAL")
     DBI::dbExecute(con, "PRAGMA synchronous=NORMAL")
-    lapply(ls(pattern="^[gmdlvios]"),popultab
+    lapply(objetos_base,popultab
     )
 
     DBI::dbDisconnect(con)

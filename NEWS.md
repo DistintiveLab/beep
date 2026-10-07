@@ -1,3 +1,22 @@
+# beep 0.9.1.9000
+
+## populate_initialdb exportada e arqueologia do prepare_db
+
+- `populate_initialdb()` moveu-se de `data-raw/` para `R/` e é
+  **exportada**: painéis construídos sobre o beep chamam
+  `beep::populate_initialdb()` depois do `prepare_db()` para preencher
+  `local`/`geoloc`/grupos territoriais; ao final ela regenera
+  `recortes_geograficos` e atualiza `named_datavalues`/
+  `geonamed_datavalues` (com aviso se `geo=FALSE`).
+- Archaeologia: o conflito do argumento `geo` com o `ls()` do npks
+  nasceu no AEDi `2419c1d` (2025-08-01, esquema relacional postgres),
+  não na era agêntica; o erro no popultab era engolido por `try()` e
+  a queda real (`xj[i]`) ocorria na fase de constraints — por isso
+  bancos antigos (schema via ddlx.sql/extração) estavam corretos.
+- O caminho sqlite usa o mesmo filtro corrigido do npks (antes
+  `ls(pattern="^[gmdlvios]")` também varria o argumento `geo`).
+
+
 # beep 0.9.0.9006
 
 ## recortes_geograficos tolera catálogo parcial + segunda passada de PKs silenciada

@@ -411,5 +411,17 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
     DBI::dbAppendTable(con, "local_group", lcgroup)
   }
 
+  ## 7) Matviews territoriais em dia apos a carga ----------------
+  ## recortes_geograficos depende de local/geoloc/grupos - agora
+  ## preenchidos; named/geonamed so existem se prepare_db rodou
+  ## com geo=TRUE (default)
+  tryCatch({
+    criar_recortes_geograficos(con = con)
+    DBI::dbExecute(con, "refresh materialized view named_datavalues;")
+    DBI::dbExecute(con, "refresh materialized view geonamed_datavalues;")
+  }, error = \(e) warning("populate_initialdb: matviews nao atualizados (",
+                          conditionMessage(e), ") - rode com geo=TRUE ",
+                          "no prepare_db ou crie-os manualmente"))
+
   invisible(TRUE)
 }

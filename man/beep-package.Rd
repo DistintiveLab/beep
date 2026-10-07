@@ -8,9 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-AED interativa e adição de dados. beep é o acrônimo de
-'Back-End de Exploração e Painéis de dados'. Sucessor do pacote AEDi
-(https://github.com/DistintiveLab/AEDi).
+AED interativa e adição de dados. beep é o acrônimo de 'Back-End de Exploração e Painéis de dados'. Sucessor do pacote AEDi (https://github.com/DistintiveLab/AEDi).
 }
 \seealso{
 Useful links:
