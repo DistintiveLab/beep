@@ -481,8 +481,11 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
                               "mdata_exts.datasource_id = datasource.datasource_id "
                               ))
     if(geo){
-      source('R/create_extend_geogroup_view.R')
-      criar_recortes_geograficos()
+      # criar_recortes_geograficos ja vem do namespace (Collate);
+      # o source() relativo antigo so funcionava com cwd na raiz do
+      # pacote e, sem con, conectava no banco de dev via env vars.
+      # Aqui o alvo e sempre a conexao corrente desta execucao.
+      criar_recortes_geograficos(con = con)
       DBI::dbExecute(con,paste0("CREATE MATERIALIZED VIEW geonamed_datavalues as SELECT named_datavalues.*, recortes_geograficos.* FROM named_datavalues LEFT JOIN ",
                                 "local ON named_datavalues.local_id  = local.local_id LEFT JOIN recortes_geograficos ON ",
                                 "local.geoloc_id = recortes_geograficos.codigo_ibge"))
