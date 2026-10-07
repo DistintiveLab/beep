@@ -195,6 +195,7 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_rodape.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_rotulo_tempo.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_slug.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_tema_botao.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_tipo_grafico.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_topbar.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_ufs_com_dados.html</loc></url>
@@ -215,9 +216,12 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/panel_server.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/panel_sobre_server.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/panel_sobre_ui.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/populate_initialdb.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/prepare_db.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/rep_br.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/resolver_logo_contato.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/resolver_logo_src.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/resolver_marca_src.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/resumo_indicadores_dw.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/right_sidebar_ui.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/run_app.html</loc></url>

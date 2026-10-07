@@ -1,5 +1,28 @@
 # Changelog
 
+## beep 0.9.1.9000
+
+### populate_initialdb exportada e arqueologia do prepare_db
+
+- [`populate_initialdb()`](https://distintivelab.github.io/beep/dev/reference/populate_initialdb.md)
+  moveu-se de `data-raw/` para `R/` e é **exportada**: painéis
+  construídos sobre o beep chamam
+  [`beep::populate_initialdb()`](https://distintivelab.github.io/beep/dev/reference/populate_initialdb.md)
+  depois do
+  [`prepare_db()`](https://distintivelab.github.io/beep/dev/reference/prepare_db.md)
+  para preencher `local`/`geoloc`/grupos territoriais; ao final ela
+  regenera `recortes_geograficos` e atualiza `named_datavalues`/
+  `geonamed_datavalues` (com aviso se `geo=FALSE`).
+- Archaeologia: o conflito do argumento `geo` com o
+  [`ls()`](https://rdrr.io/r/base/ls.html) do npks nasceu no AEDi
+  `2419c1d` (2025-08-01, esquema relacional postgres), não na era
+  agêntica; o erro no popultab era engolido por
+  [`try()`](https://rdrr.io/r/base/try.html) e a queda real (`xj[i]`)
+  ocorria na fase de constraints — por isso bancos antigos (schema via
+  ddlx.sql/extração) estavam corretos.
+- O caminho sqlite usa o mesmo filtro corrigido do npks (antes
+  `ls(pattern="^[gmdlvios]")` também varria o argumento `geo`).
+
 ## beep 0.9.0.9006
 
 ### recortes_geograficos tolera catálogo parcial + segunda passada de PKs silenciada
@@ -130,8 +153,11 @@
   default o box da Distintive traz o logo e o do autor fica sem.
   Suporte:
   [`resolver_logo_src()`](https://distintivelab.github.io/beep/dev/reference/resolver_logo_src.md)
-  foi fatorado na genérica `resolver_marca_src()` e o novo
-  `resolver_logo_contato()` decide o logo de cada box.
+  foi fatorado na genérica
+  [`resolver_marca_src()`](https://distintivelab.github.io/beep/dev/reference/resolver_marca_src.md)
+  e o novo
+  [`resolver_logo_contato()`](https://distintivelab.github.io/beep/dev/reference/resolver_logo_contato.md)
+  decide o logo de cada box.
 
 ## beep 0.8.1
 
@@ -196,10 +222,12 @@
 - Esqueleto do painel: autossuficiente no tema —
   [`deploy_panel()`](https://distintivelab.github.io/beep/dev/reference/deploy_panel.md)
   copia `beep-tema.css/js` para `www/` e `R/painel_ui.R` traz o botão
-  local (`painel_tema_botao()`). Correção de bug latente: o `app.R`
-  gerado passou a carregar dinamicamente TODO `R/*.R` (a lista fixa não
-  carregava `mod_panel_baixar.R`/`painel_xlsx.R`, o que só não quebrava
-  com o beep carregado na mesma sessão).
+  local
+  ([`painel_tema_botao()`](https://distintivelab.github.io/beep/dev/reference/painel_tema_botao.md)).
+  Correção de bug latente: o `app.R` gerado passou a carregar
+  dinamicamente TODO `R/*.R` (a lista fixa não carregava
+  `mod_panel_baixar.R`/`painel_xlsx.R`, o que só não quebrava com o beep
+  carregado na mesma sessão).
 
 ## beep 0.7.9
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9006</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,16 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.1.9000" id="beep-0919000">beep 0.9.1.9000<a class="anchor" aria-label="anchor" href="#beep-0919000"></a></h2>
+<div class="section level3">
+<h3 id="populate_initialdb-exportada-e-arqueologia-do-prepare_db-0-9-1-9000">populate_initialdb exportada e arqueologia do prepare_db<a class="anchor" aria-label="anchor" href="#populate_initialdb-exportada-e-arqueologia-do-prepare_db-0-9-1-9000"></a></h3>
+<ul><li>
+<code><a href="../reference/populate_initialdb.html">populate_initialdb()</a></code> moveu-se de <code>data-raw/</code> para <code>R/</code> e é <strong>exportada</strong>: painéis construídos sobre o beep chamam <code><a href="../reference/populate_initialdb.html">beep::populate_initialdb()</a></code> depois do <code><a href="../reference/prepare_db.html">prepare_db()</a></code> para preencher <code>local</code>/<code>geoloc</code>/grupos territoriais; ao final ela regenera <code>recortes_geograficos</code> e atualiza <code>named_datavalues</code>/ <code>geonamed_datavalues</code> (com aviso se <code>geo=FALSE</code>).</li>
+<li>Archaeologia: o conflito do argumento <code>geo</code> com o <code><a href="https://rdrr.io/r/base/ls.html" class="external-link">ls()</a></code> do npks nasceu no AEDi <code>2419c1d</code> (2025-08-01, esquema relacional postgres), não na era agêntica; o erro no popultab era engolido por <code><a href="https://rdrr.io/r/base/try.html" class="external-link">try()</a></code> e a queda real (<code>xj[i]</code>) ocorria na fase de constraints — por isso bancos antigos (schema via ddlx.sql/extração) estavam corretos.</li>
+<li>O caminho sqlite usa o mesmo filtro corrigido do npks (antes <code>ls(pattern="^[gmdlvios]")</code> também varria o argumento <code>geo</code>).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0.9006" id="beep-0909006">beep 0.9.0.9006<a class="anchor" aria-label="anchor" href="#beep-0909006"></a></h2>
 <div class="section level3">
@@ -104,7 +114,7 @@
 <h2 class="pkg-version" data-toc-text="0.8.1.9000" id="beep-0819000">beep 0.8.1.9000<a class="anchor" aria-label="anchor" href="#beep-0819000"></a></h2>
 <div class="section level3">
 <h3 id="contatos-do-header-com-logo-configurável-0-8-1-9000">Contatos do header com logo configurável<a class="anchor" aria-label="anchor" href="#contatos-do-header-com-logo-configur%C3%A1vel-0-8-1-9000"></a></h3>
-<ul><li>Boxes do dropdown “Contato” do app ganham avatar (logo redondo de 40 px ao lado do nome/função): o 5º campo opcional de cada entrada de <code>beep_contatos</code> (<code>"nome|função|telefone|email|logo"</code>) define o logo do box (arquivo local, URL http(s) ou caminho relativo a <code>inst/app/www/</code>, mesma resolução de <code>beep_logo</code>); <code>"none"</code> ou <code>"-"</code> desliga. Sem 5º campo, vale a nova env <code>beep_contato_logo</code> e, em última instância, o padrão quadrado da marca (<code>www/beep-innovations-Square.png</code>) — no default o box da Distintive traz o logo e o do autor fica sem. Suporte: <code><a href="../reference/resolver_logo_src.html">resolver_logo_src()</a></code> foi fatorado na genérica <code>resolver_marca_src()</code> e o novo <code>resolver_logo_contato()</code> decide o logo de cada box.</li>
+<ul><li>Boxes do dropdown “Contato” do app ganham avatar (logo redondo de 40 px ao lado do nome/função): o 5º campo opcional de cada entrada de <code>beep_contatos</code> (<code>"nome|função|telefone|email|logo"</code>) define o logo do box (arquivo local, URL http(s) ou caminho relativo a <code>inst/app/www/</code>, mesma resolução de <code>beep_logo</code>); <code>"none"</code> ou <code>"-"</code> desliga. Sem 5º campo, vale a nova env <code>beep_contato_logo</code> e, em última instância, o padrão quadrado da marca (<code>www/beep-innovations-Square.png</code>) — no default o box da Distintive traz o logo e o do autor fica sem. Suporte: <code><a href="../reference/resolver_logo_src.html">resolver_logo_src()</a></code> foi fatorado na genérica <code><a href="../reference/resolver_marca_src.html">resolver_marca_src()</a></code> e o novo <code><a href="../reference/resolver_logo_contato.html">resolver_logo_contato()</a></code> decide o logo de cada box.</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -127,7 +137,7 @@
 <li>Admin do lote (T2): <code>admin_app(tema = )</code> aplica o núcleo + chrome próprio (<code>inst/tema/beep-admin.css</code>, navbar/tabs/DT consumindo <code>--p-*</code>) com botão de alternância na navbar; <code>deploy_admin(tema = )</code> materializa a paleta resolvida na launcher.</li>
 <li>App beep (T3): <code>app_ui(tema = )</code> inclui o núcleo + overrides AdminLTE (<code>inst/tema/beep-app.css</code>: header, sidebar, boxes, botões, controlbar) e a barra lateral direita ganha a aba “Tema” com o botão.</li>
 <li>Painel de indicadores (T4): unificado sobre o núcleo. <code>painel.css</code> perde os blocos de paleta (variáveis vêm do núcleo) e o botão antigo (<code>.painel-paleta-btn</code> → <code>.beep-tema-btn</code>); <code>painel.js</code> fica só com a sincronização com o servidor (escuta <code>beep:paleta</code> → input <code>painel_paleta_ativa</code>, sem mudança de nome), restauração de aba e alturas; <code><a href="../reference/painel_recursos.html">painel_recursos()</a></code> inclui o núcleo antes dos assets locais (assets do projeto primeiro, fallback para o pacote) e a div raiz passa a <code>#beep_tema_raiz</code>. Cores semânticas de badges/heatmap do painel são mantidas nas duas paletas.</li>
-<li>Esqueleto do painel: autossuficiente no tema — <code><a href="../reference/deploy_panel.html">deploy_panel()</a></code> copia <code>beep-tema.css/js</code> para <code>www/</code> e <code>R/painel_ui.R</code> traz o botão local (<code>painel_tema_botao()</code>). Correção de bug latente: o <code>app.R</code> gerado passou a carregar dinamicamente TODO <code>R/*.R</code> (a lista fixa não carregava <code>mod_panel_baixar.R</code>/<code>painel_xlsx.R</code>, o que só não quebrava com o beep carregado na mesma sessão).</li>
+<li>Esqueleto do painel: autossuficiente no tema — <code><a href="../reference/deploy_panel.html">deploy_panel()</a></code> copia <code>beep-tema.css/js</code> para <code>www/</code> e <code>R/painel_ui.R</code> traz o botão local (<code><a href="../reference/painel_tema_botao.html">painel_tema_botao()</a></code>). Correção de bug latente: o <code>app.R</code> gerado passou a carregar dinamicamente TODO <code>R/*.R</code> (a lista fixa não carregava <code>mod_panel_baixar.R</code>/<code>painel_xlsx.R</code>, o que só não quebrava com o beep carregado na mesma sessão).</li>
 </ul></div>
 </div>
     <div class="section level2">

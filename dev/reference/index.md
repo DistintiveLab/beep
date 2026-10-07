@@ -136,6 +136,9 @@
 - [`panel_app()`](https://distintivelab.github.io/beep/dev/reference/panel_app.md)
   : App do painel de indicadores (objeto shinyApp)
 
+- [`populate_initialdb()`](https://distintivelab.github.io/beep/dev/reference/populate_initialdb.md)
+  : populate_initialdb — seeder territorial do DW beep
+
 - [`prepare_db()`](https://distintivelab.github.io/beep/dev/reference/prepare_db.md)
   : Prepare app_db
 
