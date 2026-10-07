@@ -42,7 +42,7 @@ test_that("normalizar_codigo_geoloc nao gera notacao cientifica", {
 test_that("eh_codigo_submunicipal e nivel_tipo_por_largura seguem o registro", {
   expect_true(eh_codigo_submunicipal("110020305020001"))
   expect_false(eh_codigo_submunicipal(1100203))
-  expect_identical(nivel_tipo_por_largura(c(1L, 2L, 7L, 11L, 12L, 13L, 15L, 16L)),
+  expect_identical(nivel_tipo_por_largura(c(1L, 2L, 7L, 11L, 12L, 10L, 15L, 16L)),
                    c("regiao", "uf", "municipio", "bairro", "bairro",
                      "area_ponderacao", "setor", "setor"))
   expect_true(is.na(nivel_tipo_por_largura(99L)))
@@ -96,6 +96,6 @@ test_that("rotulos do painel cobrem as larguras submunicipais", {
   rot <- painel_niveis_rotulo
   expect_identical(unname(rot[["15"]]), "Setor censitário")
   expect_identical(unname(rot[["16"]]), "Setor censitário")
-  expect_identical(unname(rot[["13"]]), "Área de ponderação")
+  expect_identical(unname(rot[["10"]]), "Área de ponderação")
   expect_identical(unname(rot[["11"]]), "Bairro")
 })

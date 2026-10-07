@@ -328,7 +328,7 @@ painel_ranking_texto <- function(rank_uf, n_uf, rank_br, n_br) {
 # (verificado 2026-09-22: nenhum indicador municipal publica nelas, e nenhum
 # pnadc publica em municipio).
 # Niveis submunicipais (roadmap-niveis-submunicipais): bairro 11-12,
-# area de ponderacao 13, setor censitario 15-16 digitos — larguras que nao
+# area de ponderacao 10, setor censitario 15-16 digitos — larguras que nao
 # colidem entre si nem com 1..8. Manter sincrono com R/niveis_territoriais.R
 # (o esqueleto do painel e autocontido de proposito).
 painel_niveis_rotulo <- c(
@@ -342,7 +342,7 @@ painel_niveis_rotulo <- c(
   "8" = "Mesorregião",
   "11" = "Bairro",
   "12" = "Bairro",
-  "13" = "Área de ponderação",
+  "10" = "Área de ponderação",
   "15" = "Setor censitário",
   "16" = "Setor censitário")
 

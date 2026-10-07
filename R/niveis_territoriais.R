@@ -14,7 +14,7 @@
 #
 #   setor censitario     local_id >= 100000    geoloc_id 15-16 digitos
 #   bairro               local_id >= 1000000   geoloc_id 11-12 digitos
-#   area de ponderacao   local_id >= 2000000   geoloc_id 13 digitos
+#   area de ponderacao   local_id >= 2000000   geoloc_id 10 digitos
 #
 # Codigos submunicipais nao cabem no int4 do `geoloc_id` original (setor
 # chega a 16 digitos ~ 5.3e15, acima do int4 mas abaixo de 2^53), por isso a
@@ -64,8 +64,8 @@ niveis_territoriais_tipos <- data.frame(
              "Região geográfica imediata", "Município",
              "Região de interesse PNAD", "Bairro",
              "Área de ponderação", "Setor censitário"),
-  largura_min = c(1L, 2L, 4L, 5L, 6L, 7L, 7L, 11L, 13L, 15L),
-  largura_max = c(1L, 2L, 4L, 5L, 6L, 7L, 7L, 12L, 13L, 16L)
+  largura_min = c(1L, 2L, 4L, 5L, 6L, 7L, 7L, 11L, 10L, 15L),
+  largura_max = c(1L, 2L, 4L, 5L, 6L, 7L, 7L, 12L, 10L, 16L)
 )
 
 #' Um local_id e municipio? (bloco malha 2024 + incorporados apos a
@@ -334,7 +334,7 @@ preparar_niveis_submunicipais <- function(con = NULL) {
       "WHEN length(geoloc_id::text) = 6 THEN 'rgim'",
       "WHEN length(geoloc_id::text) = 8 THEN 'mesorregiao'",
       "WHEN length(geoloc_id::text) BETWEEN 11 AND 12 THEN 'bairro'",
-      "WHEN length(geoloc_id::text) = 13 THEN 'area_ponderacao'",
+      "WHEN length(geoloc_id::text) = 10 THEN 'area_ponderacao'",
       "WHEN length(geoloc_id::text) BETWEEN 15 AND 16 THEN 'setor'",
       "WHEN length(geoloc_id::text) = 7 THEN 'municipio'",
       "ELSE nivel_tipo END",
