@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.1.9001</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.1.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,16 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.1.9002" id="beep-0919002">beep 0.9.1.9002<a class="anchor" aria-label="anchor" href="#beep-0919002"></a></h2>
+<div class="section level3">
+<h3 id="populate_initialdb-brazilmaps---geobr-0-9-1-9002">populate_initialdb: brazilmaps -&gt; geobr<a class="anchor" aria-label="anchor" href="#populate_initialdb-brazilmaps---geobr-0-9-1-9002"></a></h3>
+<ul><li>A v1.0.0 do brazilmaps quebrou a API depois de anos parada (level/output, colunas renomeadas) e derrubou o seeder. Como o geobr já era dependência do próprio script e é mantido ativamente pelo ipea, <code>retwritegeo()</code> migrou para geobr: municípios (<code>read_municipality</code>, reutilizando <code>geobrcities</code>), microrregiões (<code>read_micro_region</code>, códigos de 5 dígitos — caem no nível “Microrregião” do painel), mesorregiões (<code>read_meso_region</code>, 4 dígitos — seguem para o shift 8 dígitos), UFs, regiões e Brasil.</li>
+<li>
+<code>local_group</code> (Faixa de Fronteira, Amazônia Legal, Semiárido, SUDENE) agora vincula por <strong>código IBGE</strong> (join via mapa código-&gt;local_id capturado do banco), não mais por posição de linha — corrige deslocamentos herdados entre brazilmaps e geobr.</li>
+<li>brazilmaps sai dos Suggests.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0.9007" id="beep-0909007--0919001">beep 0.9.0.9007 → 0.9.1.9001<a class="anchor" aria-label="anchor" href="#beep-0909007--0919001"></a></h2>
 <div class="section level3">

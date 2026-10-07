@@ -1,5 +1,23 @@
 # Changelog
 
+## beep 0.9.1.9002
+
+### populate_initialdb: brazilmaps -\> geobr
+
+- A v1.0.0 do brazilmaps quebrou a API depois de anos parada
+  (level/output, colunas renomeadas) e derrubou o seeder. Como o geobr
+  já era dependência do próprio script e é mantido ativamente pelo ipea,
+  `retwritegeo()` migrou para geobr: municípios (`read_municipality`,
+  reutilizando `geobrcities`), microrregiões (`read_micro_region`,
+  códigos de 5 dígitos — caem no nível “Microrregião” do painel),
+  mesorregiões (`read_meso_region`, 4 dígitos — seguem para o shift 8
+  dígitos), UFs, regiões e Brasil.
+- `local_group` (Faixa de Fronteira, Amazônia Legal, Semiárido, SUDENE)
+  agora vincula por **código IBGE** (join via mapa código-\>local_id
+  capturado do banco), não mais por posição de linha — corrige
+  deslocamentos herdados entre brazilmaps e geobr.
+- brazilmaps sai dos Suggests.
+
 ## beep 0.9.0.9007 → 0.9.1.9001
 
 ### prepare_db em banco novo: recortes_geograficos sem dependentes
