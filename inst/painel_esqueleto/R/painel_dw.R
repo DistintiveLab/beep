@@ -107,7 +107,7 @@ painel_geo_mun <- function(con) {
   sf::st_read(con, query = paste(
     "SELECT l.local_id, l.local_name, g.geometry",
     "FROM local l JOIN geoloc g USING (geoloc_id)",
-    "WHERE", painel_municipio_filtro()), quiet = TRUE)
+    "WHERE", painel_municipio_filtro(con)), quiet = TRUE)
 }
 
 #' Localidades do DW rotuladas por nome + id (ha nomes repetidos entre
@@ -133,7 +133,7 @@ painel_codigo_mun <- function(con) {
   cod <- DBI::dbGetQuery(con, paste(
     "SELECT l.local_id, g.geoloc_id::text AS codigo",
     "FROM local l JOIN geoloc g USING (geoloc_id)",
-    "WHERE", painel_municipio_filtro(),
+    "WHERE", painel_municipio_filtro(con),
     "OR length(g.geoloc_id::text) > 10",
     "ORDER BY l.local_id"))
   setNames(cod$codigo, as.character(cod$local_id))
@@ -367,12 +367,28 @@ painel_niveis_rotulo <- c(
 # (R/niveis_territoriais.R): o esqueleto do painel e autocontido.
 painel_municipio_limite_id <- 5572L
 painel_pnad_bloco_fim <- 7087L
+.painel_bloco_env <- new.env(parent = emptyenv())
+
+#' Fim do bloco PNAD: local_id da linha "Brasil" (dinamico; cai no
+#' fallback estatico sem a linha). Cache de sessao em environment
+#' proprio (namespace e travado apos o load).
+painel_pnad_bloco_fim_resolver <- function(con) {
+  if (is.null(.painel_bloco_env$fim)) {
+    v <- tryCatch(as.integer(DBI::dbGetQuery(con, paste(
+      "SELECT local_id FROM local WHERE local_name = 'Brasil'",
+      "ORDER BY local_id LIMIT 1"))$local_id[1]),
+      error = function(e) NA_integer_)
+    .painel_bloco_env$fim <- if (is.na(v)) painel_pnad_bloco_fim else v
+  }
+  .painel_bloco_env$fim
+}
 painel_submunicipal_inicio <- 100000L
 
 #' Fragmento SQL que seleciona apenas municipios (alias `l` no chamador)
 painel_municipio_filtro <- function(alias = "l") {
   sprintf("(%s.local_id < %d OR (%s.local_id > %d AND %s.local_id < %d))",
-          alias, painel_municipio_limite_id, alias, painel_pnad_bloco_fim,
+          alias, painel_municipio_limite_id, alias,
+          painel_pnad_bloco_fim_resolver(NULL),
           alias, painel_submunicipal_inicio)
 }
 
@@ -390,13 +406,16 @@ painel_nivel_parse <- function(nivel_id) {
   pnad <- nzchar(chave) && tolower(chave) == "7p"
   nivel <- if (pnad) 7L else suppressWarnings(as.integer(chave))[1]
   if (!is.na(nivel) && nivel < 1L) nivel <- NA_integer_
+  bloco_fim <- if (!is.null(.painel_bloco_env$fim)) .painel_bloco_env$fim else
+    painel_pnad_bloco_fim
   filtro <- if (is.na(nivel)) {
     "1 = 0"
   } else if (pnad) {
     sprintf("length(g.geoloc_id::text) = 7 AND l.local_id >= %d AND l.local_id <= %d",
-            painel_municipio_limite_id, painel_pnad_bloco_fim)
+            painel_municipio_limite_id, bloco_fim)
   } else if (identical(nivel, 7L)) {
-    sprintf("length(g.geoloc_id::text) = 7 AND %s", painel_municipio_filtro())
+    sprintf("length(g.geoloc_id::text) = 7 AND %s",
+            painel_pnad_bloco_fim_resolver(NULL))
   } else {
     sprintf("length(g.geoloc_id::text) = %d", nivel)
   }
@@ -427,7 +446,8 @@ painel_niveis <- function(con) {
   q <- DBI::dbGetQuery(con, paste(
     "SELECT CASE WHEN length(g.geoloc_id::text) = 7",
     sprintf("AND l.local_id >= %d AND l.local_id <= %d THEN '7p'",
-            painel_municipio_limite_id, painel_pnad_bloco_fim),
+            painel_municipio_limite_id,
+            painel_pnad_bloco_fim_resolver(con)),
     "ELSE length(g.geoloc_id::text)::text END AS nivel_id,",
     "count(*)::int AS n_locais",
     "FROM local l",
