@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.1.9003</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.1.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,16 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.1.9004" id="beep-0919004">beep 0.9.1.9004<a class="anchor" aria-label="anchor" href="#beep-0919004"></a></h2>
+<div class="section level3">
+<h3 id="painel-ui-dos-submódulos-tsecenso-renderiza-seeder-com-buffers-métricos-0-9-1-9004">Painel: UI dos submódulos tse/censo renderiza; seeder com buffers métricos<a class="anchor" aria-label="anchor" href="#painel-ui-dos-subm%C3%B3dulos-tsecenso-renderiza-seeder-com-buffers-m%C3%A9tricos-0-9-1-9004"></a></h3>
+<ul><li>Corrige crash ao selecionar as fontes tse/censo no painel: a UI passava o objeto session para <code><a href="https://rdrr.io/pkg/shiny/man/NS.html" class="external-link">shiny::NS()</a></code>; agora usa <code>parent_session$ns</code> (o input oculto <code>upload_file</code> volta a nascer no namespace do módulo pai). Testes de regressão com sessão simulada.</li>
+<li>
+<code>populate_initialdb</code>: buffers espaciais (500 m) para associação município × região imediata/intermediária e Amazônia Legal agora projetam para EPSG 5880 (metros) — o código herdado bufferizava 500 <strong>graus</strong> em CRS geográfico, o que engoliria o país inteiro.</li>
+<li>geobr: os três downloads que falharam (0 bytes em cache) eram transitórios — cargas de semiarido/amazonia/assentos ficam com tryCatch e o seeder segue mesmo se algum recorte estiver indisponível (a matview tolera a coluna ausente).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.1.9003" id="beep-0919003">beep 0.9.1.9003<a class="anchor" aria-label="anchor" href="#beep-0919003"></a></h2>
 <div class="section level3">

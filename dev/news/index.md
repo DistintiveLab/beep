@@ -1,5 +1,23 @@
 # Changelog
 
+## beep 0.9.1.9004
+
+### Painel: UI dos submódulos tse/censo renderiza; seeder com buffers métricos
+
+- Corrige crash ao selecionar as fontes tse/censo no painel: a UI
+  passava o objeto session para
+  [`shiny::NS()`](https://rdrr.io/pkg/shiny/man/NS.html); agora usa
+  `parent_session$ns` (o input oculto `upload_file` volta a nascer no
+  namespace do módulo pai). Testes de regressão com sessão simulada.
+- `populate_initialdb`: buffers espaciais (500 m) para associação
+  município × região imediata/intermediária e Amazônia Legal agora
+  projetam para EPSG 5880 (metros) — o código herdado bufferizava 500
+  **graus** em CRS geográfico, o que engoliria o país inteiro.
+- geobr: os três downloads que falharam (0 bytes em cache) eram
+  transitórios — cargas de semiarido/amazonia/assentos ficam com
+  tryCatch e o seeder segue mesmo se algum recorte estiver indisponível
+  (a matview tolera a coluna ausente).
+
 ## beep 0.9.1.9003
 
 ### Malha municipal 2024 e estratos PNAD a partir de 5572
