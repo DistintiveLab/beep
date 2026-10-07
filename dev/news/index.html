@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9005</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,14 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.0.9006" id="beep-0909006">beep 0.9.0.9006<a class="anchor" aria-label="anchor" href="#beep-0909006"></a></h2>
+<div class="section level3">
+<h3 id="recortes_geograficos-tolera-catálogo-parcial--segunda-passada-de-pks-silenciada-0-9-0-9006">recortes_geograficos tolera catálogo parcial + segunda passada de PKs silenciada<a class="anchor" aria-label="anchor" href="#recortes_geograficos-tolera-cat%C3%A1logo-parcial--segunda-passada-de-pks-silenciada-0-9-0-9006"></a></h3>
+<ul><li>A view <code>recortes_geograficos</code> mapeia os grupos-pai para colunas de forma <strong>semântica</strong> (nome do grupo → coluna) em vez de posicional: exigia exatamente os 9 grupos da era PNDR e quebrava com subconjuntos (<code>rep(NA_character_, negativo)</code> — o erro final do seu paste, exposto quando o fluxo passou a chegar até lá). Com catálogo parcial (ex.: <code>populate_initialdb(pndr_groups=FALSE)</code>) a view nasce sem as colunas ausentes; com os 9 grupos, definição idêntica à de produção.</li>
+<li>Segunda passada de <code>pkadd</code> no pgsql passa a repetir apenas as tabelas compostas (sem ownpk): repetir as ownpk só produzia a parede de erros “multiple primary keys”/“cannot drop constraint” em qualquer execução (comportamento documentado no próprio fonte).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0.9005" id="beep-0909005">beep 0.9.0.9005<a class="anchor" aria-label="anchor" href="#beep-0909005"></a></h2>
 <div class="section level3">

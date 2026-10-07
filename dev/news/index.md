@@ -1,5 +1,21 @@
 # Changelog
 
+## beep 0.9.0.9006
+
+### recortes_geograficos tolera catálogo parcial + segunda passada de PKs silenciada
+
+- A view `recortes_geograficos` mapeia os grupos-pai para colunas de
+  forma **semântica** (nome do grupo → coluna) em vez de posicional:
+  exigia exatamente os 9 grupos da era PNDR e quebrava com subconjuntos
+  (`rep(NA_character_, negativo)` — o erro final do seu paste, exposto
+  quando o fluxo passou a chegar até lá). Com catálogo parcial (ex.:
+  `populate_initialdb(pndr_groups=FALSE)`) a view nasce sem as colunas
+  ausentes; com os 9 grupos, definição idêntica à de produção.
+- Segunda passada de `pkadd` no pgsql passa a repetir apenas as tabelas
+  compostas (sem ownpk): repetir as ownpk só produzia a parede de erros
+  “multiple primary keys”/“cannot drop constraint” em qualquer execução
+  (comportamento documentado no próprio fonte).
+
 ## beep 0.9.0.9005
 
 ### FK de \*\_parentid no sqlite segue o desenho do prepare_db
