@@ -19,7 +19,8 @@
 #'
 #' Uso: `data-raw/populate_initialdb.R | populate_initialdb()`
 #' (requer conexao ao Postgres do DW e os pacotes Suggests
-#' brazilmaps/geobr/readODS/rvest).
+#' geobr/readODS/rvest (brazilmaps não é mais usado: a v1.0.0
+#' quebrou API e o geobr cobre todos os níveis).
 #'
 #' @param con Conexao DBI aberta no DW alvo; se NULL, abre com as
 #'   env vars padrao do beep (user/password/host/dbname).
@@ -44,22 +45,53 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
                           dbname = Sys.getenv("dbname", "beepdb"))
   }
 
+  ## cargas geobr (mantido ativamente pelo ipea) - usadas pelo
+  ## retwritegeo e pelos vinculos territoriais adiante
+  geobrcities <- subset(geobr::read_municipality(year = 2020, simplified = TRUE),
+                        !code_muni %in% (4300000 + 1:2))
+  geobrimmediater <- geobr::read_immediate_region(year = 2020, simplified = TRUE)
+  geobrintermr <- geobr::read_intermediate_region(year = 2020)
+  geobrstates <- geobr::read_state(year = 2020)
+  geobrcitiesm <- geobr::read_municipal_seat(year = 2010)
+  geobrsemiarid <- geobr::read_semiarid(year = 2022)
+  geobramazonia_legal <- geobr::read_amazon(year = 2012)
+
+  ## niveles -> leitor geobr + colunas de codigo/nome
+  espec_retwritegeo <- list(
+    City        = list(dados = function() geobrcities,
+                       code = "code_muni", nome = "name_muni"),
+    MicroRegion = list(dados = function() geobr::read_micro_region(year = 2019, simplified = TRUE),
+                       code = "code_micro", nome = "name_micro"),
+    MesoRegion  = list(dados = function() geobr::read_meso_region(year = 2019, simplified = TRUE),
+                       code = "code_meso", nome = "name_meso"),
+    State       = list(dados = function() geobrstates,
+                       code = "code_state", nome = "name_state"),
+    Region      = list(dados = function() geobr::read_region(year = 2020),
+                       code = "code_region", nome = "name_region"))
+
   retwritegeo <- \(levelgeo = "City") {
-    geoloc <- brazilmaps::get_brmap(geo = levelgeo, class = 'sf')
-    geoloc <- sf::st_transform(geoloc, crs = "+proj=longlat +datum=WGS84 +no_defs")
-    if (levelgeo == "Region") {
-      geoloc <- geoloc |> sf::st_sf() |> dplyr::rename(nome = "desc_rg")
-    } else if (levelgeo == "Brazil") {
+    esp <- espec_retwritegeo[[levelgeo]]
+    geoloc <- esp$dados()
+    if (levelgeo == "City") {
       geoloc <- sf::st_sf(
-        Brazil = 1 + as.numeric(DBI::dbGetQuery(con, "select MAX(local_id) from local")),
-        nome = "Brasil", geometry = geoloc)
+        geoloc_id = as.numeric(geoloc$code_muni),
+        nome = as.character(geoloc$name_muni),
+        geometry = sf::st_geometry(geoloc)) |>
+        dplyr::arrange(geoloc_id)
+    } else {
+      geoloc <- sf::st_sf(
+        geoloc_id = as.numeric(geoloc[[esp$code]]),
+        nome = as.character(geoloc[[esp$nome]]),
+        geometry = sf::st_geometry(geoloc)) |>
+        dplyr::arrange(geoloc_id)
     }
+    geoloc <- sf::st_transform(geoloc, crs = "+proj=longlat +datum=WGS84 +no_defs")
     local <- geoloc |>
-      dplyr::select(geoloc_id = tidyr::all_of(levelgeo), local_name = nome) |>
+      dplyr::select(geoloc_id, local_name = nome) |>
       dplyr::mutate(across(local_name, stringr::str_to_title),
                     across(local_name, \(x) gsub(" D([^ ]+) ", " d\\1 ", x))) |>
       sf::st_drop_geometry()
-    geoloc <- geoloc |> dplyr::select(geoloc_id = tidyr::all_of(levelgeo), geometry)
+    geoloc <- geoloc |> dplyr::select(geoloc_id, geometry)
 
     sf::st_write(geoloc, con, append = TRUE)
     if (levelgeo == "Brazil") {
@@ -83,21 +115,16 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   DBI::dbExecute(con, "ALTER TABLE local ADD CONSTRAINT fk_geoloc_geoloc_id
                    FOREIGN KEY (geoloc_id) REFERENCES geoloc(geoloc_id);")
   DBI::dbExecute(con, "END TRANSACTION")
+  ## mapa codigo IBGE (7d) -> local_id (nesta altura, so municipios)
+  mapa_mun <- DBI::dbGetQuery(con, paste(
+    "SELECT local_id, geoloc_id::bigint AS code_muni FROM local",
+    "WHERE length(geoloc_id::text) = 7"))
 
   ## 2) UF e macrorregiao -------------------------------------------
   retwritegeo("State")
   retwritegeo("Region")
 
   ## 3) Regioes imediatas/intermediarias (geobr 2020) ----------------
-  geobrcities <- subset(geobr::read_municipality(year = 2020, simplified = TRUE),
-                        !code_muni %in% (4300000 + 1:2))
-  geobrimmediater <- geobr::read_immediate_region(year = 2020, simplified = TRUE)
-  geobrintermr <- geobr::read_intermediate_region(year = 2020)
-  geobrstates <- geobr::read_state(year = 2020)
-  geobrcitiesm <- geobr::read_municipal_seat(year = 2010)
-  geobrsemiarid <- geobr::read_semiarid(year = 2022)
-  geobramazonia_legal <- geobr::read_amazon(year = 2012)
-
   ## SUDENE (ODS do geoftp IBGE)
   tmp_file_sudene <- tempfile(fileext = ".ods")
   download.file("http://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/area_atuacao_SUDENE/2021/SUDENE_2021.ods",
@@ -259,9 +286,11 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   ffrontcdm <- (ffront |> sf::st_drop_geometry())$CD_MUN
   dgidff <- DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup where datagroup_name LIKE '%em faixa%'")$datagroup_id
   local_group_ff <- geobrcities |> sf::st_drop_geometry() |>
-    dplyr::transmute(local_id = 1:nrow(geobrcities),
+    dplyr::left_join(mapa_mun, by = "code_muni") |>
+    dplyr::transmute(local_id,
                      datagroup_id = dplyr::case_when(
-                       code_muni %in% ffrontcdm ~ dgidff, TRUE ~ dgidff + 1))
+                       code_muni %in% ffrontcdm ~ dgidff, TRUE ~ dgidff + 1)) |>
+    dplyr::filter(!is.na(local_id))
   DBI::dbAppendTable(con, "local_group", local_group_ff)
   DBI::dbAppendTable(con, "group_parent", data.frame(
     datagroup_id = dgidff,
@@ -280,9 +309,13 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   amlegalcm <- sf::st_within(geobrcities,
                              sf::st_buffer(geobramazonia_legal, 500), sparse = FALSE)
   dgidal <- DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup where datagroup_name LIKE '%faz parte da Amaz%'")$datagroup_id
-  local_group_al <- amlegalcm |>
-    dplyr::transmute(local_id = 1:nrow(amlegalcm),
-                     datagroup_id = dplyr::case_when(amzlegal ~ dgidal[1], TRUE ~ dgidal[2]))
+  local_group_al <- geobrcities |> sf::st_drop_geometry() |>
+    dplyr::mutate(amzlegal = as.logical(amlegalcm)) |>
+    dplyr::left_join(mapa_mun, by = "code_muni") |>
+    dplyr::transmute(local_id,
+                     datagroup_id = dplyr::case_when(
+                       amzlegal ~ dgidal[1], TRUE ~ dgidal[2])) |>
+    dplyr::filter(!is.na(local_id))
   DBI::dbAppendTable(con, "local_group", local_group_al)
   DBI::dbAppendTable(con, "group_parent", data.frame(
     datagroup_id = dgidal,
@@ -302,9 +335,11 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
     datagroup_id = dgidsa,
     datagroup_parentid = DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup WHERE datagroup_name = 'Participação no Semiárido'")$datagroup_id))
   local_group_sa <- geobrcities |> sf::st_drop_geometry() |>
-    dplyr::transmute(local_id = 1:nrow(geobrcities),
+    dplyr::left_join(mapa_mun, by = "code_muni") |>
+    dplyr::transmute(local_id,
                      datagroup_id = dplyr::case_when(
-                       code_muni %in% semiacn ~ dgidsa[1], TRUE ~ dgidsa[2]))
+                       code_muni %in% semiacn ~ dgidsa[1], TRUE ~ dgidsa[2])) |>
+    dplyr::filter(!is.na(local_id))
   DBI::dbAppendTable(con, "local_group", local_group_sa)
 
   ## SUDENE
@@ -321,9 +356,11 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
     datagroup_id = dgidsudene,
     datagroup_parentid = DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup WHERE datagroup_name = 'Participação na SUDENE'")$datagroup_id))
   local_group_sudene <- geobrcities |> sf::st_drop_geometry() |>
-    dplyr::transmute(local_id = 1:nrow(geobrcities),
+    dplyr::left_join(mapa_mun, by = "code_muni") |>
+    dplyr::transmute(local_id,
                      datagroup_id = dplyr::case_when(
-                       code_muni %in% ibgesudene ~ dgidsudene[1], TRUE ~ dgidsudene[2]))
+                       code_muni %in% ibgesudene ~ dgidsudene[1], TRUE ~ dgidsudene[2])) |>
+    dplyr::filter(!is.na(local_id))
   DBI::dbAppendTable(con, "local_group", local_group_sudene)
 
   ## Regioes Imediatas/Intermediarias + UF + Regiao
