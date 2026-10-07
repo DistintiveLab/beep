@@ -469,8 +469,12 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
     mapply(fk_relations,npkwf$table,npkwf$n_pk,USE.NAMES=F)
 
     print("Now adding primary keys")
-    ## Add all primary keys
-    mapply(pk_add,npks$table,npks$cols,USE.NAMES = F)
+    ## Add remaining primary keys — apenas as compostas/sem ownpk:
+    ## as ownpk já receberam PK na primeira passada, e repeti-las
+    ## aqui só gera a parede de erros ("multiple primary keys",
+    ## "cannot drop constraint ... other objects depend on it") em
+    ## re-execuções
+    mapply(pk_add,npks[!npks$ownpk,]$table,npks[!npks$ownpk,]$cols,USE.NAMES = F)
 
     ## Review at some point if this for tables:
     ## data_class, data_freq, data_type,datagroup,datasource_type,

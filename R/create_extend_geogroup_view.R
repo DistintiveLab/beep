@@ -45,6 +45,9 @@ consulta_inicial <- paste('(SELECT geoloc.geoloc_id codigo_ibge,',
                           "local.geoloc_id = geoloc.geoloc_id WHERE",
                           municipios_filtro,") As viewbase")
 
+##Ordem canonica das colunas de recorte da matview; a presenca no
+##banco e avaliada a cada chamada (catalogos podem ter subconjunto,
+##ex.: DW sem os grupos de desenvolvimento regional)
 previos_recortes_nmcol <- c(
   'faixa_de_fronteira',
   'participacao_semiarido',
@@ -60,28 +63,31 @@ adiciona_recorte <- \(novorecorte = 'regiao_imediata',baseq = consulta_inicial,v
   ###GET EXISTING PARENT GROUPS AS POSSIBLE BASES
   parent_grupos <- DBI::dbGetQuery(con,"select * from (select DISTINCT(datagroup_parentid) from group_parent) gp LEFT JOIN datagroup ON gp.datagroup_parentid = datagroup.datagroup_id")
 
-  ###FOR COMPATIBILITY PURPOSES WITH PREVIOUS VERSION
-  previos_nmcols <- c('eixos_pndr',
-                      'faixa_de_fronteira',
-                      'participacao_semiarido',
-                      'regiao_intermediaria',
-                      'tipologia',
-                      'participacao_sudene',
-                      'objetivos_pndr',
-                      'regiao_imediata',
-                      'participacao_amazonia_legal')
-
-  if(length(previos_nmcols)==nrow(parent_grupos)){
-    parent_grupos$nomecol <- previos_nmcols
-  } else {
-    parent_grupos$nomecol <- c(previos_nmcols,rep(NA_character_,nrow(parent_grupos)-length(previos_nmcols)))
-
-    parent_grupos <- parent_grupos|>
-      mutate(across(nomecol,
-                    \(x)ifelse(is.na(x),
-                               gsub("_de_","",janitor::make_clean_names(x)),
-                               x)))
+  ###Mapeamento semantico nome do grupo-pai -> coluna da matview
+  ###(substitui o pareamento posicional antigo, que exigia exatamente
+  ###os 9 grupos da era PNDR e quebrava com subconjuntos:
+  ###rep(NA_character_, negativo) em rep(NA, nrow - length))
+  mapa_recortes <- c(
+    "faixa de fronteira" = "faixa_de_fronteira",
+    "semiarido" = "participacao_semiarido",
+    "semiárido" = "participacao_semiarido",
+    "intermediari" = "regiao_intermediaria",
+    "tipologia" = "tipologia",
+    "sudene" = "participacao_sudene",
+    "immediat" = "regiao_imediata",
+    "imediata" = "regiao_imediata",
+    "amaz" = "participacao_amazonia_legal",
+    "eixos" = "eixos_pndr",
+    "objetivos" = "objetivos_pndr")
+  parent_grupos$nomecol <- NA_character_
+  for (padrao in names(mapa_recortes)) {
+    hit <- is.na(parent_grupos$nomecol) &
+      grepl(padrao, parent_grupos$datagroup_name, ignore.case = TRUE)
+    parent_grupos$nomecol[hit] <- unname(mapa_recortes[padrao])
   }
+  ##so recortes presentes no banco, na ordem canonica
+  previos_recortes_nmcol <- previos_recortes_nmcol[
+    previos_recortes_nmcol %in% parent_grupos$nomecol]
 
 
   ###Identifica novo grupo
