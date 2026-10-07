@@ -369,6 +369,12 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
 #    print("processar chaves externas")
     adiciona_foreign <- \(fk,ft){
       if(length(fk)!=0) {
+        # colunas *_parentid ficam por conta do bloco especial da
+        # tabela (ex.: group_parent -> datagroup(datagroup_id)):
+        # referencia-las pela propria coluna geraria um FK quebrado
+        # (a coluna nao existe na tabela-pai) e duplicaria o vinculo
+        # ja criado pelo bloco especial
+        if (grepl("_parentid$", fk)) return(invisible())
         #"(.*)[, ]+(`",fk,"`),*",
         result <- paste0(gsub("\\)$","",createquery),", CONSTRAINT ","fk_",ft,
                          " FOREIGN KEY (",fk,") REFERENCES ",ft,"(",fk,"))")
