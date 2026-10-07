@@ -1,5 +1,19 @@
 # Changelog
 
+## beep 0.9.2.9004
+
+### Fim do bloco PNAD resolvido dinamicamente (linha Brasil)
+
+- `painel_pnad_bloco_fim_resolver(con)`: o painel resolve o fim do bloco
+  PNAD pelo `local_id` da linha “Brasil” (7092 no seeder malha 2024;
+  7087 na produção antiga), com cache de sessão em environment próprio e
+  fallback estático. Sem isso, na numeração nova as intermediárias
+  (7088..7091) vazariam como município na matview e nos filtros do
+  painel.
+- `painel_municipio_filtro` e `painel_nivel_parse` leem o valor
+  resolvido do cache; as funções com `con` aquecem o resolver na
+  abertura.
+
 ## beep 0.9.2.9003
 
 ### Fim do bloco PNAD dinâmico (linha Brasil) no painel

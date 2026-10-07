@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.2.9003</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.2.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,16 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.2.9004" id="beep-0929004">beep 0.9.2.9004<a class="anchor" aria-label="anchor" href="#beep-0929004"></a></h2>
+<div class="section level3">
+<h3 id="fim-do-bloco-pnad-resolvido-dinamicamente-linha-brasil-0-9-2-9004">Fim do bloco PNAD resolvido dinamicamente (linha Brasil)<a class="anchor" aria-label="anchor" href="#fim-do-bloco-pnad-resolvido-dinamicamente-linha-brasil-0-9-2-9004"></a></h3>
+<ul><li>
+<code>painel_pnad_bloco_fim_resolver(con)</code>: o painel resolve o fim do bloco PNAD pelo <code>local_id</code> da linha “Brasil” (7092 no seeder malha 2024; 7087 na produção antiga), com cache de sessão em environment próprio e fallback estático. Sem isso, na numeração nova as intermediárias (7088..7091) vazariam como município na matview e nos filtros do painel.</li>
+<li>
+<code>painel_municipio_filtro</code> e <code>painel_nivel_parse</code> leem o valor resolvido do cache; as funções com <code>con</code> aquecem o resolver na abertura.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.2.9003" id="beep-0929003">beep 0.9.2.9003<a class="anchor" aria-label="anchor" href="#beep-0929003"></a></h2>
 <div class="section level3">
