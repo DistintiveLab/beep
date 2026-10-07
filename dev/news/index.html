@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9003</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,16 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.0.9004" id="beep-0909004">beep 0.9.0.9004<a class="anchor" aria-label="anchor" href="#beep-0909004"></a></h2>
+<div class="section level3">
+<h3 id="reversão-das-mudanças-de-fk-do-prepare_db-0-9-0-9004">Reversão das mudanças de FK do prepare_db<a class="anchor" aria-label="anchor" href="#revers%C3%A3o-das-mudan%C3%A7as-de-fk-do-prepare_db-0-9-0-9004"></a></h3>
+<ul><li>
+<code>adiciona_foreign</code> (sqlite) volta ao original (<code>fk_&lt;tabela&gt;</code> referenciando <code>(&lt;fk&gt;)</code>) e o bloco especial do <code>group_parent</code> volta.</li>
+<li>Mantidas as correções não-FK: tabela fantasma <code>geo</code> no <code><a href="https://rdrr.io/r/base/ls.html" class="external-link">ls()</a></code>, typo do gsub (“NA in coercion to boolean”), wrapper de contexto nos envios sqlite e <code>criar_recortes_geograficos(con=)</code> com conexão corrente (sem <code><a href="https://rdrr.io/r/base/source.html" class="external-link">source()</a></code> relativo).</li>
+<li>Observação: a parede de erros ao RODAR prepare_db em um banco que já tem PKs/FKs é idempotência ausente (erros suprimidos por try; estado final íntegro) — comportamento do código original.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0.9003" id="beep-0909003">beep 0.9.0.9003<a class="anchor" aria-label="anchor" href="#beep-0909003"></a></h2>
 <div class="section level3">
