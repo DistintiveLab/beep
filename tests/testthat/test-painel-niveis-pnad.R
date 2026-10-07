@@ -45,7 +45,7 @@ test_that("painel_nivel_parse rejeita chave invalida sem gerar filtro", {
 test_that("rotulo e fronteira do subnivel PNAD estao no lugar", {
   expect_identical(unname(beep:::painel_niveis_rotulo["7p"]),
                    "Região de interesse PNAD")
-  expect_identical(beep:::painel_municipio_limite_id, 5571L)
+  expect_identical(beep:::painel_municipio_limite_id, 5572L)
 })
 
 test_that("guards dos caches com a nova chave retornam vazio sem tocar no banco", {

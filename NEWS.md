@@ -1,3 +1,22 @@
+# beep 0.9.1.9003
+
+## Malha municipal 2024 e estratos PNAD a partir de 5572
+
+- `populate_initialdb()` usa a malha municipal **2024** do geobr
+  (5.571 municípios, Boa Esperança do Norte incluída; sem as
+  features da Lagoa dos Patos): municípios ocupam `local_id`
+  1..5571.
+- Estratos PNAD Contínua passam a ser inseridos logo após os
+  municípios, a partir de **5572** (parâmetro `pnadc_inicio`),
+  antes das regiões imediata/intermediária.
+- Fronteiras sincronizadas no painel e na view:
+  `painel_municipio_limite_id = 5572`,
+  `numero_municipios = 5571` (filtro `local_id < 5572`);
+  `painel_pnad_bloco_fim = 7087` mantido como limite superior
+  aberto. DWs antigos com a numeração anterior precisam da versão
+  0.9.1.9002 ou anterior do painel.
+
+
 # beep 0.9.1.9002
 
 ## populate_initialdb: brazilmaps -> geobr

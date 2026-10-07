@@ -32,10 +32,13 @@
 #'   `recortes_geograficos` tolera a ausencia (colunas NA). Os
 #'   recortes territoriais universais (Faixa de Fronteira, Amazonia
 #'   Legal, Semiarido, SUDENE, regioes, UF/Regiao) sempre entram.
+#' @param pnadc_inicio Primeiro `local_id` do bloco de estratos PNAD
+#'   (default 5572: municípios da malha 2024 ocupam 1..5571).
 #' @param dbtype "pgsql" (unico suportado; sqlite não tem PostGIS).
 #' @export
 populate_initialdb <- \(con = NULL, dbtype = "pgsql",
-                        dir_dadostat = NULL, pndr_groups = FALSE) {
+                        dir_dadostat = NULL, pndr_groups = FALSE,
+                        pnadc_inicio = 5572L) {
   stopifnot(dbtype == "pgsql")
   if (is.null(con)) {
     con <- DBI::dbConnect(RPostgres::Postgres(),
@@ -47,8 +50,7 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
 
   ## cargas geobr (mantido ativamente pelo ipea) - usadas pelo
   ## retwritegeo e pelos vinculos territoriais adiante
-  geobrcities <- subset(geobr::read_municipality(year = 2020, simplified = TRUE),
-                        !code_muni %in% (4300000 + 1:2))
+  geobrcities <- geobr::read_municipality(year = 2024, simplified = TRUE)
   geobrimmediater <- geobr::read_immediate_region(year = 2020, simplified = TRUE)
   geobrintermr <- geobr::read_intermediate_region(year = 2020)
   geobrstates <- geobr::read_state(year = 2020)
@@ -124,7 +126,7 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   retwritegeo("State")
   retwritegeo("Region")
 
-  ## 3) Regioes imediatas/intermediarias (geobr 2020) ----------------
+  ## 4) Regioes imediatas/intermediarias (geobr 2020) ----------------
   ## SUDENE (ODS do geoftp IBGE)
   tmp_file_sudene <- tempfile(fileext = ".ods")
   download.file("http://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/area_atuacao_SUDENE/2021/SUDENE_2021.ods",
@@ -149,6 +151,35 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
     geobrintermr |> dplyr::select(dplyr::contains("intermediate")) |>
       sf::st_buffer(500), join = sf::st_within)
   juntaspa <- sf::st_transform(juntaspa, crs = "+proj=longlat +datum=WGS84 +no_defs")
+
+  ## 3) Estratos PNAD Contínua ---------------------------------------
+  ## codigo sintetico = cod_estrato + UF + regiao (2+1 primeiros digitos)
+  pnadcem <- tempfile(fileext = ".csv")
+  download.file("https://painel.ibge.gov.br/saibamais/files/Municipios_por_Estratos.csv",
+                pnadcem)
+  extratosmun <- readr::read_csv2(pnadcem)
+  extratosmun <- geobrcities |>
+    dplyr::left_join(extratosmun, by = c("code_muni" = "Código do Município"))
+  extrlocs <- extratosmun |>
+    dplyr::mutate(codmun = paste0(`Código do estrato`,
+                                  substr(`Código do estrato`, 1, 2),
+                                  substr(`Código do estrato`, 1, 1))) |>
+    dplyr::group_by(codmun, `Nome abreviado do estrato`) |>
+    dplyr::summarise() |> dplyr::ungroup()
+
+  newloce <- max(DBI::dbGetQuery(con, "SELECT MAX(local_id) FROM local;")$max,
+                 pnadc_inicio - 1L, na.rm = TRUE)
+
+  geoloc <- extrlocs |>
+    dplyr::select(geoloc_id = codmun, geometry = geom) |>
+    sf::st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs")
+  sf::st_write(geoloc, con, append = TRUE)
+
+  locale <- extrlocs |> sf::st_drop_geometry() |>
+    dplyr::mutate(local_id = (newloce + 1):(newloce + nrow(extrlocs))) |>
+    dplyr::select(local_id, geoloc_id = codmun,
+                  local_name = `Nome abreviado do estrato`)
+  DBI::dbAppendTable(con, "local", locale)
 
   geoloc <- geobrintermr |>
     dplyr::select(geoloc_id = code_intermediate, geometry = geom) |>
@@ -175,33 +206,6 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
                   local_name = name_immediate)
   DBI::dbAppendTable(con, "local", local)
 
-  ## 4) Estratos PNAD Contínua ---------------------------------------
-  ## codigo sintetico = cod_estrato + UF + regiao (2+1 primeiros digitos)
-  pnadcem <- tempfile(fileext = ".csv")
-  download.file("https://painel.ibge.gov.br/saibamais/files/Municipios_por_Estratos.csv",
-                pnadcem)
-  extratosmun <- readr::read_csv2(pnadcem)
-  extratosmun <- geobrcities |>
-    dplyr::left_join(extratosmun, by = c("code_muni" = "Código do Município"))
-  extrlocs <- extratosmun |>
-    dplyr::mutate(codmun = paste0(`Código do estrato`,
-                                  substr(`Código do estrato`, 1, 2),
-                                  substr(`Código do estrato`, 1, 1))) |>
-    dplyr::group_by(codmun, `Nome abreviado do estrato`) |>
-    dplyr::summarise() |> dplyr::ungroup()
-
-  newloce <- DBI::dbGetQuery(con, "SELECT MAX(local_id) FROM local;")$max
-
-  geoloc <- extrlocs |>
-    dplyr::select(geoloc_id = codmun, geometry = geom) |>
-    sf::st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs")
-  sf::st_write(geoloc, con, append = TRUE)
-
-  locale <- extrlocs |> sf::st_drop_geometry() |>
-    dplyr::mutate(local_id = (newloce + 1):(newloce + nrow(extrlocs))) |>
-    dplyr::select(local_id, geoloc_id = codmun,
-                  local_name = `Nome abreviado do estrato`)
-  DBI::dbAppendTable(con, "local", locale)
 
   ## 5) Brasil --------------------------------------------------------
   retwritegeo("Brazil")
@@ -440,7 +444,7 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
 
   ## Vinculos da Tipologia por municipio
   if (pndr_groups && !is.null(tip2018)) {
-    locids <- DBI::dbGetQuery(con, "SELECT local_id,geoloc_id from local WHERE local_id < 5571")
+    locids <- DBI::dbGetQuery(con, "SELECT local_id,geoloc_id from local WHERE local_id < 5572")
     tip2018 <- tip2018 |> dplyr::left_join(locids, by = c("code_muni" = "geoloc_id"))
     lcgroup <- tip2018 |>
       dplyr::left_join(localg, by = c("TIPOLOGIA SUB REGIONAL" = "datagroup_name")) |>

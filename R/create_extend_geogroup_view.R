@@ -29,8 +29,8 @@ criar_recortes_geograficos <- \(con = NULL) {
 con_propria <- is.null(con)
 if (con_propria) con <- .con_recortes()
 if (is.null(con)) return(invisible(NULL))
-numero_municipios <- 5570
-# municipios = bloco historico (1..5570) MAIS os incorporados com append
+numero_municipios <- 5571
+# municipios = bloco 2024 (1..5571) MAIS os incorporados com append
 # apos o bloco PNAD (7088, 7089, ...; ver incorporar_municipio_ibge)
 pnad_bloco_fim <- 7087
 municipios_filtro <- sprintf("(local.local_id < %d OR local.local_id > %d)",
