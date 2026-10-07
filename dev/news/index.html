@@ -40,6 +40,17 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.1.9006" id="beep-0919006">beep 0.9.1.9006<a class="anchor" aria-label="anchor" href="#beep-0919006"></a></h2>
 <div class="section level3">
+<h3 id="populate_initialdb-pré-aquecimento-do-cache-do-geobr-0-9-1-9006">populate_initialdb: pré-aquecimento do cache do geobr<a class="anchor" aria-label="anchor" href="#populate_initialdb-pr%C3%A9-aquecimento-do-cache-do-geobr-0-9-1-9006"></a></h3>
+<ul><li>O geobr 1.9.1 baixa os gpkg para o tempdir da sessão, e o CDN do IPEA devolve 0 bytes quando o IP encadeia downloads grandes (a leitura vira NULL e os recortes morriam). O seeder agora pré-aquece o cache via httr2 com retry/backoff (3 tentativas, backoff exponencial) para todos os níveis usados: municípios 2024, UFs, micro/meso 2019, imediata/intermediária 2020, semiarido 2022 e amazonia legal 2012.</li>
+<li>
+<code>limpar=TRUE</code> (default): truncar local_group/local/geoloc no início torna o seeder re-executável.</li>
+<li>Amazônia Legal: o caminho da metadata v1.7.0 do geobr dá 404 (migrado para data_v2.0.0 no servidor) — com geobr 2.1 (que lê a base nova) volta a funcionar; sem ele o recorte é pulado com aviso.</li>
+<li>Buffers espaciais agora em metros (EPSG 5880): o código herdado bufferizava 500 graus em CRS geográfico.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.1.9006" id="beep-0919006-1">beep 0.9.1.9006<a class="anchor" aria-label="anchor" href="#beep-0919006-1"></a></h2>
+<div class="section level3">
 <h3 id="populate_initialdb-retry-com-backoff-e-cargas-blindadas-0-9-1-9006">populate_initialdb: retry com backoff e cargas blindadas<a class="anchor" aria-label="anchor" href="#populate_initialdb-retry-com-backoff-e-cargas-blindadas-0-9-1-9006"></a></h3>
 <ul><li>Todos os carregamentos geobr passam por <code>ler_geobr_seguro()</code> com 4 tentativas e backoff crescente (5/15/45/90s): o CDN do IPEA devolve 0 bytes / “Problem connecting to data server” quando o IP encadeia downloads grandes.</li>
 <li>Malha municipal 2024 e UFs são essenciais (stop se indisponíveis); semiarido/amazonia continuam opcionais com aviso (a matview nasce sem a coluna).</li>
