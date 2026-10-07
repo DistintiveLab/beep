@@ -1,3 +1,23 @@
+# beep 0.9.0.9003
+
+## Seeder territorial: populate_initialdb() (data-raw)
+
+- Portado do pndr_dashboard (populate_initialdb.R), onde nasceu o
+  catálogo territorial do ecossistema. Preenche `local`/`geoloc` de
+  um DW recém-criado (municípios, micro/mesorregiões antigas com
+  shift 8 dígitos, UFs, regiões, Brasil, regiões imediata/
+  intermediária 2020, estratos PNAD na faixa 5571..7087) e os
+  recortes territoriais usados pela matview `recortes_geograficos`
+  (Faixa de Fronteira, Amazônia Legal, Semiárido, SUDENE) com
+  `local_group`/`group_parent`.
+- Grupos de desenvolvimento regional (Tipologia PNDR 2018,
+  Eixos/Objetivos) ficam **opt-in** (`pndr_groups=TRUE`) — fora do
+  padrão, como decidido; a matview tolera ausência de tipologia.
+- Não carrega indicadores (mdata/data_values): esses vêm dos
+  pipelines de cada projeto. Requer Suggests: brazilmaps, geobr,
+  readODS, rvest.
+
+
 # beep 0.9.0.9002
 
 ## prepare_db funciona fora da raiz do pacote
