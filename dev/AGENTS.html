@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.1.9006</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.2.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -218,7 +218,36 @@ app_server()  (R/server_app.R)
 <code>datasource</code> / <code>datasource_type</code> / <code>institution</code> / <code>officialer</code> — provenance.</li>
 <li>
 <code>data_class</code> / <code>data_freq</code> / <code>data_type</code> — classification lookups.</li>
-</ul><p><strong>Materialized views</strong> (refresh after writes):</p>
+</ul></div>
+<div class="section level3">
+<h3 id="territorial-levels-and-local_id-blocks">Territorial levels and <code>local_id</code> blocks<a class="anchor" aria-label="anchor" href="#territorial-levels-and-local_id-blocks"></a></h3>
+<p><code>R/niveis_territoriais.R</code> is the single source of the conventions below (ROADMAP-niveis-submunicipais.md). <code>geoloc.geoloc_id</code> is BIGINT and <code>local.nivel_tipo</code> records the level; submunicipal codes carry their own municipality as the 7-digit prefix:</p>
+<table class="table"><colgroup><col width="25%"><col width="25%"><col width="25%"><col width="25%"></colgroup><thead><tr><th>Level</th>
+<th>
+<code>geoloc_id</code> width</th>
+<th>
+<code>local_id</code> block</th>
+<th>Notes</th>
+</tr></thead><tbody><tr><td>municipality</td>
+<td>7</td>
+<td>malha 2024 1..5571, PNAD 5572..7087 (or up to the “Brasil” row), then append after it</td>
+<td>6-digit codes always mean municipality (RAIS prefix map)</td>
+</tr><tr><td>bairro</td>
+<td>11-12</td>
+<td>1000000..1999999</td>
+<td>derived from the Census (dissolve of tracts), <code><a href="reference/incorporar_bairros.html">incorporar_bairros()</a></code>
+</td>
+</tr><tr><td>area de ponderacao</td>
+<td>13</td>
+<td>2000000..2999999</td>
+<td><code><a href="reference/incorporar_areas_ponderacao.html">incorporar_areas_ponderacao()</a></code></td>
+</tr><tr><td>setor censitario</td>
+<td>15-16</td>
+<td>100000..999999</td>
+<td><code><a href="reference/incorporar_setores_censitarios.html">incorporar_setores_censitarios()</a></code></td>
+</tr></tbody></table><p>Loads are <strong>append-only</strong> (<code>local_id</code> is never renumbered — <code>data_values</code> references it) and idempotent by code via <code><a href="reference/ampliar_nivel_territorial.html">ampliar_nivel_territorial()</a></code>. Provenance goes to <code>niveis_carga (nivel_tipo, fonte, escopo, ano, n_localidades, carregado_em)</code>. Submunicipal levels deliberately have <strong>no row in <code>recortes_geograficos</code></strong> (one row per municipality by design); the painel resolves their context via the 7-digit prefix. Note <code>R/painel_dw.R</code> keeps a local copy of the block limits so the painel skeleton stays self-contained — mirror changes in both (<code>tests/testthat/test-painel-esqueleto.R</code> enforces file sync, not this).</p>
+<p>For TSE electoral data by bairro, the pure helpers in <code>R/tse_auxiliares.R</code> (internal) match <code>(municipio, normalized name)</code> and map seção→bairro from the voter-profile files; premises and limits are documented in that file’s header — never infer a bairro silently.</p>
+<p><strong>Materialized views</strong> (refresh after writes):</p>
 <ul><li>
 <code>named_datavalues</code> — joins <code>data_values</code> → <code>mdata</code> → <code>mdata_exts</code> → <code>datasource</code>.</li>
 <li>

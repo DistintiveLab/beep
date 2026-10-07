@@ -8,6 +8,10 @@
 - [`admin_app()`](https://distintivelab.github.io/beep/dev/reference/admin_app.md)
   : Painel admin (somente leitura) do lote de um projeto
 
+- [`ampliar_nivel_territorial()`](https://distintivelab.github.io/beep/dev/reference/ampliar_nivel_territorial.md)
+  : Incorpora um nivel territorial submunicipal a partir de um sf de
+  feicoes
+
 - [`anos_rais()`](https://distintivelab.github.io/beep/dev/reference/anos_rais.md)
   : Anos disponiveis no mte_rais (tabelas rais_vinculo_YYYY)
 
@@ -110,8 +114,17 @@
 - [`icon_text()`](https://distintivelab.github.io/beep/dev/reference/icon_text.md)
   : Icon Text
 
+- [`incorporar_areas_ponderacao()`](https://distintivelab.github.io/beep/dev/reference/incorporar_areas_ponderacao.md)
+  : Incorpora a malha de areas de ponderacao do Censo
+
+- [`incorporar_bairros()`](https://distintivelab.github.io/beep/dev/reference/incorporar_bairros.md)
+  : Incorpora bairros derivados dos setores censitarios
+
 - [`incorporar_municipio_ibge()`](https://distintivelab.github.io/beep/dev/reference/incorporar_municipio_ibge.md)
   : Incorpora um municipio criado depois da carga original do DW
+
+- [`incorporar_setores_censitarios()`](https://distintivelab.github.io/beep/dev/reference/incorporar_setores_censitarios.md)
+  : Incorpora a malha de setores censitarios de UFs/municipios
 
 - [`insert_logo()`](https://distintivelab.github.io/beep/dev/reference/insert_logo.md)
   : Insert Logo
@@ -138,6 +151,9 @@
 
 - [`populate_initialdb()`](https://distintivelab.github.io/beep/dev/reference/populate_initialdb.md)
   : populate_initialdb — seeder territorial do DW beep
+
+- [`preparar_niveis_submunicipais()`](https://distintivelab.github.io/beep/dev/reference/preparar_niveis_submunicipais.md)
+  : Migra o schema do DW para aceitar niveis territoriais submunicipais
 
 - [`prepare_db()`](https://distintivelab.github.io/beep/dev/reference/prepare_db.md)
   : Prepare app_db

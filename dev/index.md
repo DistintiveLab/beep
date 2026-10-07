@@ -89,3 +89,8 @@ O `beep` deseja fornecer os seguintes recursos:
   [targets](https://docs.ropensci.org/targets/)**: a pré-configuração de
   pipelines reproduzíveis (o foco original do protótipo `beep`) está
   planejada como uma opção futura do pacote.
+
+- **Níveis territoriais submunicipais**: ampliar o DW para bairro e
+  setor censitário (dados eleitorais do TSE e Censo IBGE) por meio de
+  carregador dedicado, sem custo para quem não usa — plano detalhado em
+  `ROADMAP-niveis-submunicipais.md`.

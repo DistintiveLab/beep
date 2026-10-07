@@ -1,0 +1,64 @@
+# Incorpora bairros derivados dos setores censitarios
+
+Dissolve os setores por bairro (codigo derivado do Censo: municipio 7
+digitos + sequencial 4-5; codigos completos de 11-12 digitos tambem sao
+aceitos como-is) e grava cada bairro com ampliar_nivel_territorial()
+(tipo "bairro": geoloc_id de 11-12 digitos, local_id no bloco
+1000000-1999999). Setores sem bairro informado ficam de fora — o bairro
+nunca e inferido. Cargas repetidas sao idempotentes por codigo e
+registradas em niveis_carga com fonte "dissolve_setores" (uma linha por
+municipio; ano e apenas proveniencia — com o default NA cada carga gera
+uma linha nova, pois NULL nunca colide no UNIQUE; passe um ano fixo para
+atualizar a mesma linha).
+
+## Usage
+
+``` r
+incorporar_bairros(
+  setores,
+  col_bairro = NULL,
+  col_nome = NULL,
+  col_setor = NULL,
+  con = NULL,
+  simplificar = 0.001,
+  refrescar = FALSE,
+  ano = NA
+)
+```
+
+## Arguments
+
+- setores:
+
+  sf de setores censitarios com atributo de bairro (`col_bairro`) e,
+  quando o atributo for sufixo curto (1-5 digitos), o codigo do setor
+  (`col_setor`, auto-detetavel) para derivar o municipio pai; CRS
+  qualquer (reprojetado para 4326 na gravacao)
+
+- col_bairro, col_nome, col_setor:
+
+  nomes das colunas de bairro (codigo), nome e codigo de setor no sf;
+  defaults por auto-deteccao
+
+- con:
+
+  conexao DBI com o DW; default abre o beepdb local
+
+- simplificar:
+
+  dTolerance (graus) da simplificacao no SQL
+
+- refrescar:
+
+  atualizar as matviews named/geonamed_datavalues ao fim? Custa minutos
+  em DW grande; ETL em lote prefere refrescar uma unica vez
+
+- ano:
+
+  ano de referencia do atributo de bairro (proveniencia em niveis_carga;
+  default NA — ver nota na descricao)
+
+## Value
+
+invisivel data.frame (escopo, n_localidades) com o resumo da carga por
+municipio — o mesmo registro vai para `niveis_carga`

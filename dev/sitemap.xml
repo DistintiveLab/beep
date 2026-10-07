@@ -2,11 +2,13 @@
 <url><loc>https://distintivelab.github.io/beep/dev/AGENTS.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/LICENSE-text.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/LICENSE.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/ROADMAP-niveis-submunicipais.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/authors.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/index.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/news/index.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/add_external_resources.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/admin_app.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/ampliar_nivel_territorial.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/anos_rais.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/aplicar_retencao_dumps.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/app_server.html</loc></url>
@@ -91,7 +93,10 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/header_buttons_ui.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/header_ui.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/icon_text.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/incorporar_areas_ponderacao.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/incorporar_bairros.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/incorporar_municipio_ibge.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/incorporar_setores_censitarios.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/index.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/insert_logo.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/ler_controle.html</loc></url>
@@ -217,6 +222,7 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/panel_sobre_server.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/panel_sobre_ui.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/populate_initialdb.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/preparar_niveis_submunicipais.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/prepare_db.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/rep_br.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/resolver_logo_contato.html</loc></url>

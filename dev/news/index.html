@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.1.9006</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.2.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,27 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.2.9000" id="beep-0929000">beep 0.9.2.9000<a class="anchor" aria-label="anchor" href="#beep-0929000"></a></h2>
+<div class="section level3">
+<h3 id="níveis-territoriais-submunicipais-no-dw-setor-área-de-ponderação-bairro-0-9-2-9000">Níveis territoriais submunicipais no DW (setor, área de ponderação, bairro)<a class="anchor" aria-label="anchor" href="#n%C3%ADveis-territoriais-submunicipais-no-dw-setor-%C3%A1rea-de-pondera%C3%A7%C3%A3o-bairro-0-9-2-9000"></a></h3>
+<p>Implementação do ROADMAP-niveis-submunicipais.md (F1-F4):</p>
+<ul><li>
+<strong>Migração do schema</strong> — <code><a href="../reference/preparar_niveis_submunicipais.html">preparar_niveis_submunicipais()</a></code>: <code>geoloc.geoloc_id</code> vira BIGINT e <code>local</code> ganha <code>nivel_tipo</code>, tudo em uma transação que salva e recria matviews dependentes e FKs; bancos já migrados são no-op. Novos blocos de <code>local_id</code>: setor 100000-999999 (geoloc_id 15-16d), bairro 1000000-1999999 (11-12d) e área de ponderação 2000000-2999999 (13d); o município pai é sempre o prefixo 7d do código. A tabela <code>niveis_carga</code> registra o que foi carregado, de onde e quando (insumo para remoção/atualização seletiva).</li>
+<li>
+<strong>Carregadores</strong> — <code><a href="../reference/incorporar_setores_censitarios.html">incorporar_setores_censitarios()</a></code> e <code><a href="../reference/incorporar_areas_ponderacao.html">incorporar_areas_ponderacao()</a></code> (malhas do Censo via geobr, por UF/município) e <code><a href="../reference/incorporar_bairros.html">incorporar_bairros()</a></code> (bairros derivados do atributo de bairro dos setores, por dissolve: código município 7d + sequencial 4-5d, ou código completo 11-12d; setores sem bairro ficam de fora — bairro nunca é inferido). A máquina genérica é <code><a href="../reference/ampliar_nivel_territorial.html">ampliar_nivel_territorial()</a></code> (idempotente por código, inserção set-based); <code><a href="../reference/gravar_serie_dw.html">gravar_serie_dw()</a></code> resolve códigos longos (ex.: setor 15d) direto para o local_id.</li>
+<li>
+<strong>Auxiliares TSE</strong> (internos <code>beep:::</code>, para a frente eleitoral) — <code>tse_normalizar_nome()</code>, <code>tse_casar_bairros()</code> (casamento por município + nome normalizado, com relatório de não-casados e homônimos ambíguos), <code>tse_mapa_secao_bairro()</code> (perfil do eleitorado por seção; seções com bairros múltiplos ficam sem bairro e listadas) e <code>tse_agregar_votacao()</code> (votos por bairro, com a zona como fallback auditável das seções sem bairro determinável). As premissas e limites da correspondência seção↔︎bairro estão documentadas no cabeçalho de <code>R/tse_auxiliares.R</code> — nenhuma inferência silenciosa.</li>
+<li>
+<strong>Painel</strong> — a aba Baixar traduz códigos submunicipais (setor/bairro/AP) pelo geoloc_id; o globo passa a enviar como “malha” os vizinhos do mesmo nível dentro do município em foco (<code>painel_geo_irmaos_mun()</code>, simplificação + teto de feições) e a reenvia a cada troca de destaque (também corrige município que “sumia” ao trocar de foco dentro da mesma UF). Níveis sem malha ou rótulo degradam graciosamente (Sem dados).</li>
+<li>
+<strong>Correções de compatibilidade PostgreSQL</strong> incluídas no caminho da migração: recriação de matviews dependentes entre SAVEPOINT/ROLLBACK TO (uma instrução que falha não aborta a transação inteira).</li>
+<li>
+<strong>Mudanças de comportamento</strong>: o mapa de prefixo 6d da RAIS cobre só municípios (geoloc_id de 7 dígitos — regiões PNAD e agregados ficam fora; códigos 6d de entrada continuam significando município); o filtro de zona municipal do <code><a href="../reference/db_datawrite.html">db_datawrite()</a></code> exclui os blocos submunicipais (<code>local_id &gt;= 100000</code>).</li>
+<li>
+<strong>Fronteira municipal (malha 2024)</strong>: municípios 1..5571, estratos PNAD a partir de 5572 e fronteira superior dinâmica pelo <code>local_id</code> da linha “Brasil” — <code>eh_municipio_id()</code> e <code>eh_zona_carga_municipal()</code> ganham o argumento <code>bloco_fim</code> (fallback estático 7087). Os blocos submunicipais ficam fora de todos os filtros municipais, inclusive no painel.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.1.9006" id="beep-0919006">beep 0.9.1.9006<a class="anchor" aria-label="anchor" href="#beep-0919006"></a></h2>
 <div class="section level3">
