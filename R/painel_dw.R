@@ -103,6 +103,7 @@ painel_rotulo_tempo <- function(freq_name) {
 #' municipios incorporados apos o bloco PNAD, local_id > 7087)
 #' @keywords internal
 painel_geo_mun <- function(con) {
+  painel_pnad_bloco_fim_resolver(con)
   sf::st_read(con, query = paste(
     "SELECT l.local_id, l.local_name, g.geometry",
     "FROM local l JOIN geoloc g USING (geoloc_id)",
@@ -113,6 +114,7 @@ painel_geo_mun <- function(con) {
 #' granularidades: municipio, UF, aglomeracao, regiao, "exceto")
 #' @keywords internal
 painel_locais <- function(con) {
+  painel_pnad_bloco_fim_resolver(con)
   loc <- DBI::dbGetQuery(con,
     "SELECT local_id, local_name FROM local ORDER BY local_name, local_id")
   setNames(loc$local_id,
@@ -127,6 +129,7 @@ painel_locais <- function(con) {
 #' codigo externo e continuam mostrando o local_id.
 #' @keywords internal
 painel_codigo_mun <- function(con) {
+  painel_pnad_bloco_fim_resolver(con)
   cod <- DBI::dbGetQuery(con, paste(
     "SELECT l.local_id, g.geoloc_id::text AS codigo",
     "FROM local l JOIN geoloc g USING (geoloc_id)",
@@ -420,6 +423,7 @@ painel_uf_sigla <- c(
 #' agregar os ~10 milhoes de pontos do data_values
 #' @keywords internal
 painel_niveis <- function(con) {
+  painel_pnad_bloco_fim_resolver(con)
   q <- DBI::dbGetQuery(con, paste(
     "SELECT CASE WHEN length(g.geoloc_id::text) = 7",
     sprintf("AND l.local_id >= %d AND l.local_id <= %d THEN '7p'",
@@ -602,6 +606,7 @@ painel_geo_pai_uf <- function(con, local_id) {
 #' desenhadas no globo ao redor do municipio em destaque
 #' @keywords internal
 painel_geo_mun_uf <- function(con, uf) {
+  painel_pnad_bloco_fim_resolver(con)
   uf <- as.character(uf)[1]
   if (is.na(uf) || !grepl("^[0-9]{2}$", uf)) return(painel_geo_vazio())
   geo <- sf::st_read(con, query = sprintf(paste(

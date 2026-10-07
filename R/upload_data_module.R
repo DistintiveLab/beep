@@ -940,7 +940,11 @@ tipocarga <- reactive({
             } else {
             fam <- sub("^# tsebr-familia: ([a-z_]+).*", "\\1", input$upload_file)
             codigo <- sub("^[^\n]+\n", "", input$upload_file)
-            tabela <- eval(parse(text=codigo))
+            # bloco: avalia TODAS as expressoes (con/mapa/chamada final)
+            tabela <- eval(parse(text = paste0("{\n", codigo, "\n}")))
+            if (!is.data.frame(tabela))
+              stop("Fonte TSE: o call string nao devolveu um data.frame")
+            tabela
 
             ####DATAFILE WRITER
 
@@ -972,8 +976,12 @@ tipocarga <- reactive({
             if (!requireNamespace("censoagg", quietly = TRUE)) {
               print("Fonte censo desabilitada: instale censoagg e censobr")
             } else {
-            tabela <- eval(parse(text=input$upload_file))
+            tabela <- eval(parse(text = paste0("{\n", input$upload_file, "\n}")))
             if (!inherits(tabela, "list")) tabela <- list(censo=tabela)
+            falhas <- names(tabela)[!vapply(tabela, is.data.frame, logical(1))]
+            if (length(falhas))
+              stop("censo: variaveis sem data.frame: ",
+                   paste(falhas, collapse = ", "))
 
             combinada <- data.table::rbindlist(
               lapply(names(tabela), \(nm)
