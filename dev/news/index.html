@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9002</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,15 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.0.9003" id="beep-0909003">beep 0.9.0.9003<a class="anchor" aria-label="anchor" href="#beep-0909003"></a></h2>
+<div class="section level3">
+<h3 id="seeder-territorial-populate_initialdb-data-raw-0-9-0-9003">Seeder territorial: populate_initialdb() (data-raw)<a class="anchor" aria-label="anchor" href="#seeder-territorial-populate_initialdb-data-raw-0-9-0-9003"></a></h3>
+<ul><li>Portado do pndr_dashboard (populate_initialdb.R), onde nasceu o catálogo territorial do ecossistema. Preenche <code>local</code>/<code>geoloc</code> de um DW recém-criado (municípios, micro/mesorregiões antigas com shift 8 dígitos, UFs, regiões, Brasil, regiões imediata/ intermediária 2020, estratos PNAD na faixa 5571..7087) e os recortes territoriais usados pela matview <code>recortes_geograficos</code> (Faixa de Fronteira, Amazônia Legal, Semiárido, SUDENE) com <code>local_group</code>/<code>group_parent</code>.</li>
+<li>Grupos de desenvolvimento regional (Tipologia PNDR 2018, Eixos/Objetivos) ficam <strong>opt-in</strong> (<code>pndr_groups=TRUE</code>) — fora do padrão, como decidido; a matview tolera ausência de tipologia.</li>
+<li>Não carrega indicadores (mdata/data_values): esses vêm dos pipelines de cada projeto. Requer Suggests: brazilmaps, geobr, readODS, rvest.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0.9002" id="beep-0909002">beep 0.9.0.9002<a class="anchor" aria-label="anchor" href="#beep-0909002"></a></h2>
 <div class="section level3">
