@@ -1,5 +1,22 @@
 # Changelog
 
+## beep 0.9.1.9005
+
+### Fronteira de município dinâmica (linha Brasil) no ecossistema DW
+
+- `incorporar_municipio_ibge`, `montar_lookup_locais` (gravar_serie_dw)
+  e o filtro de sanitização do `db_datawrite` usavam a fronteira fixa
+  `local_id < 5571 OU > 7087` — herdada da numeração antiga (municípios
+  1..5570, estratos 6941..7086, Brasil 7087). Com a malha 2024 do seeder
+  (municípios 1..5571, Brasil = MAX+1 = 6412), intermediárias nos ids
+  7088..7142 seriam classificadas como município e Boa Esperança do
+  Norte (5571) ficaria fora.
+- Agora a fronteira superior é o `local_id` da linha **“Brasil”**
+  (dinâmico; fallback 7087 em bancos sem a linha) e a inferior é 5572.
+  No DW de produção (numeração antiga) o comportamento fica idêntico ao
+  original; em bancos novos, incorporações passam a entrar acima do
+  Brasil.
+
 ## beep 0.9.1.9004
 
 ### Painel: UI dos submódulos tse/censo renderiza; seeder com buffers métricos

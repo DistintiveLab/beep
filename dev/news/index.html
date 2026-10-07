@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.1.9004</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.1.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,15 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.1.9005" id="beep-0919005">beep 0.9.1.9005<a class="anchor" aria-label="anchor" href="#beep-0919005"></a></h2>
+<div class="section level3">
+<h3 id="fronteira-de-município-dinâmica-linha-brasil-no-ecossistema-dw-0-9-1-9005">Fronteira de município dinâmica (linha Brasil) no ecossistema DW<a class="anchor" aria-label="anchor" href="#fronteira-de-munic%C3%ADpio-din%C3%A2mica-linha-brasil-no-ecossistema-dw-0-9-1-9005"></a></h3>
+<ul><li>
+<code>incorporar_municipio_ibge</code>, <code>montar_lookup_locais</code> (gravar_serie_dw) e o filtro de sanitização do <code>db_datawrite</code> usavam a fronteira fixa <code>local_id &lt; 5571 OU &gt; 7087</code> — herdada da numeração antiga (municípios 1..5570, estratos 6941..7086, Brasil 7087). Com a malha 2024 do seeder (municípios 1..5571, Brasil = MAX+1 = 6412), intermediárias nos ids 7088..7142 seriam classificadas como município e Boa Esperança do Norte (5571) ficaria fora.</li>
+<li>Agora a fronteira superior é o <code>local_id</code> da linha <strong>“Brasil”</strong> (dinâmico; fallback 7087 em bancos sem a linha) e a inferior é 5572. No DW de produção (numeração antiga) o comportamento fica idêntico ao original; em bancos novos, incorporações passam a entrar acima do Brasil.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.1.9004" id="beep-0919004">beep 0.9.1.9004<a class="anchor" aria-label="anchor" href="#beep-0919004"></a></h2>
 <div class="section level3">
