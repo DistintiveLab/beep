@@ -1,3 +1,18 @@
+# beep 0.9.0.9004
+
+## Reversão das mudanças de FK do prepare_db
+
+- `adiciona_foreign` (sqlite) volta ao original (`fk_<tabela>`
+  referenciando `(<fk>)`) e o bloco especial do `group_parent` volta.
+- Mantidas as correções não-FK: tabela fantasma `geo` no `ls()`, typo
+  do gsub ("NA in coercion to boolean"), wrapper de contexto nos
+  envios sqlite e `criar_recortes_geograficos(con=)` com conexão
+  corrente (sem `source()` relativo).
+- Observação: a parede de erros ao RODAR prepare_db em um banco que
+  já tem PKs/FKs é idempotência ausente (erros suprimidos por try;
+  estado final íntegro) — comportamento do código original.
+
+
 # beep 0.9.0.9003
 
 ## Seeder territorial: populate_initialdb() (data-raw)

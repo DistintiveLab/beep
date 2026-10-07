@@ -370,9 +370,8 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
     adiciona_foreign <- \(fk,ft){
       if(length(fk)!=0) {
         #"(.*)[, ]+(`",fk,"`),*",
-        # coluna-pai sempre <ft>_id (o fk pode ser <ft>_parentid etc.)
-        result <- paste0(gsub("\\)$","",createquery),", CONSTRAINT fk_",ft,"_",fk,
-                         " FOREIGN KEY (",fk,") REFERENCES ",ft,"(",ft,"_id))")
+        result <- paste0(gsub("\\)$","",createquery),", CONSTRAINT ","fk_",ft,
+                         " FOREIGN KEY (",fk,") REFERENCES ",ft,"(",fk,"))")
         assign("createquery",result,envir = parent.frame(2))
       }
     }
@@ -388,8 +387,11 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
                         gsub(",( +,)+", ", ", createquery))
     # createquery <- gsub("(_id` )REAL","\\1INTEGER",createquery)
 
-    ##hack antigo do group_parent removido: o bloco padrao de FKs agora
-    ## referencia datagroup(datagroup_id) para datagroup_parentid
+    ##hack to fix same fk two times in |>
+
+    if(atbname=="group_parent"){
+      createquery <- gsub("\\)$",", CONSTRAINT fk_parent FOREIGN KEY (datagroup_parentid) REFERENCES datagroup(datagroup_id))",createquery)
+    }
 
 
     ##erro com contexto (tabela + SQL) para diagnosticar a fase de chaves
