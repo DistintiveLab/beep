@@ -70,6 +70,39 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
     NULL
   }
 
+  ## pre-aquece o cache do geobr: download_gpkg grava no tempdir da
+  ## sessao; o CDN do IPEA devolve 0 bytes sob carga, entao baixamos
+  ## via httr2 (com retry/backoff) para o caminho que o geobr espera
+  aquecer_gpkg <- function(geo, year, simplified = TRUE) {
+    md <- tryCatch(geobr:::download_metadata(), error = \(e) return(invisible(NULL)))
+    linha <- md[md$geo == geo & md$year == year, ]
+    if (!nrow(linha)) return(invisible(NULL))
+    urlgp <- linha$download_path[1]
+    if (isTRUE(simplified) && any(grepl("_simplified", linha$download_path,
+                                        fixed = TRUE))) {
+      urlgp <- linha$download_path[grepl("_simplified", linha$download_path,
+                                         fixed = TRUE)][1]
+    }
+    dest <- fs::path(fs::path_temp(), basename(urlgp))
+    if (file.exists(dest) && file.size(dest) > 0) return(invisible(NULL))
+    tryCatch({
+      httr2::request(urlgp) |>
+        httr2::req_retry(max_tries = 3, backoff = \(t) 5 * 2^(t - 1)) |>
+        httr2::req_perform(path = dest)
+      cat("cache geobr pre-aquecido:", basename(urlgp), "\n")
+    }, error = \(e) warning("pre-aquecimento falhou (", basename(urlgp),
+                            "): ", conditionMessage(e)))
+    invisible(NULL)
+  }
+  aquecer_gpkg("municipality", 2024, simplified = TRUE)
+  aquecer_gpkg("state", 2020, simplified = TRUE)
+  aquecer_gpkg("micro_region", 2019, simplified = TRUE)
+  aquecer_gpkg("meso_region", 2019, simplified = TRUE)
+  aquecer_gpkg("immediate_regions", 2020, simplified = TRUE)
+  aquecer_gpkg("intermediate_regions", 2020, simplified = TRUE)
+  aquecer_gpkg("semiarid", 2022, simplified = TRUE)
+  aquecer_gpkg("amazonia_legal", 2012, simplified = TRUE)
+
   ## cargas geobr (mantido ativamente pelo ipea) - usadas pelo
   ## retwritegeo e pelos vinculos territoriais adiante
   geobrcities <- ler_geobr_seguro(geobr::read_municipality,

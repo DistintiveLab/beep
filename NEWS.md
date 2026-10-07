@@ -1,5 +1,25 @@
 # beep 0.9.1.9006
 
+## populate_initialdb: pré-aquecimento do cache do geobr
+
+- O geobr 1.9.1 baixa os gpkg para o tempdir da sessão, e o CDN do
+  IPEA devolve 0 bytes quando o IP encadeia downloads grandes (a
+  leitura vira NULL e os recortes morriam). O seeder agora pré-aquece
+  o cache via httr2 com retry/backoff (3 tentativas, backoff
+  exponencial) para todos os níveis usados: municípios 2024, UFs,
+  micro/meso 2019, imediata/intermediária 2020, semiarido 2022 e
+  amazonia legal 2012.
+- `limpar=TRUE` (default): truncar local_group/local/geoloc no início
+  torna o seeder re-executável.
+- Amazônia Legal: o caminho da metadata v1.7.0 do geobr dá 404
+  (migrado para data_v2.0.0 no servidor) — com geobr 2.1 (que lê a
+  base nova) volta a funcionar; sem ele o recorte é pulado com aviso.
+- Buffers espaciais agora em metros (EPSG 5880): o código herdado
+  bufferizava 500 graus em CRS geográfico.
+
+
+# beep 0.9.1.9006
+
 ## populate_initialdb: retry com backoff e cargas blindadas
 
 - Todos os carregamentos geobr passam por `ler_geobr_seguro()` com 4
