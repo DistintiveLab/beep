@@ -1,3 +1,18 @@
+# beep 0.9.1.9006
+
+## populate_initialdb: retry com backoff e cargas blindadas
+
+- Todos os carregamentos geobr passam por `ler_geobr_seguro()` com 4
+  tentativas e backoff crescente (5/15/45/90s): o CDN do IPEA devolve
+  0 bytes / "Problem connecting to data server" quando o IP encadeia
+  downloads grandes.
+- Malha municipal 2024 e UFs são essenciais (stop se indisponíveis);
+  semiarido/amazonia continuam opcionais com aviso (a matview nasce
+  sem a coluna).
+- Seeder re-executável: `limpar=TRUE` (default) trunca
+  local_group/local/geoloc no início.
+
+
 # beep 0.9.1.9005
 
 ## Fronteira de município dinâmica (linha Brasil) no ecossistema DW

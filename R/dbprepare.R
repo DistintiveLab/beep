@@ -474,7 +474,10 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
     ## aqui só gera a parede de erros ("multiple primary keys",
     ## "cannot drop constraint ... other objects depend on it") em
     ## re-execuções
-    mapply(pk_add,npks[!npks$ownpk,]$table,npks[!npks$ownpk,]$cols,USE.NAMES = F)
+    mapply(function(tb, cols) {
+      tryCatch(pk_add(tb, cols),
+               error = \(e) stop("pkadd ", tb, ": ", conditionMessage(e), call. = FALSE))
+    }, npks[!npks$ownpk,]$table, npks[!npks$ownpk,]$cols, USE.NAMES = F)
 
     ## Review at some point if this for tables:
     ## data_class, data_freq, data_type,datagroup,datasource_type,
@@ -483,7 +486,7 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
     ##Error : Failed to fetch row: ERROR:  multiple primary keys for table \"data_class\" are not allowed\n\n
 
 
-    DBI::dbExecute(con,paste0("CREATE MATERIALIZED VIEW named_datavalues as ",
+    tryCatch(DBI::dbExecute(con,paste0("CREATE MATERIALIZED VIEW named_datavalues as ",
                               "SELECT datasource_name,orig_name,",
                               "mdata_exts.data_freq_id,data_type_id,local_id,refdate,value FROM ",
                               "data_values LEFT JOIN mdata ON ",
@@ -491,14 +494,15 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
                               "mdata_exts ON data_values.mdata_id = ",
                               "mdata_exts.mdata_id LEFT JOIN datasource ON ",
                               "mdata_exts.datasource_id = datasource.datasource_id "
-                              ))
+                              )), error = \(e) stop("matview named_datavalues: ",
+                                                   conditionMessage(e), call. = FALSE))
     if(geo){
       # criar_recortes_geograficos ja vem do namespace (Collate);
       # o source() relativo antigo so funcionava com cwd na raiz do
       # pacote e, sem con, conectava no banco de dev via env vars.
       # Aqui o alvo e sempre a conexao corrente desta execucao.
       criar_recortes_geograficos(con = con)
-      DBI::dbExecute(con,paste0("CREATE MATERIALIZED VIEW geonamed_datavalues as SELECT named_datavalues.*, recortes_geograficos.* FROM named_datavalues LEFT JOIN ",
+      DBI::dbExecute(con,paste0("CREATE MATERIALIZED VIEW IF NOT EXISTS geonamed_datavalues as SELECT named_datavalues.*, recortes_geograficos.* FROM named_datavalues LEFT JOIN ",
                                 "local ON named_datavalues.local_id  = local.local_id LEFT JOIN recortes_geograficos ON ",
                                 "local.geoloc_id = recortes_geograficos.codigo_ibge"))
 

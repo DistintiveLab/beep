@@ -34,11 +34,13 @@
 #'   Legal, Semiarido, SUDENE, regioes, UF/Regiao) sempre entram.
 #' @param pnadc_inicio Primeiro `local_id` do bloco de estratos PNAD
 #'   (default 5572: municípios da malha 2024 ocupam 1..5571).
+#' @param limpar Truncar `local_group`/`local`/`geoloc` antes de
+#'   popular (default TRUE - torna o seeder re-executavel).
 #' @param dbtype "pgsql" (unico suportado; sqlite não tem PostGIS).
 #' @export
 populate_initialdb <- \(con = NULL, dbtype = "pgsql",
                         dir_dadostat = NULL, pndr_groups = FALSE,
-                        pnadc_inicio = 5572L) {
+                        pnadc_inicio = 5572L, limpar = TRUE) {
   stopifnot(dbtype == "pgsql")
   if (is.null(con)) {
     con <- DBI::dbConnect(RPostgres::Postgres(),
@@ -48,19 +50,46 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
                           dbname = Sys.getenv("dbname", "beepdb"))
   }
 
+  if (isTRUE(limpar)) {
+    DBI::dbExecute(con, "DELETE FROM local_group")
+    DBI::dbExecute(con, "DELETE FROM local")
+    DBI::dbExecute(con, "DELETE FROM geoloc")
+  }
+
+  ## retries: o CDN do IPEA devolve 0 bytes esporadicamente apos
+  ## downloads grandes (cache corrompido -> leitura NULL)
+  ler_geobr_seguro <- function(leitor, ...) {
+    ## backoff crescente: o CDN do IPEA limita IP sob sequencias de
+    ## downloads grandes; 0 bytes/cache corrompido conta como falha
+    esperas <- c(5, 15, 45, 90)
+    for (tent in seq_along(esperas)) {
+      d <- tryCatch(leitor(...), error = \(e) NULL)
+      if (!is.null(d) && nrow(d) > 0) return(d)
+      if (tent < length(esperas)) Sys.sleep(esperas[tent])
+    }
+    NULL
+  }
+
   ## cargas geobr (mantido ativamente pelo ipea) - usadas pelo
   ## retwritegeo e pelos vinculos territoriais adiante
-  geobrcities <- geobr::read_municipality(year = 2024, simplified = TRUE)
-  geobrimmediater <- geobr::read_immediate_region(year = 2020, simplified = TRUE)
-  geobrintermr <- geobr::read_intermediate_region(year = 2020)
-  geobrstates <- geobr::read_state(year = 2020)
+  geobrcities <- ler_geobr_seguro(geobr::read_municipality,
+                                  year = 2024, simplified = TRUE)
+  if (is.null(geobrcities)) stop("malha municipal 2024 indisponivel")
+  geobrimmediater <- ler_geobr_seguro(geobr::read_immediate_region,
+                                      year = 2020, simplified = TRUE)
+  geobrintermr <- ler_geobr_seguro(geobr::read_intermediate_region,
+                                   year = 2020)
+  geobrstates <- ler_geobr_seguro(geobr::read_state, year = 2020)
+  if (is.null(geobrstates)) stop("malha de UFs indisponivel")
   ## cargas opcionais (recortes): falha de download nao aborta o
   ## seeder — o bloco correspondente e pulado com aviso e a matview
   ## recortes_geograficos nasce sem a coluna
-  geobrsemiarid <- tryCatch(geobr::read_semiarid(year = 2022),
-    error = \(e) { warning("semiarido indisponivel: ", conditionMessage(e)); NULL })
-  geobramazonia_legal <- tryCatch(geobr::read_amazon(year = 2012),
-    error = \(e) { warning("amazonia legal indisponivel: ", conditionMessage(e)); NULL })
+  geobrsemiarid <- ler_geobr_seguro(geobr::read_semiarid, year = 2022)
+  geobramazonia_legal <- ler_geobr_seguro(geobr::read_amazon, year = 2012)
+  cat("LOADS: cities=", !is.null(geobrcities), " states=", !is.null(geobrstates),
+      " semiarid=", !is.null(geobrsemiarid), "\n")
+  if (is.null(geobrsemiarid)) warning("semiarido indisponivel - recorte nao criado")
+  if (is.null(geobramazonia_legal)) warning("amazonia legal indisponivel - recorte nao criado")
 
   ## niveles -> leitor geobr + colunas de codigo/nome
   espec_retwritegeo <- list(
@@ -84,19 +113,27 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   }
 
   retwritegeo <- \(levelgeo = "City") {
-    esp <- espec_retwritegeo[[levelgeo]]
-    geoloc <- esp$dados()
-    if (levelgeo == "City") {
-      geoloc <- sf::st_sf(
-        geoloc_id = as.numeric(geoloc$code_muni),
-        nome = as.character(geoloc$name_muni),
-        geometry = sf::st_geometry(geoloc)) |>
-        dplyr::arrange(geoloc_id)
+    cat("populate: lendo", levelgeo, "\n")
+    geoloc <- if (levelgeo == "Brazil") {
+      # read_country so traz a geometria: id/nome manuais, como no
+      # seeder original (geoloc_id = MAX(local_id)+1, fora das faixas
+      # de width dos demais niveis)
+      geom_pais <- ler_geobr_seguro(geobr::read_country,
+                                    year = 2019, simplified = TRUE)
+      sf::st_sf(
+        geoloc_id = 1 + as.numeric(DBI::dbGetQuery(con, "select MAX(local_id) from local")),
+        nome = "Brasil", geometry = sf::st_geometry(geom_pais))
     } else {
-      geoloc <- sf::st_sf(
-        geoloc_id = as.numeric(geoloc[[esp$code]]),
-        nome = as.character(geoloc[[esp$nome]]),
-        geometry = sf::st_geometry(geoloc)) |>
+      esp <- espec_retwritegeo[[levelgeo]]
+      stopifnot(!is.null(esp), !is.null(esp$dados))
+      d <- ler_geobr_seguro(esp$dados)
+      cat("RW-DBG:", levelgeo, "| d nrow:", tryCatch(nrow(d), error = \(e) -1),
+          "| geobrstates nrow:", tryCatch(nrow(geobrstates), error = \(e) -1), "\n")
+      stopifnot(!is.null(d))
+      sf::st_sf(
+        geoloc_id = as.numeric(d[[esp$code]]),
+        nome = as.character(d[[esp$nome]]),
+        geometry = sf::st_geometry(d)) |>
         dplyr::arrange(geoloc_id)
     }
     geoloc <- sf::st_transform(geoloc, crs = "+proj=longlat +datum=WGS84 +no_defs")

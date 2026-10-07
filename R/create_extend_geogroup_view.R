@@ -44,6 +44,8 @@ consulta_inicial <- paste('(SELECT geoloc.geoloc_id codigo_ibge,',
                           "local LEFT JOIN geoloc ON ",
                           "local.geoloc_id = geoloc.geoloc_id WHERE",
                           municipios_filtro,") As viewbase")
+  cat("DBG2: consulta_inicial len:", length(consulta_inicial),
+      "| municipios_filtro len:", length(municipios_filtro), "\n")
 
 ##Ordem canonica das colunas de recorte da matview; a presenca no
 ##banco e avaliada a cada chamada (catalogos podem ter subconjunto,
@@ -58,15 +60,10 @@ previos_recortes_nmcol <- c(
   'participacao_amazonia_legal')
 
 
-adiciona_recorte <- \(novorecorte = 'regiao_imediata',baseq = consulta_inicial,viewbase='recortes_geograficos') {
-
-  ###GET EXISTING PARENT GROUPS AS POSSIBLE BASES
-  parent_grupos <- DBI::dbGetQuery(con,"select * from (select DISTINCT(datagroup_parentid) from group_parent) gp LEFT JOIN datagroup ON gp.datagroup_parentid = datagroup.datagroup_id")
-
-  ###Mapeamento semantico nome do grupo-pai -> coluna da matview
-  ###(substitui o pareamento posicional antigo, que exigia exatamente
-  ###os 9 grupos da era PNDR e quebrava com subconjuntos:
-  ###rep(NA_character_, negativo) em rep(NA, nrow - length))
+  ## Grupos-pai do catalogo + mapeamento semantico nome -> coluna da
+  ## matview (o pareamento posicional antigo exigia exatamente os 9
+  ## grupos da era PNDR e quebrava com subconjuntos: rep(NA, negativo))
+  parent_grupos <- DBI::dbGetQuery(con, "select * from (select DISTINCT(datagroup_parentid) from group_parent) gp LEFT JOIN datagroup ON gp.datagroup_parentid = datagroup.datagroup_id")
   mapa_recortes <- c(
     "faixa de fronteira" = "faixa_de_fronteira",
     "semiarido" = "participacao_semiarido",
@@ -85,55 +82,44 @@ adiciona_recorte <- \(novorecorte = 'regiao_imediata',baseq = consulta_inicial,v
       grepl(padrao, parent_grupos$datagroup_name, ignore.case = TRUE)
     parent_grupos$nomecol[hit] <- unname(mapa_recortes[padrao])
   }
-  ##so recortes presentes no banco, na ordem canonica
-  previos_recortes_nmcol <- previos_recortes_nmcol[
+  parent_grupos <- parent_grupos[!is.na(parent_grupos$nomecol), ]
+  recortes_presentes <- previos_recortes_nmcol[
     previos_recortes_nmcol %in% parent_grupos$nomecol]
 
-
-  ###Identifica novo grupo
-  novo_grupo <- (parent_grupos|>dplyr::filter(grepl(novorecorte,nomecol,ignore.case=T)))$datagroup_id
-
-  if (length(novo_grupo) > 1) {
-    warning("foi encontrado mais de um grupo-pai para o identificador fornecido. Vai ser utilizado o primeiro.")
+  adiciona_recorte <- \(novorecorte = 'regiao_imediata',
+                        baseq = consulta_inicial,
+                        viewbase = 'recortes_geograficos') {
+    novo_grupo <- parent_grupos$datagroup_id[
+      parent_grupos$nomecol == novorecorte]
+    if (length(novo_grupo) > 1) {
+      warning("mais de um grupo-pai para o recorte ", novorecorte,
+              "; utilizando o primeiro")
+    }
+    recorte <- paste(
+      "(SELECT geoloc.geoloc_id codigo_ibge,",
+      "datagroup.datagroup_name", novorecorte,
+      "FROM local LEFT JOIN geoloc ON",
+      "local.geoloc_id = geoloc.geoloc_id",
+      "LEFT JOIN local_group ON local.local_Id = local_group.local_id",
+      'LEFT JOIN datagroup ON local_group.datagroup_id = datagroup.datagroup_id',
+      "LEFT JOIN group_parent ON local_group.datagroup_id = group_parent.datagroup_id",
+      "WHERE", municipios_filtro,
+      "AND group_parent.datagroup_parentid = ",
+      novo_grupo[1], ") As", novorecorte)
+    paste0(baseq,
+           ' LEFT JOIN ',
+           recorte,
+           ' ON viewbase.codigo_ibge = ',
+           novorecorte, '.codigo_ibge')
   }
 
-  ### check if column already exists
-  newcolname <- parent_grupos[parent_grupos$datagroup_id==novo_grupo[1],]$nomecol
-
-
-  ##Prepare data for JOIN
-
-  recorte <-
-    paste("(SELECT geoloc.geoloc_id codigo_ibge,",
-          "datagroup.datagroup_name" ,newcolname,
-          "FROM local LEFT JOIN geoloc ON",
-          "local.geoloc_id = geoloc.geoloc_id",
-          "LEFT JOIN local_group ON local.local_Id = local_group.local_id",
-          'LEFT JOIN datagroup ON local_group.datagroup_id = datagroup.datagroup_id',
-          "LEFT JOIN group_parent ON local_group.datagroup_id = group_parent.datagroup_id",
-          "WHERE", municipios_filtro,
-          "AND group_parent.datagroup_parentid = ",
-          novo_grupo,") As", newcolname)
-
-  ###JOIN
-
-  paste0(baseq,
-         ' LEFT JOIN ',
-         recorte,
-         ' ON viewbase.codigo_ibge = ',
-         newcolname,'.codigo_ibge')
-
-
-}
-
-centro_query <- Reduce(
-  function(q, recorte) {
-    adiciona_recorte(novorecorte = recorte, baseq = q)
-  },
-  previos_recortes_nmcol,
-  init = consulta_inicial
-
-)
+  centro_query <- Reduce(
+    function(q, recorte) {
+      adiciona_recorte(novorecorte = recorte, baseq = q)
+    },
+    recortes_presentes,
+    init = consulta_inicial
+  )
 
 ### Estado e Região autorreferenciado via geoloc_id
 
@@ -145,15 +131,15 @@ uf_regiao <- paste0(" LEFT JOIN (SELECT geoloc_id,local_name uf FROM local WHERE
 
 ##inicio query:
 
+colunas_recorte <- if (length(recortes_presentes))
+  paste0(", ", paste0(recortes_presentes, collapse = ", ")) else ""
 colselect <- paste(
   "SELECT viewbase.codigo_ibge,",
   "viewbase.longitude, viewbase.latitude,",
   "viewbase.município,",
-  'uf estado, regiao região,',
-  paste0(previos_recortes_nmcol,collapse=", "),
-  ', viewbase.geometry ',
-  'FROM'
-)
+  'uf estado, regiao região',
+  colunas_recorte,
+  ', viewbase.geometry FROM')
 
 
 # Matviews que dependem de recortes_geograficos (ex.: geonamed_datavalues):
@@ -205,7 +191,7 @@ colselect <- paste(
 
 dependentes_salvos <- .salvar_dependentes_recortes(con)
 DBI::dbExecute(con,"DROP MATERIALIZED VIEW IF EXISTS recortes_geograficos CASCADE")
-DBI::dbExecute(con,paste0("CREATE MATERIALIZED VIEW recortes_geograficos AS ",paste(colselect,centro_query,uf_regiao)))
+    DBI::dbExecute(con,paste0("CREATE MATERIALIZED VIEW recortes_geograficos AS ",paste(colselect,centro_query,uf_regiao)))
 DBI::dbExecute(con,
                paste0("CREATE UNIQUE INDEX IF NOT EXISTS codibge_index ON
                       public.recortes_geograficos USING btree
