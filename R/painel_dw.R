@@ -336,9 +336,14 @@ painel_niveis_rotulo <- c(
 # dentro da largura 7 do geoloc_id — mesma convencao adotada pelo
 # populate_initialdb (malha 2024). Municipios: local_id 1..5571 (5571
 # municipios da malha 2024, Boa Esperanca do Norte incluida); estratos
-# PNAD a partir de 5572; municipios incorporados com append APOS o
-# bloco PNAD (local_id 7088, 7089, ...; ver incorporar_municipio_ibge()).
-# PNAD: bloco contiguo 5572..7087.
+# PNAD a partir de 5572. O limite superior 7087 tem duas funcoes:
+# (a) excluir da zona PNAD os municipios incorporados com append
+# (local_id 7088+; ver incorporar_municipio_ibge()); no DW de
+# producao com a numeracao antiga, 7087 era o proprio Brasil
+# (estratos 6941..7086, Brasil = 7087) — o gate de largura 7 o
+# mantinha fora da zona PNAD de qualquer forma. No numeracao nova o
+# Brasil/imediatas/intermediarias caem depois dos estratos e seguem
+# fora pelo mesmo gate ou pelo limite.
 painel_municipio_limite_id <- 5572L
 painel_pnad_bloco_fim <- 7087L
 
