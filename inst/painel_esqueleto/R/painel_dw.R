@@ -99,7 +99,7 @@ painel_rotulo_tempo <- function(freq_name) {
   unname(rotulos[[f]])
 }
 
-#' Geometrias municipais do DW (bloco historico local_id < 5571 mais os
+#' Geometrias municipais do DW (bloco local_id < 5572 mais os
 #' municipios incorporados apos o bloco PNAD, local_id > 7087)
 #' @keywords internal
 painel_geo_mun <- function(con) {
@@ -333,12 +333,13 @@ painel_niveis_rotulo <- c(
   "8" = "Mesorregião")
 
 # Fronteira entre os municipios e as regioes de interesse em PNAD Contínua
-# dentro da largura 7 do geoloc_id — mesma convencao ja adotada por
-# painel_geo_mun(). Municipios: bloco historico (local_id 1..5570, Brasilia
-# incluida) mais os criados depois da carga original, incorporados com
-# append APOS o bloco PNAD (local_id 7088, 7089, ...; ver
-# incorporar_municipio_ibge()). PNAD: bloco contiguo 5571..7087.
-painel_municipio_limite_id <- 5571L
+# dentro da largura 7 do geoloc_id — mesma convencao adotada pelo
+# populate_initialdb (malha 2024). Municipios: local_id 1..5571 (5571
+# municipios da malha 2024, Boa Esperanca do Norte incluida); estratos
+# PNAD a partir de 5572; municipios incorporados com append APOS o
+# bloco PNAD (local_id 7088, 7089, ...; ver incorporar_municipio_ibge()).
+# PNAD: bloco contiguo 5572..7087.
+painel_municipio_limite_id <- 5572L
 painel_pnad_bloco_fim <- 7087L
 
 #' Fragmento SQL que seleciona apenas municipios (alias `l` no chamador)
