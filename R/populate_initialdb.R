@@ -50,12 +50,6 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
                           dbname = Sys.getenv("dbname", "beepdb"))
   }
 
-  if (isTRUE(limpar)) {
-    DBI::dbExecute(con, "DELETE FROM local_group")
-    DBI::dbExecute(con, "DELETE FROM local")
-    DBI::dbExecute(con, "DELETE FROM geoloc")
-  }
-
   ## retries: o CDN do IPEA devolve 0 bytes esporadicamente apos
   ## downloads grandes (cache corrompido -> leitura NULL)
   ler_geobr_seguro <- function(leitor, ...) {
@@ -74,9 +68,11 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   ## sessao; o CDN do IPEA devolve 0 bytes sob carga, entao baixamos
   ## via httr2 (com retry/backoff) para o caminho que o geobr espera
   aquecer_gpkg <- function(geo, year, simplified = TRUE) {
-    md <- tryCatch(geobr:::download_metadata(), error = \(e) return(invisible(NULL)))
+    md <- tryCatch(geobr:::download_metadata(), error = \(e) NULL)
+    if (!is.data.frame(md) || !all(c("geo", "year") %in% names(md)))
+      return(invisible(NULL))
     linha <- md[md$geo == geo & md$year == year, ]
-    if (!nrow(linha)) return(invisible(NULL))
+    if (nrow(linha) == 0) return(invisible(NULL))
     urlgp <- linha$download_path[1]
     if (isTRUE(simplified) && any(grepl("_simplified", linha$download_path,
                                         fixed = TRUE))) {
@@ -103,6 +99,12 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   aquecer_gpkg("semiarid", 2022, simplified = TRUE)
   aquecer_gpkg("amazonia_legal", 2012, simplified = TRUE)
 
+  if (isTRUE(limpar)) {
+    DBI::dbExecute(con, "DELETE FROM local_group")
+    DBI::dbExecute(con, "DELETE FROM local")
+    DBI::dbExecute(con, "DELETE FROM geoloc")
+  }
+
   ## cargas geobr (mantido ativamente pelo ipea) - usadas pelo
   ## retwritegeo e pelos vinculos territoriais adiante
   geobrcities <- ler_geobr_seguro(geobr::read_municipality,
@@ -118,11 +120,26 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   ## seeder — o bloco correspondente e pulado com aviso e a matview
   ## recortes_geograficos nasce sem a coluna
   geobrsemiarid <- ler_geobr_seguro(geobr::read_semiarid, year = 2022)
-  geobramazonia_legal <- ler_geobr_seguro(geobr::read_amazon, year = 2012)
+  geobramazonia_legal <- ler_geobr_seguro(geobr::read_amazon, year = 2019)
   cat("LOADS: cities=", !is.null(geobrcities), " states=", !is.null(geobrstates),
       " semiarid=", !is.null(geobrsemiarid), "\n")
   if (is.null(geobrsemiarid)) warning("semiarido indisponivel - recorte nao criado")
   if (is.null(geobramazonia_legal)) warning("amazonia legal indisponivel - recorte nao criado")
+
+  ## padroniza CRS (geobr 2.1 traz SIRGAS 2000; predicates do sf exigem
+  ## CRS identicos entre x e y) e codigos como character (geobr 2.1 usa
+  ## integer64; joins com strings de shapefiles/CSVs falham por tipo)
+  crs_padrao <- "+proj=longlat +datum=WGS84 +no_defs"
+  geobrcities <- sf::st_transform(geobrcities, crs_padrao)
+  geobrimmediater <- sf::st_transform(geobrimmediater, crs_padrao)
+  geobrintermr <- sf::st_transform(geobrintermr, crs_padrao)
+  geobrstates <- sf::st_transform(geobrstates, crs_padrao)
+  geobrsemiarid <- sf::st_transform(geobrsemiarid, crs_padrao)
+  geobramazonia_legal <- sf::st_transform(geobramazonia_legal, crs_padrao)
+  geobrcities$code_muni <- as.character(geobrcities$code_muni)
+  if (!is.null(geobrsemiarid)) {
+    geobrsemiarid$code_muni <- as.character(geobrsemiarid$code_muni)
+  }
 
   ## niveles -> leitor geobr + colunas de codigo/nome
   espec_retwritegeo <- list(
@@ -201,7 +218,7 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   DBI::dbExecute(con, "END TRANSACTION")
   ## mapa codigo IBGE (7d) -> local_id (nesta altura, so municipios)
   mapa_mun <- DBI::dbGetQuery(con, paste(
-    "SELECT local_id, geoloc_id::bigint AS code_muni FROM local",
+    "SELECT local_id, geoloc_id::text AS code_muni FROM local",
     "WHERE length(geoloc_id::text) = 7"))
 
   ## 2) UF e macrorregiao -------------------------------------------
@@ -232,12 +249,14 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
     geobrcities,
     buffer_metrico(geobrimmediater |>
                      dplyr::select(dplyr::contains("immediate")), 500),
-    join = sf::st_within)
+    join = sf::st_intersects)
   juntaspa <- sf::st_join(
     juntaspa,
     buffer_metrico(geobrintermr |>
                      dplyr::select(dplyr::contains("intermediate")), 500),
-    join = sf::st_within)
+    join = sf::st_intersects)
+  ## municipios na divisa de 2+ regioes: manter o primeiro casamento
+  juntaspa <- juntaspa |> dplyr::distinct(code_muni, .keep_all = TRUE)
   juntaspa <- sf::st_transform(juntaspa, crs = "+proj=longlat +datum=WGS84 +no_defs")
 
   ## 3) Estratos PNAD Contínua ---------------------------------------
@@ -246,8 +265,14 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   download.file("https://painel.ibge.gov.br/saibamais/files/Municipios_por_Estratos.csv",
                 pnadcem)
   extratosmun <- readr::read_csv2(pnadcem)
+  col_codmun <- grep("C.digo do Munic.pio", names(extratosmun),
+                     ignore.case = TRUE)[1]
+  if (!is.na(col_codmun)) {
+    extratosmun[[col_codmun]] <- as.character(extratosmun[[col_codmun]])
+  }
   extratosmun <- geobrcities |>
-    dplyr::left_join(extratosmun, by = c("code_muni" = "Código do Município"))
+    dplyr::left_join(extratosmun, by = c("code_muni" = "Código do Município")) |>
+    dplyr::filter(!is.na(`Código do estrato`))
   extrlocs <- extratosmun |>
     dplyr::mutate(codmun = paste0(`Código do estrato`,
                                   substr(`Código do estrato`, 1, 2),
@@ -259,7 +284,7 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
                  pnadc_inicio - 1L, na.rm = TRUE)
 
   geoloc <- extrlocs |>
-    dplyr::select(geoloc_id = codmun, geometry = geom) |>
+    dplyr::select(geoloc_id = codmun, geometry = geometry) |>
     sf::st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs")
   sf::st_write(geoloc, con, append = TRUE)
 
@@ -270,12 +295,12 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   DBI::dbAppendTable(con, "local", locale)
 
   geoloc <- geobrintermr |>
-    dplyr::select(geoloc_id = code_intermediate, geometry = geom) |>
+    dplyr::select(geoloc_id = code_intermediate, geometry = geometry) |>
     sf::st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs")
   sf::st_write(geoloc, con, append = TRUE)
 
   geoloc <- geobrimmediater |>
-    dplyr::select(geoloc_id = code_immediate, geometry = geom) |>
+    dplyr::select(geoloc_id = code_immediate, geometry = geometry) |>
     sf::st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs")
   sf::st_write(geoloc, con, append = TRUE)
 
@@ -403,9 +428,9 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
       datagroup_desc = c("Participacação na Amazônia Legal",
                          "Município/Área faz parte da Amazônia Legal",
                          "Município/Área não faz parte da Amazônia Legal")))
-    amlegalcm <- sf::st_within(geobrcities,
-                             buffer_metrico(geobramazonia_legal, 500),
-                             sparse = FALSE)
+    amlegalcm <- sf::st_intersects(geobrcities,
+                                 buffer_metrico(geobramazonia_legal, 500),
+                                 sparse = FALSE)
     dgidal <- DBI::dbGetQuery(con, "SELECT datagroup_id from datagroup where datagroup_name LIKE '%faz parte da Amaz%'")$datagroup_id
     local_group_al <- geobrcities |> sf::st_drop_geometry() |>
       dplyr::mutate(amzlegal = as.logical(amlegalcm)) |>
@@ -507,11 +532,12 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
     dplyr::left_join(harmoniza_im, by = c("code_immediate" = "geoloc_id")) |>
     dplyr::left_join(harmoniza_in, by = c("code_intermediate" = "geoloc_id"))
 
-  local <- DBI::dbGetQuery(con, "SELECT * from local;")
-  # municipios: geoloc 7 digitos, fora da faixa PNAD (hack: intermediaria
-  # tambem tem 7 digitos no IBGE)
-  localmun <- (local |> dplyr::filter(nchar(geoloc_id) == 7,
-                                      local_id < 5580 | local_id > 7086))$local_id
+  ## municipios: geoloc 7 digitos fora da faixa PNAD — por local_id
+  ## (bloco 1..5571 do seeder; nchar sobre BIGINT da migracao
+  ## submunicipal esvaziava o filtro)
+  localmun <- DBI::dbGetQuery(con, paste(
+    "SELECT local_id FROM local",
+    "WHERE local_id <= 5571 AND length(geoloc_id::text) = 7"))$local_id
   DBI::dbAppendTable(con, "local_group", data.frame(
     local_id = localmun, datagroup_id = tabmunesp$datagroup_id))
   DBI::dbAppendTable(con, "local_group", data.frame(

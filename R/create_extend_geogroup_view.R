@@ -48,8 +48,6 @@ consulta_inicial <- paste('(SELECT geoloc.geoloc_id codigo_ibge,',
                           "local LEFT JOIN geoloc ON ",
                           "local.geoloc_id = geoloc.geoloc_id WHERE",
                           municipios_filtro,") As viewbase")
-  cat("DBG2: consulta_inicial len:", length(consulta_inicial),
-      "| municipios_filtro len:", length(municipios_filtro), "\n")
 
 ##Ordem canonica das colunas de recorte da matview; a presenca no
 ##banco e avaliada a cada chamada (catalogos podem ter subconjunto,

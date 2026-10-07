@@ -1,3 +1,24 @@
+# beep 0.9.2.9001
+
+## populate_initialdb sob geobr 2.1 e valida ponta a ponta
+
+- Retests/backoff (4 tentativas, 5/15/45/90s) em todas as leituras
+  geobr: o CDN do IPEA devolve 0 bytes sob sequências de downloads.
+- CRS padronizado (WGS84) em todos os objetos geobr — o sf passa a
+  exigir CRS idênticos em predicates; buffers projetam para EPSG 5880
+  (metros) antes de bufferizar (o código herdado bufferizava 500
+  graus em CRS geográfico).
+- Associação município × região imediata/intermediária por
+  `st_intersects` + `distinct` por município (o `st_within` original
+  não casava municípios que extrapolam o limite regional).
+- Vínculos por `code_muni`/`local_id` normalizados (geobr 2.1 entrega
+  integer64; BIGINT da migração submunicipal quebrava `nchar`).
+- Amazônia Legal: ano 2019 (2012 saiu do geobr 2.1); semiarido/
+  amazonia indisponíveis pulam o recorte com aviso.
+- `prepare_db` cria `geonamed_datavalues` com IF NOT EXISTS (o
+  `criar_recortes_geograficos` já a garante).
+
+
 # beep 0.9.2.9000
 
 ## Níveis territoriais submunicipais no DW (setor, área de ponderação, bairro)
