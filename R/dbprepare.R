@@ -198,7 +198,13 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
 
 
     ##Define how many first cols as primary_key for all base tables
-    npks <- data.frame("table"=ls(pattern="^[^ctphu]"),
+    ## (apenas data.frames/tribbles: o argumento `geo` da funcao
+    ## tambem aparece no ls() e quebrava o prepare_db com
+    ## dbWriteTable(logical) e um xj[i] invalido depois)
+    objetos_base <- ls(pattern = "^[^ctphu]")
+    objetos_base <- objetos_base[vapply(
+      objetos_base, \(o) is.data.frame(get(o)), logical(1))]
+    npks <- data.frame("table" = objetos_base,
                        "n_pk" = 1)
 
 
@@ -364,8 +370,9 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
     adiciona_foreign <- \(fk,ft){
       if(length(fk)!=0) {
         #"(.*)[, ]+(`",fk,"`),*",
-        result <- paste0(gsub("\\)$","",createquery),", CONSTRAINT ","fk_",ft,
-                         " FOREIGN KEY (",fk,") REFERENCES ",ft,"(",fk,"))")
+        # coluna-pai sempre <ft>_id (o fk pode ser <ft>_parentid etc.)
+        result <- paste0(gsub("\\)$","",createquery),", CONSTRAINT fk_",ft,"_",fk,
+                         " FOREIGN KEY (",fk,") REFERENCES ",ft,"(",ft,"_id))")
         assign("createquery",result,envir = parent.frame(2))
       }
     }
@@ -375,27 +382,32 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
         mapply(adiciona_foreign,fk_ids$fk,fk_ids$ft)
         }
     }
-    createquery <- paste0(gsub("(\\( +, +)([^ ])","(\\2",gsub(",( +,)+",", ",createquery),")"))
+    # typo historico: o ")" do replacement "(\\2)" estava solto como
+    # 4o argumento (perl=) do gsub -> "NA in coercion to boolean"
+    createquery <- gsub("(\\( +, +)([^ ])", "(\\2)",
+                        gsub(",( +,)+", ", ", createquery))
     # createquery <- gsub("(_id` )REAL","\\1INTEGER",createquery)
 
-    ##hack to fix same fk two times in |>
-
-    if(atbname=="group_parent"){
-#      createquery <- gsub("(^.*)(PRIMARY KEY)(.*),([^,]+$)","\\1 \\3,\\2 (datagroup_id,datagroup_parentid)\\4",paste(gsub(")$","",createquery),"CONSTRAINT fk_parent FOREIGN KEY (datagroup_parentid) REFERENCES datagroup(datagroup_id))"))
-      createquery <- gsub("\\)$",", CONSTRAINT fk_parent FOREIGN KEY (datagroup_parentid) REFERENCES datagroup(datagroup_id))",createquery)
-    }
+    ##hack antigo do group_parent removido: o bloco padrao de FKs agora
+    ## referencia datagroup(datagroup_id) para datagroup_parentid
 
 
-    DBI::dbSendQuery(con,createquery)
+    ##erro com contexto (tabela + SQL) para diagnosticar a fase de chaves
+    envia <- \(q) tryCatch(DBI::dbSendQuery(con, q),
+      error = \(e) stop("altera_adiciona_chave (", atbname, "): ",
+                        conditionMessage(e), " | SQL: ",
+                        substr(q, 1, 240), call. = FALSE))
+
+    envia(createquery)
 
     ##5) INSERT INTO
-    DBI::dbSendQuery(con,paste0("INSERT INTO ",atbname," SELECT * FROM `",atbname,"_old`;"))
+    envia(paste0("INSERT INTO ",atbname," SELECT * FROM `",atbname,"_old`;"))
 
     ##6) DROP TABLE
-    DBI::dbSendQuery(con,paste0("DROP TABLE ",atbname,"_old;"))
+    envia(paste0("DROP TABLE ",atbname,"_old;"))
 
     ##7) If foreign key constraints were enabled run PRAGMA foreign_key_check
-    DBI::dbSendQuery(con,"PRAGMA foreign_key_check")
+    envia("PRAGMA foreign_key_check")
 
     ##8) Commit transaction started in 2
     DBI::dbExecute(con,"COMMIT TRANSACTION")
