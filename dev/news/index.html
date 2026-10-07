@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,15 @@
       <small>Source: <a href="https://github.com/DistintiveLab/beep/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.0.9001" id="beep-0909001">beep 0.9.0.9001<a class="anchor" aria-label="anchor" href="#beep-0909001"></a></h2>
+<div class="section level3">
+<h3 id="correções-no-prepare_db-0-9-0-9001">Correções no prepare_db<a class="anchor" aria-label="anchor" href="#corre%C3%A7%C3%B5es-no-prepare_db-0-9-0-9001"></a></h3>
+<ul><li>Tabela fantasma “geo”: o argumento <code>geo=TRUE</code> da função entrava na lista de tabelas do <code><a href="https://rdrr.io/r/base/ls.html" class="external-link">ls()</a></code> e quebrava <code>dbWriteTable</code> (erro “value = logical”) e, em seguida, o <code>npks</code> (erro <code>xj[i]</code>), abortando a criação de PKs/FKs. Agora só objetos data.frame entram na lista.</li>
+<li>SQLite: typo antigo no gsub de limpeza (<code>")"</code> solto como 4º argumento, parâmetro <code>perl</code>) gerava “NA in coercion to boolean” em todas as execuções; e o FK de <code>group_parent.datagroup_parentid</code> referenciava a coluna inexistente <code>datagroup(datagroup_parentid)</code> (era o motivo do hack antigo). FKs agora sempre apontam para <code>&lt;tabela&gt;_id</code>; erros da fase de chaves reportam tabela + SQL.</li>
+<li>Fluxo sqlite completo validado: 23 tabelas + view <code>named_datavalues</code>, sem erros. Tabelas vazias (<code>data_values</code>, <code>mdata</code>, <code>geoloc</code>, <code>local</code>) continuam por design — recebem carga depois; catálogos de lookup (<code>data_class</code>, <code>data_freq</code>, <code>data_type</code>, <code>datasource_type</code>, <code>vis_type</code>, <code>vis_focus</code>) populam automaticamente.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0.9000" id="beep-0909000">beep 0.9.0.9000<a class="anchor" aria-label="anchor" href="#beep-0909000"></a></h2>
 <div class="section level3">

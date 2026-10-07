@@ -1,5 +1,26 @@
 # Changelog
 
+## beep 0.9.0.9001
+
+### Correções no prepare_db
+
+- Tabela fantasma “geo”: o argumento `geo=TRUE` da função entrava na
+  lista de tabelas do [`ls()`](https://rdrr.io/r/base/ls.html) e
+  quebrava `dbWriteTable` (erro “value = logical”) e, em seguida, o
+  `npks` (erro `xj[i]`), abortando a criação de PKs/FKs. Agora só
+  objetos data.frame entram na lista.
+- SQLite: typo antigo no gsub de limpeza (`")"` solto como 4º argumento,
+  parâmetro `perl`) gerava “NA in coercion to boolean” em todas as
+  execuções; e o FK de `group_parent.datagroup_parentid` referenciava a
+  coluna inexistente `datagroup(datagroup_parentid)` (era o motivo do
+  hack antigo). FKs agora sempre apontam para `<tabela>_id`; erros da
+  fase de chaves reportam tabela + SQL.
+- Fluxo sqlite completo validado: 23 tabelas + view `named_datavalues`,
+  sem erros. Tabelas vazias (`data_values`, `mdata`, `geoloc`, `local`)
+  continuam por design — recebem carga depois; catálogos de lookup
+  (`data_class`, `data_freq`, `data_type`, `datasource_type`,
+  `vis_type`, `vis_focus`) populam automaticamente.
+
 ## beep 0.9.0.9000
 
 ### Novas fontes de dados: TSE (via tsebr) e Censo IBGE (via censoagg)
