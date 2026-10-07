@@ -1,5 +1,15 @@
 # Changelog
 
+## beep 0.9.2.9003
+
+### Fim do bloco PNAD dinâmico (linha Brasil) no painel
+
+- `painel_pnad_bloco_fim` deixa de ser a constante 7087: o painel
+  resolve pelo `local_id` da linha “Brasil” (7092 no seeder malha 2024),
+  com cache de sessão e fallback 7087 (numeração antiga — comportamento
+  idêntico). Sem isso, na numeração nova as intermediárias (7088..7091)
+  vazariam como município na matview e no painel.
+
 ## beep 0.9.2.9002
 
 ### Painel: dicionário do censo com geobr 2.1 + censoagg 0.0.1.9002
