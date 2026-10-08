@@ -34,9 +34,10 @@ upload_censobr_ui <- function(id, parent_session) {
     shiny::conditionalPanel(
       condition = sprintf("input['%s'] == 'tracts'", ns("censtipo")),
       shiny::selectizeInput(ns("censdst"), "Base de agregados",
-                            choices = c("Basico", "Domicilio", "Pessoas",
-                                        "Instrucao", "Morador",
-                                        "DomicilioRenda"),
+                            choices = c("Basico", "Domicilios", "Entorno",
+                                        "Indigenas", "Obitos", "Pessoas",
+                                        "Quilombolas",
+                                        "ResponsavelRenda"),
                             selected = "Basico", multiple = FALSE)),
     shiny::selectizeInput(ns("censvar"), "Variaveis (filtre)",
                           choices = character(0), multiple = TRUE,
@@ -85,18 +86,28 @@ upload_censobr_server <- function(id, parent_session) {
       escolhas <- tryCatch({
         dic <- censoagg::censo_variaveis(2022, tipo)
         if ("dataset" %in% names(dic)) {
+          # bases reais do dicionario (Domicilios, Entorno, ...) —
+          # nomes fixos na UI divergiam (ex. "Instrucao" nao existe
+          # em 2022 e esvaziava o select quebrando o updateSelectize)
+          if (identical(tipo, "tracts")) {
+            bases <- sort(unique(dic$dataset[!is.na(dic$dataset)]))
+            shiny::updateSelectizeInput(
+              session, "censdst", choices = bases,
+              selected = if (!is.null(ds_atual) && ds_atual %in% bases)
+                ds_atual else bases[1])
+          }
           # dplyr::filter descarta linhas com dataset NA (abas do xlsx
           # sem mapeamento, ex. religiao/geografia) — indexacao base-R
           # com NA as manteria como linhas all-NA
           dic <- dplyr::filter(dic, !is.na(dataset), dataset == ds_atual)
         }
         dic <- dic[!is.na(dic$variavel) & nzchar(dic$variavel), , drop = FALSE]
-        dic <- dic[!is.na(dic$variavel) & nzchar(dic$variavel), , drop = FALSE]
         rotulos <- paste0(dic$variavel, " - ", dic$descricao)
-        names(rotulos) <- dic$variavel
-        rotulos
+        # selectize server=TRUE: names viram LABEL, elementos viram
+        # VALUE — portanto valor = codigo e rotulo no name
+        setNames(dic$variavel, rotulos)
       }, error = \(e) {
-        c("dicionario indisponivel - instale censoagg/censobr" = "")
+        setNames("", "dicionario indisponivel - instale censoagg/censobr")
       })
       shiny::updateSelectizeInput(session, "censvar", choices = escolhas,
                                   server = TRUE, selected = character(0))
@@ -129,15 +140,20 @@ upload_censobr_server <- function(id, parent_session) {
 }
 
 #' Gera a call string do submódulo censo (pura, testavel offline).
-#' 1a linha: marcador "# censo-origem:"; o resto, codigo editavel
-#' que devolve lista nomeada variavel -> long(local, periodo,
-#' valor).
+#' Marcador "# censo-origem:" e codigo na MESMA linha, separados por
+#' "; " (o browser remove \n do valor de um textInput; ver
+#' gerar_call_tsebr). O codigo devolve lista nomeada variavel ->
+#' long(local, periodo, valor).
 #'
 #' @noRd
 gerar_call_censo <- function(tipo, dataset, ano, variaveis, nivel,
                              funcao = NULL, corte = NULL) {
   variaveis <- as.character(variaveis)
-  if (!length(variaveis)) stop("gerar_call_censo: nenhuma variavel")
+  # defesa: rotulo "V001 - descricao" vindo de um selectize antigo
+  # vira so o codigo
+  variaveis <- sub("\\s+-\\s+.*$", "", variaveis)
+  if (!length(variaveis) || !all(nzchar(variaveis)))
+    stop("gerar_call_censo: nenhuma variavel")
   vec <- deparse(variaveis)
   if (identical(tipo, "microdados")) {
     funcao <- funcao %||% "soma_pond"
@@ -155,7 +171,7 @@ gerar_call_censo <- function(tipo, dataset, ano, variaveis, nivel,
   } else {
     stop("gerar_call_censo: origem desconhecida: ", tipo)
   }
-  paste0("# censo-origem: ", tipo, "\n", corpo)
+  paste0("# censo-origem: ", tipo, "; ", corpo)
 }
 
 #' Garante linha de datasource IBGE-Censo no DW (idempotente pelo

@@ -1,11 +1,17 @@
 # Testes offline do submódulo TSE: geração de call strings.
 # Downloads do tsebr e escrita no DW não são exerciciados aqui.
 
+# replica o strip do selected_files: marcador separado por "; "
+# (single-line — o browser remove \n de textInput) ou "\n" (antigo)
+stripar_marcador <- function(s)
+  sub("^[^;]*;\\s*", "", sub("^[^\n]+\n", "", s))
+
 test_that("call string traz marcador de familia e codigo parseavel", {
   chamada <- gerar_call_tsebr("resultados_detalhe", 2022, "DF",
                               metrica = "abstencoes")
   expect_match(chamada, "^# tsebr-familia: resultados_detalhe")
-  codigo <- sub("^[^\n]+\n", "", chamada)
+  expect_false(grepl("\n", chamada))
+  codigo <- stripar_marcador(chamada)
   expect_silent(expr <- parse(text = paste0("{\n", codigo, "\n}")))
   corpo <- paste(deparse(expr[[1]]), collapse = " ")
   expect_match(corpo, "tse_detalhe_municipio")

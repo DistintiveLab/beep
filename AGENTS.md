@@ -122,9 +122,13 @@ expression as a text string** and write it into the parent module's `upload_file
 input via `updateTextInput(session = parent_session, "upload_file", value = ...)`.
 The parent's `selected_files()` reactive then does `eval(parse(text = input$upload_file))`
 to actually execute it. New source types must follow this contract. Os
-submódulos 14/15 prefixam o call string com um **marcador na primeira linha**
-(`# tsebr-familia:` / `# censo-origem:`) que o ramo do `selected_files` consome
-(e remove antes do eval) para decidir o reshape/escrita.
+submódulos 14/15 prefixam o call string com um **marcador na mesma linha do
+código, separado por `"; "`** (`# tsebr-familia: <familia>; <call>` /
+`# censo-origem: <origem>; <call>`), que o ramo do `selected_files` consome
+(e remove antes do eval, via `sub("^[^;]*;\\s*", "", sub("^[^\n]+\n", "", ...))`)
+para decidir o reshape/escrita. O separador é single-line de propósito: o browser
+aplica a sanitização de `<input type="text">` e **remove `\n`** do valor — um
+call string multi-linha viraria um comentário único e o eval devolveria NULL.
 
 Datasources `TSE` e `IBGE Censo` são criados sob demanda no DW por
 `garantir_datasource_tse()` / `garantir_datasource_censo()` (idempotentes pelo

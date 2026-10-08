@@ -145,7 +145,10 @@ gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
   } else {
     stop("gerar_call_tsebr: familia desconhecida: ", familia)
   }
-  paste0("# tsebr-familia: ", familia, "\n", corpo)
+  # marcador e codigo na MESMA linha, separados por "; ": o browser
+  # remove \n do valor de um textInput, o que colava marcador e
+  # codigo num comentario unico e anulava o eval
+  paste0("# tsebr-familia: ", familia, "; ", corpo)
 }
 
 # coalescencia: usa o %||% ja definido em executa_atualizacao.R

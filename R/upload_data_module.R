@@ -939,7 +939,11 @@ tipocarga <- reactive({
               print("Fonte tse desabilitada: instale o pacote tsebr")
             } else {
             fam <- sub("^# tsebr-familia: ([a-z_]+).*", "\\1", input$upload_file)
-            codigo <- sub("^[^\n]+\n", "", input$upload_file)
+            # o browser remove \n do textInput: o marcador vem
+            # colado ao codigo com "; " — tirar ate o separador em
+            # qualquer dos formatos (novo single-line ou antigo \n)
+            codigo <- sub("^[^;]*;\\s*", "",
+                          sub("^[^\n]+\n", "", input$upload_file))
             # bloco: avalia TODAS as expressoes (con/mapa/chamada final)
             tabela <- eval(parse(text = paste0("{\n", codigo, "\n}")))
             if (!is.data.frame(tabela))
@@ -972,11 +976,14 @@ tipocarga <- reactive({
             }
 
           } else if (input$sourcetype == 15 ) {
-            # censoagg: eval devolve lista nomeada variavel -> long
+            # censoagg: eval devolve lista nomeada variavel -> long.
+            # Marcador na 1a expressao separado por "; " (ver tsebr)
             if (!requireNamespace("censoagg", quietly = TRUE)) {
               print("Fonte censo desabilitada: instale censoagg e censobr")
             } else {
-            tabela <- eval(parse(text = paste0("{\n", input$upload_file, "\n}")))
+            codigo <- sub("^[^;]*;\\s*", "",
+                          sub("^[^\n]+\n", "", input$upload_file))
+            tabela <- eval(parse(text = paste0("{\n", codigo, "\n}")))
             if (!inherits(tabela, "list")) tabela <- list(censo=tabela)
             falhas <- names(tabela)[!vapply(tabela, is.data.frame, logical(1))]
             if (length(falhas))
