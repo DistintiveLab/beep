@@ -261,6 +261,11 @@ ER/EER diagrams live in `inst/app/www/` (`v2024-12-EER.png`, `*ERpsql*.png`).
 - **Naming history:** everything was bulk-renamed from AEDi/aedidb to beep/beepdb
   (files, function names like `beep_tema_*`, CSS classes like `beep-tema`, env var
   `BEEP_SCRIPT_ARGS`). Keep the `beep` prefixes consistent in new code.
+- **Version bumps:** every commit in beep/tsebr/censoagg/tsesqlr must carry at
+  least a minimal `DESCRIPTION` version bump (e.g. `9000` → `9001`). The user
+  installs these packages as root into `/usr/local/lib/R/site-library/`; the
+  assistant never installs — test with `pkgload::load_all()` and let the user
+  reinstall.
 
 ## Gotchas
 
