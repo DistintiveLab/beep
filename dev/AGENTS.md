@@ -145,8 +145,9 @@ Datasources `TSE` e `IBGE Censo` são criados sob demanda no DW por
 (idempotentes pelo nome; types 4=ckan e 6=ibge_ftp). Dados por seção
 eleitoral/setor censitário **não** entram no DW ainda (não há níveis
 submunicipais no `local`): perfis do eleitorado por seção ficam no
-pacote (`tsebr::tse_perfis_secao`) até o trilho territorial ser
-implementado.
+pacote
+([`tsebr::tse_perfis_secao`](https://rdrr.io/pkg/tsebr/man/tse_perfis_secao.html))
+até o trilho territorial ser implementado.
 
 ### Data write pipeline
 
@@ -296,6 +297,13 @@ ER/EER diagrams live in `inst/app/www/` (`v2024-12-EER.png`,
   beep/beepdb (files, function names like `beep_tema_*`, CSS classes
   like `beep-tema`, env var `BEEP_SCRIPT_ARGS`). Keep the `beep`
   prefixes consistent in new code.
+- **Version bumps:** every commit in beep/tsebr/censoagg/tsesqlr must
+  carry at least a minimal `DESCRIPTION` version bump (e.g. `9000` →
+  `9001`). The user installs these packages as root into
+  `/usr/local/lib/R/site-library/`; the assistant never installs — test
+  with
+  [`pkgload::load_all()`](https://pkgload.r-lib.org/reference/load_all.html)
+  and let the user reinstall.
 
 ## Gotchas
 
