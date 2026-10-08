@@ -121,28 +121,18 @@ gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
     max(tsebr::tse_anos_disponiveis("todas")) else
     max(as.integer(ano), na.rm = TRUE)
   uf <- if (identical(tolower(uf), "all")) "all" else toupper(uf)
-  con_snippet <- paste0(
-    "con <- DBI::dbConnect(RPostgres::Postgres(), ",
-    "user=Sys.getenv('user','beep'), ",
-    "password=Sys.getenv('password','aEd1#man@gR'), ",
-    "host=Sys.getenv('host','127.0.0.1'), ",
-    "dbname=Sys.getenv('dbname','beepdb'))\n",
-    "mapa <- tsebr::tse_municipios(ano_mapa, con=con, uf='", uf, "')\n",
-    "DBI::dbDisconnect(con)\n")
   if (identical(familia, "resultados_nominais")) {
-    corpo <- paste0(con_snippet,
-                    "tsebr::tse_resultados_municipio(ano = ", ano_param,
+    corpo <- paste0("tsebr::tse_resultados_municipio(ano = ", ano_param,
                     ", uf='", uf, "'",
                     if (!is.null(cargo))
                       paste0(", cargo=", deparse(cargo)) else "",
                     if (!is.null(nr_votavel))
                       paste0(", nr_votavel=", deparse(nr_votavel)) else "",
-                    ", mapa=mapa)")
+                    ")")
   } else if (identical(familia, "resultados_detalhe")) {
-    corpo <- paste0(con_snippet,
-                    "tsebr::tse_detalhe_municipio(ano = ", ano_param,
+    corpo <- paste0("tsebr::tse_detalhe_municipio(ano = ", ano_param,
                     ", uf='", uf, "', metrica='",
-                    metrica %||% "abstencoes", "', mapa=mapa)")
+                    metrica %||% "abstencoes", "')")
   } else if (identical(familia, "prestacao")) {
     corpo <- paste0("tsebr::tse_prestacao_uf(ano = ", ano_param,
                     ", tipo='", tipo %||% "receitas", "')")

@@ -40,3 +40,4 @@ data/sidrameta_bckp.rda
 docs/
 .crush/
 _targets/
+tests/testthat/cache/

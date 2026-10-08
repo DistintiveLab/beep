@@ -1,6 +1,9 @@
 # Chave de nivel territorial: municipios x regioes PNAD na largura 7 ----
 
 test_that("painel_nivel_parse decodifica larguras e o subnivel PNAD", {
+  # bloco dinamico (linha Brasil do DW) pode ter sido resolvido por
+  # um teste anterior: zerar para cair no padrao estatico
+  assign("fim", NULL, envir = beep:::.painel_bloco_env)
   p2 <- beep:::painel_nivel_parse("2")
   expect_identical(p2$nivel, 2L)
   expect_false(p2$pnad)

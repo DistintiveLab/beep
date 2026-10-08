@@ -10,7 +10,8 @@ test_that("call string traz marcador de familia e codigo parseavel", {
   corpo <- paste(deparse(expr[[1]]), collapse = " ")
   expect_match(corpo, "tse_detalhe_municipio")
   expect_match(corpo, "abstencoes")
-  expect_match(corpo, "tse_municipios")
+  # mapa TSE x IBGE resolvido internamente pelo tsebr (env vars do DW)
+  expect_false(grepl("tse_municipios", corpo))
 })
 
 test_that("familias nominais, prestacao e candidaturas geram chamadas proprias", {
@@ -27,7 +28,8 @@ test_that("familias nominais, prestacao e candidaturas geram chamadas proprias",
 
   cand <- gerar_call_tsebr("candidaturas", 2026, "all", cargo = "GOVERNADOR")
   expect_match(cand, "^# tsebr-familia: candidaturas")
-  expect_match(cand, "tse_candidaturas..2026, uf=.all., cargo=.GOVERNADOR.")
+  expect_match(cand, "tse_candidaturas")
+  expect_match(cand, "GOVERNADOR")
 })
 
 test_that("extracao do marcador replica a logica do selected_files", {

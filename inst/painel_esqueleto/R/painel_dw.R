@@ -417,7 +417,7 @@ painel_nivel_parse <- function(nivel_id) {
   } else if (identical(nivel, 7L)) {
     bloco_fim7 <- if (!is.null(.painel_bloco_env$fim)) .painel_bloco_env$fim else
       painel_pnad_bloco_fim
-    sprintf("length(g.geoloc_id::text) = 7 AND (%s)", painel_municipio_filtro())
+    sprintf("length(g.geoloc_id::text) = 7 AND %s", painel_municipio_filtro())
   } else {
     sprintf("length(g.geoloc_id::text) = %d", nivel)
   }

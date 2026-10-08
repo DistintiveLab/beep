@@ -51,7 +51,7 @@ test_that("painel_plot_banda desenha banda, mediana e destaque", {
     ano = rep(c(2019L, 2020L, 2021L), 2))
   p <- beep:::painel_plot_banda(d, local_id = 1)
   expect_s3_class(p, "ggplot")
-  geoms <- vapply(p$layers, function(l) class(l$geom)[1], character(1))
+  geoms <- unname(vapply(p$layers, function(l) class(l$geom)[1], character(1)))
   expect_identical(geoms, c("GeomRibbon", "GeomLine", "GeomLine", "GeomPoint"))
   # contexto agrega os dois locais por ano: min = menor serie
   ctx <- p$layers[[1]]$data

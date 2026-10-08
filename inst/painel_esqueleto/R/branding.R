@@ -1,85 +1,160 @@
-# Marca configuravel do dashboard beep (2026-09-02)
+# Marca do painel configuravel por variaveis de ambiente (2026-09-20) ------
 #
-# O logo (header e rodape da sidebar) e o link do rodape eram fixos da
-# Distintive. Agora sao configuraveis por variaveis de ambiente (use o
-# .Renviron do projeto), com fallback para o padrao original:
+# Padrao adaptado do branding.R do rascunho do pndr_dashboard: titulo,
+# subtitulo, paleta inicial e contato do rodape configuraveis sem editar
+# codigo (use o .Renviron do projeto), com fallback para o padrao do beep.
+# A variavel de ambiente SOBREPOE o default passado por argumento (assim o
+# painel launcher e o esqueleto gerado por deploy_panel(esqueleto = TRUE)
+# podem ser re-branded em producao sem regenerar codigo). O logo continua
+# na variavel beep_logo (ver painel_logo_src()).
 #
-#   beep_logo       caminho de arquivo local (servido via resource path),
-#                   URL http(s), ou caminho relativo a inst/app/www/
-#                   (ex.: "www/beep_logo_new.png"). Default: www/beep-Wide.png
-#   beep_logo_link  href do logo no rodape. Default: distintive.com.br
-#   beep_logo_width largura em px do logo do header. Default: 120
-#   beep_contatos     contatos do dropdown do header do app; entradas
-#                     separadas por ";" e campos
-#                     "nome|funcao|telefone|email|logo" separados por "|"
-#                     (logo opcional: arquivo local, URL http(s) ou caminho
-#                     relativo a inst/app/www/; vazio usa o padrao, e "none"
-#                     ou "-" desliga o logo do box).
-#                     Default: Rodrigo Borges e Distintive
-#   beep_contato_logo logo padrao dos boxes de contato quando a entrada nao
-#                     traz o 5o campo (mesma resolucao de beep_logo).
-#                     Default: www/beep-innovations-Square.png
-#   beep_organizacao  nome da organizacao exibido no rodape da sidebar.
-#                     Default: Distintive
+#   painel_titulo     titulo do topbar
+#   painel_subtitulo  subtitulo do topbar
+#   painel_paleta     paleta inicial: "govbr" ou "pb"
+#   painel_contato    contato do rodape, campos "nome|telefone|email"
+#                     separados por "|"; vazio mantem o credito padrao
+#   painel_apoio      linha de apoio institucional da aba Sobre, campos
+#                     "texto antes|nome|url|texto depois" separados por
+#                     "|" (nome vira link da url); sem "|" a linha inteira
+#                     vira texto puro; vazio mantem o credito a Distintive
+#   painel_equipe     cartoes da equipe ("Quem faz") da aba Sobre, entradas
+#                     separadas por ";" e campos "nome|papel|email|foto"
+#                     por "|" (email e foto opcionais; foto = arquivo do
+#                     www/ ou URL, vira avatar redondo no cartao); vazio
+#                     mantem o cartao do autor
+#   painel_apoios     boxes de apoio da aba Sobre, entradas separadas por
+#                     ";" e campos "logo|url|frase|nome" por "|" (logo =
+#                     arquivo do www/ ou URL; nome opcional, default do
+#                     dominio da url); vazio mantem o box padrao Distintive
+#                     (com a frase de painel_apoio)
 
-#' Resolve o src de uma marca (URL, arquivo local ou www/ do pacote)
+#' Titulo do painel (usa painel_titulo)
 #' @keywords internal
-resolver_marca_src <- function(marca) {
-  if (grepl("^https?://", marca)) return(marca)
-  if (file.exists(marca)) {
-    dir <- shiny::addResourcePath("beep_marca", dirname(normalizePath(marca)))
-    return(file.path("beep_marca", basename(marca)))
-  }
-  marca  # caminho relativo a www/ (com ou sem prefixo www/)
+painel_brand_titulo <- function(default = "Painel de Indicadores") {
+  Sys.getenv("painel_titulo", default)
 }
 
-#' Resolve o src do logo conforme beep_logo (arquivo, URL ou www/)
+#' Subtitulo do painel (usa painel_subtitulo)
 #' @keywords internal
-resolver_logo_src <- function() {
-  resolver_marca_src(Sys.getenv("beep_logo", "www/beep-Wide.png"))
+painel_brand_subtitulo <- function(default = "beep — banco de dados do painel") {
+  Sys.getenv("painel_subtitulo", default)
 }
 
-#' Logo de um box de contato: 5o campo da entrada, beep_contato_logo ou o
-#' padrao quadrado da marca; "none" (ou "-") desliga
+#' Paleta inicial do painel (usa painel_paleta)
 #' @keywords internal
-resolver_logo_contato <- function(campo = "") {
-  valor <- trimws(campo)
-  if (!nzchar(valor)) valor <- trimws(Sys.getenv("beep_contato_logo", ""))
-  if (!nzchar(valor)) valor <- "www/beep-innovations-Square.png"
-  if (tolower(valor) %in% c("none", "-")) return("")
-  resolver_marca_src(valor)
+painel_brand_paleta <- function(default = "govbr") {
+  match.arg(Sys.getenv("painel_paleta", default), c("govbr", "pb", "brasil"))
 }
 
-#' Logo do header (usa beep_logo e beep_logo_width)
+#' Linha de contato do rodape (usa painel_contato); NULL mantem o credito
 #' @keywords internal
-logo_header_tag <- function() {
-  shiny::tags$img(
-    src = resolver_logo_src(),
-    width = as.integer(Sys.getenv("beep_logo_width", "120"))
-  )
+painel_brand_contato <- function() {
+  valor <- trimws(Sys.getenv("painel_contato", ""))
+  if (!nzchar(valor)) return(NULL)
+  campos <- strsplit(valor, "|", fixed = TRUE)[[1]]
+  length(campos) <- 3
+  campos[is.na(campos)] <- ""
+  campos <- trimws(campos)
+  shiny::tags$span(
+    shiny::tags$b(campos[1]),
+    if (nzchar(campos[2])) shiny::tags$span(" · ", campos[2]),
+    if (nzchar(campos[3]))
+      shiny::tags$a(campos[3], href = paste0("mailto:", campos[3])))
 }
 
-#' Logo+link do rodape da sidebar (usa beep_logo e beep_logo_link)
+#' Linha de apoio institucional da aba Sobre (usa painel_apoio): campos
+#' "texto antes|nome|url|texto depois" separados por "|" — o nome vira
+#' link da url e os textos de fora aparecem como estao escritos; sem
+#' "|" a linha inteira vira um paragrafo de texto puro
 #' @keywords internal
-logo_rodape_tag <- function(width = 200) {
-  shiny::tags$a(
-    shiny::tags$img(src = resolver_logo_src(), width = width),
-    href = Sys.getenv("beep_logo_link", "http://www.distintive.com.br")
-  )
+painel_brand_apoio <- function(
+  default = paste("Este painel contou com apoio material e financeiro de ",
+                  "|Distintive|https://www.distintive.com.br|.", sep = "")) {
+  valor <- trimws(Sys.getenv("painel_apoio", ""))
+  if (!nzchar(valor)) valor <- default
+  campos <- strsplit(valor, "|", fixed = TRUE)[[1]]
+  if (length(campos) < 2L) return(shiny::tags$p(valor))
+  length(campos) <- 4
+  campos[is.na(campos)] <- ""
+  nome <- trimws(campos[2])
+  url <- trimws(campos[3])
+  shiny::tags$p(
+    campos[1],
+    if (nzchar(nome)) {
+      if (nzchar(url))
+        shiny::tags$a(nome, href = url,
+                      target = "_blank", rel = "noopener")
+      else nome
+    },
+    campos[4])
 }
 
-#' Contatos do dropdown do header (usa beep_contatos)
+#' Cartoes da equipe da aba Sobre (usa painel_equipe): entradas separadas
+#' por ";", campos "nome|papel|email|foto" por "|" (email e foto
+#' opcionais; foto = arquivo do www/ ou URL, resolvida por
+#' [painel_marca_src()] como avatar redondo do cartao); vazio mantem o
+#' cartao unico do autor
 #' @keywords internal
-contatos_header <- function() {
-  padrao <- paste0(
-    "Rodrigo Borges|Dev./Cientista de Dados|XXX-XXX-XXX|rodrigo@borges.net.br|none;",
-    "Distintive|Inteligencia para políticas publicas|61-XXXX-XXXX|apps@distintive.com.br")
-  entradas <- trimws(strsplit(Sys.getenv("beep_contatos", padrao), ";", fixed=TRUE)[[1]])
-  lapply(entradas[nzchar(entradas)], \(entrada) {
-    campos <- strsplit(entrada, "|", fixed=TRUE)[[1]]
-    length(campos) <- 5
+painel_brand_equipe <- function(
+  default = paste("Rodrigo Emmanuel Santana Borges|",
+                  "Desenvolvedor e cientista de dados|",
+                  "rodrigo@borges.net.br", sep = "")) {
+  valor <- trimws(Sys.getenv("painel_equipe", ""))
+  if (!nzchar(valor)) valor <- default
+  entradas <- trimws(strsplit(valor, ";", fixed = TRUE)[[1]])
+  lapply(entradas[nzchar(entradas)], function(entrada) {
+    campos <- strsplit(entrada, "|", fixed = TRUE)[[1]]
+    length(campos) <- 4
     campos[is.na(campos)] <- ""
-    campos[5] <- resolver_logo_contato(campos[5])
-    do.call(contact_item, as.list(campos))
+    campos <- trimws(campos)
+    foto <- if (nzchar(campos[4])) painel_marca_src(campos[4]) else ""
+    shiny::tags$div(class = "painel-pessoa-card",
+      if (nzchar(foto))
+        shiny::tags$img(class = "painel-pessoa-foto", src = foto,
+          alt = paste("Foto de", campos[1])),
+      shiny::tags$h3(campos[1]),
+      if (nzchar(campos[2]))
+        shiny::tags$p(class = "painel-pessoa-papel", campos[2]),
+      if (nzchar(campos[3]))
+        shiny::tags$p(shiny::tags$strong("Contato: "),
+          shiny::tags$a(href = paste0("mailto:", campos[3]), campos[3])))
+  })
+}
+
+#' Um box de apoio da aba Sobre: logo clicavel ao lado da frase
+#' @keywords internal
+painel_brand_apoio_box <- function(logo, url, frase, nome) {
+  src <- if (nzchar(logo)) painel_marca_src(logo) else painel_logo_src()
+  dominio <- gsub("^https?://(www\\.)?", "", url)
+  if (!nzchar(nome)) nome <- dominio
+  rotulo <- if (nzchar(dominio) && !identical(nome, dominio))
+    paste0(nome, " (", dominio, ")") else nome
+  shiny::tags$div(class = "painel-apoio",
+    shiny::tags$a(class = "painel-apoio-logo", href = url,
+      target = "_blank", rel = "noopener", `aria-label` = rotulo,
+      shiny::tags$img(src = src, alt = paste("Logotipo da", nome))),
+    shiny::tags$div(class = "painel-apoio-texto", frase))
+}
+
+#' Boxes de apoio da aba Sobre (usa painel_apoios): entradas separadas por
+#' ";", campos "logo|url|frase|nome" por "|" (nome opcional, default do
+#' dominio da url); vazio mantem o box padrao Distintive, cuja frase segue
+#' a variavel painel_apoio
+#' @keywords internal
+painel_brand_apoios <- function() {
+  valor <- trimws(Sys.getenv("painel_apoios", ""))
+  if (!nzchar(valor)) {
+    return(list(painel_brand_apoio_box(
+      logo = "", url = "https://www.distintive.com.br",
+      frase = painel_brand_apoio(), nome = "Distintive")))
+  }
+  entradas <- trimws(strsplit(valor, ";", fixed = TRUE)[[1]])
+  lapply(entradas[nzchar(entradas)], function(entrada) {
+    campos <- strsplit(entrada, "|", fixed = TRUE)[[1]]
+    length(campos) <- 4
+    campos[is.na(campos)] <- ""
+    campos <- trimws(campos)
+    painel_brand_apoio_box(logo = campos[1], url = campos[2],
+      frase = shiny::tags$p(campos[3]), nome = campos[4])
   })
 }
