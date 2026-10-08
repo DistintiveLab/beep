@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9002</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -148,7 +148,7 @@ app_server()  (R/server_app.R)
 <td>inline in <code>upload_data_module.R</code>
 </td>
 <td>file path</td>
-</tr></tbody></table><p><strong>Key pattern:</strong> Submodules do <em>not</em> fetch data themselves. They build an <strong>R expression as a text string</strong> and write it into the parent module’s <code>upload_file</code> input via <code>updateTextInput(session = parent_session, "upload_file", value = ...)</code>. The parent’s <code>selected_files()</code> reactive then does <code>eval(parse(text = input$upload_file))</code> to actually execute it. New source types must follow this contract. Os submódulos 14/15 prefixam o call string com um <strong>marcador na primeira linha</strong> (<code># tsebr-familia:</code> / <code># censo-origem:</code>) que o ramo do <code>selected_files</code> consome (e remove antes do eval) para decidir o reshape/escrita.</p>
+</tr></tbody></table><p><strong>Key pattern:</strong> Submodules do <em>not</em> fetch data themselves. They build an <strong>R expression as a text string</strong> and write it into the parent module’s <code>upload_file</code> input via <code>updateTextInput(session = parent_session, "upload_file", value = ...)</code>. The parent’s <code>selected_files()</code> reactive then does <code>eval(parse(text = input$upload_file))</code> to actually execute it. New source types must follow this contract. Os submódulos 14/15 prefixam o call string com um <strong>marcador na mesma linha do código, separado por <code>"; "</code></strong> (<code># tsebr-familia: &lt;familia&gt;; &lt;call&gt;</code> / <code># censo-origem: &lt;origem&gt;; &lt;call&gt;</code>), que o ramo do <code>selected_files</code> consome (e remove antes do eval, via <code>sub("^[^;]*;\\s*", "", sub("^[^\n]+\n", "", ...))</code>) para decidir o reshape/escrita. O separador é single-line de propósito: o browser aplica a sanitização de <code>&lt;input type="text"&gt;</code> e <strong>remove <code>\n</code></strong> do valor — um call string multi-linha viraria um comentário único e o eval devolveria NULL.</p>
 <p>Datasources <code>TSE</code> e <code>IBGE Censo</code> são criados sob demanda no DW por <code>garantir_datasource_tse()</code> / <code>garantir_datasource_censo()</code> (idempotentes pelo nome; types 4=ckan e 6=ibge_ftp). Dados por seção eleitoral/setor censitário <strong>não</strong> entram no DW ainda (não há níveis submunicipais no <code>local</code>): perfis do eleitorado por seção ficam no pacote (<code><a href="https://rdrr.io/pkg/tsebr/man/tse_perfis_secao.html" class="external-link">tsebr::tse_perfis_secao</a></code>) até o trilho territorial ser implementado.</p>
 </div>
 <div class="section level3">
