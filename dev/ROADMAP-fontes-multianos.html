@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.2.9004</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,28 @@
 
 <p>Objetivo: a aba de inserção de fontes passa a gravar <strong>séries temporais</strong> (<code>local</code>, <code>periodo</code>, <code>valor</code> — um período por ano) e passa a suportar <strong>níveis submunicipais</strong> (setor censitário, bairro) além do municipal.</p>
 <p>Estado de partida (0.9.2.9001): fonte TSE/Censo em modo indicador único — um ano, município — com bug de eval (multi-expressões) e leitura de <code>agregar_setores</code> restrita a município/setor sem bairro.</p>
+<div class="section level2">
+<h2 id="status-0939000">Status (0.9.3.9000)<a class="anchor" aria-label="anchor" href="#status-0939000"></a></h2>
+<table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>Fase</th>
+<th>Status</th>
+</tr></thead><tbody><tr><td>F0 correção do eval</td>
+<td>✅ implementado + testes</td>
+</tr><tr><td>F1 tsebr multi-anos</td>
+<td>✅ <code>ano = NULL</code> = todas (1996..2026)</td>
+</tr><tr><td>F2 painel TSE “todos os anos”</td>
+<td>✅</td>
+</tr><tr><td>F3 censo setor</td>
+<td>✅ painel (origem tracts) + <code>agregar_setores(nivel="setor")</code>
+</td>
+</tr><tr><td>F3 censo bairro</td>
+<td>⏳ depende da tabela setor→bairro do <code>incorporar_bairros</code>
+</td>
+</tr><tr><td>F4 painel censo</td>
+<td>✅ nível setor exposto; multi-ano censo segue decenal (2022/2010)</td>
+</tr><tr><td>F5 robustez</td>
+<td>✅ código longo no <code>db_datawrite</code> (via PR); ⏳ idempotência de <code>datagroup</code>
+</td>
+</tr></tbody></table></div>
 <div class="section level2">
 <h2 id="f0--correção-imediata-bug-write_delim">F0 — Correção imediata (bug write_delim)<a class="anchor" aria-label="anchor" href="#f0--corre%C3%A7%C3%A3o-imediata-bug-write_delim"></a></h2>
 <ul><li>

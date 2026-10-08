@@ -9,6 +9,18 @@ Estado de partida (0.9.2.9001): fonte TSE/Censo em modo indicador único
 — um ano, município — com bug de eval (multi-expressões) e leitura de
 `agregar_setores` restrita a município/setor sem bairro.
 
+## Status (0.9.3.9000)
+
+| Fase | Status |
+|----|----|
+| F0 correção do eval | ✅ implementado + testes |
+| F1 tsebr multi-anos | ✅ `ano = NULL` = todas (1996..2026) |
+| F2 painel TSE “todos os anos” | ✅ |
+| F3 censo setor | ✅ painel (origem tracts) + `agregar_setores(nivel="setor")` |
+| F3 censo bairro | ⏳ depende da tabela setor→bairro do `incorporar_bairros` |
+| F4 painel censo | ✅ nível setor exposto; multi-ano censo segue decenal (2022/2010) |
+| F5 robustez | ✅ código longo no `db_datawrite` (via PR); ⏳ idempotência de `datagroup` |
+
 ## F0 — Correção imediata (bug write_delim)
 
 - **Causa**: o call string do TSE emite várias expressões (`con <- ...`,
