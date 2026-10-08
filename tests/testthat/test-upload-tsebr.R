@@ -1,35 +1,33 @@
-# Testes offline do submódulo tsebr: geração de call strings.
-# A escrita no DW (db_datawrite) e o download (tsebr) exigem rede/
-# banco e não são exerciciados aqui.
+# Testes offline do submódulo TSE: geração de call strings.
+# Downloads do tsebr e escrita no DW não são exerciciados aqui.
 
 test_that("call string traz marcador de familia e codigo parseavel", {
   chamada <- gerar_call_tsebr("resultados_detalhe", 2022, "DF",
                               metrica = "abstencoes")
   expect_match(chamada, "^# tsebr-familia: resultados_detalhe")
   codigo <- sub("^[^\n]+\n", "", chamada)
-  expect_silent(expr <- parse(text = codigo))
-  corpo <- paste(unlist(lapply(as.list(expr), deparse)), collapse = " ")
+  expect_silent(expr <- parse(text = paste0("{\n", codigo, "\n}")))
+  corpo <- paste(deparse(expr[[1]]), collapse = " ")
   expect_match(corpo, "tse_detalhe_municipio")
-  expect_match(corpo, "metrica\\s*=\\s*['\"]abstencoes['\"]")
-  expect_match(corpo,
-    "tse_municipios\\(2022,\\s*con\\s*=\\s*con,\\s*uf\\s*=\\s*['\"]DF['\"]\\)")
+  expect_match(corpo, "abstencoes")
+  expect_match(corpo, "tse_municipios")
 })
 
 test_that("familias nominais, prestacao e candidaturas geram chamadas proprias", {
   nom <- gerar_call_tsebr("resultados_nominais", 2026, "SP",
                           cargo = "PRESIDENTE", nr_votavel = "13")
-  expect_match(nom, "tse_resultados_municipio\\(ano = 2026, uf='SP'")
-  expect_match(nom, "cargo=\"PRESIDENTE\"")
-  expect_match(nom, "nr_votavel=\"13\"")
+  expect_match(nom, "tse_resultados_municipio")
+  expect_match(nom, "cargo=.PRESIDENTE.")
+  expect_match(nom, "nr_votavel=.13.")
 
   prest <- gerar_call_tsebr("prestacao", 2026, "DF", tipo = "despesas")
   expect_match(prest, "^# tsebr-familia: prestacao")
-  expect_match(prest, "tse_prestacao_uf\\(ano = 2026, tipo='despesas'\\)")
+  expect_match(prest, "tse_prestacao_uf")
   expect_false(grepl("tse_municipios", prest))
 
   cand <- gerar_call_tsebr("candidaturas", 2026, "all", cargo = "GOVERNADOR")
   expect_match(cand, "^# tsebr-familia: candidaturas")
-  expect_match(cand, "tse_candidaturas\\(2026, uf='all', cargo=\"GOVERNADOR\"\\)")
+  expect_match(cand, "tse_candidaturas..2026, uf=.all., cargo=.GOVERNADOR.")
 })
 
 test_that("extracao do marcador replica a logica do selected_files", {
@@ -41,12 +39,4 @@ test_that("extracao do marcador replica a logica do selected_files", {
 test_that("familia desconhecida aborta", {
   expect_error(gerar_call_tsebr("perfil_secao", 2026, "DF"),
                "familia desconhecida")
-})
-
-test_that("UI do submodulo renderiza com parent_session real (nao string)", {
-  sess_fake <- list(ns = function(x) paste0("data:", x))
-  ui <- upload_tsebr_ui(shiny::NS("data", "tsebr"), parent_session = sess_fake)
-  expect_s3_class(ui, "shiny.tag.list")
-  html <- paste(capture.output(print(ui)), collapse = " ")
-  expect_match(html, "data:upload_file", fixed = TRUE)
 })

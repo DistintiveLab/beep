@@ -39,7 +39,7 @@
 #' @export
 deploy_panel <- function(diretorio = "painel",
                          titulo = "Painel de Indicadores",
-                         paleta = c("govbr", "pb"),
+                         paleta = c("govbr", "pb", "brasil"),
                          esqueleto = TRUE,
                          sobrescrever = FALSE) {
   paleta <- match.arg(paleta)

@@ -386,9 +386,10 @@ painel_submunicipal_inicio <- 100000L
 
 #' Fragmento SQL que seleciona apenas municipios (alias `l` no chamador)
 painel_municipio_filtro <- function(alias = "l") {
+  bloco_fim <- if (!is.null(.painel_bloco_env$fim)) .painel_bloco_env$fim else
+    painel_pnad_bloco_fim
   sprintf("(%s.local_id < %d OR (%s.local_id > %d AND %s.local_id < %d))",
-          alias, painel_municipio_limite_id, alias,
-          painel_pnad_bloco_fim_resolver(NULL),
+          alias, painel_municipio_limite_id, alias, bloco_fim,
           alias, painel_submunicipal_inicio)
 }
 
@@ -414,8 +415,9 @@ painel_nivel_parse <- function(nivel_id) {
     sprintf("length(g.geoloc_id::text) = 7 AND l.local_id >= %d AND l.local_id <= %d",
             painel_municipio_limite_id, bloco_fim)
   } else if (identical(nivel, 7L)) {
-    sprintf("length(g.geoloc_id::text) = 7 AND %s",
-            painel_pnad_bloco_fim_resolver(NULL))
+    bloco_fim7 <- if (!is.null(.painel_bloco_env$fim)) .painel_bloco_env$fim else
+      painel_pnad_bloco_fim
+    sprintf("length(g.geoloc_id::text) = 7 AND (%s)", painel_municipio_filtro())
   } else {
     sprintf("length(g.geoloc_id::text) = %d", nivel)
   }

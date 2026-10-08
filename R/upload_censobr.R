@@ -85,8 +85,12 @@ upload_censobr_server <- function(id, parent_session) {
       escolhas <- tryCatch({
         dic <- censoagg::censo_variaveis(2022, tipo)
         if ("dataset" %in% names(dic)) {
-          dic <- dic[as.character(dic$dataset) == ds_atual, , drop = FALSE]
+          # dplyr::filter descarta linhas com dataset NA (abas do xlsx
+          # sem mapeamento, ex. religiao/geografia) — indexacao base-R
+          # com NA as manteria como linhas all-NA
+          dic <- dplyr::filter(dic, !is.na(dataset), dataset == ds_atual)
         }
+        dic <- dic[!is.na(dic$variavel) & nzchar(dic$variavel), , drop = FALSE]
         dic <- dic[!is.na(dic$variavel) & nzchar(dic$variavel), , drop = FALSE]
         rotulos <- paste0(dic$variavel, " - ", dic$descricao)
         names(rotulos) <- dic$variavel

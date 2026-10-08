@@ -27,7 +27,7 @@ deploy_admin <- function(diretorio = "admin", raiz = NULL, tema = NULL,
                          sobrescrever = FALSE) {
   if (is.null(raiz)) raiz <- getwd()
   tema <- if (is.null(tema)) beep_tema_paleta_default()
-    else match.arg(tema, c("govbr", "pb"))
+    else match.arg(tema, c("govbr", "pb", "brasil"))
   projeto <- .nome_projeto(raiz)
   versao <- as.character(utils::packageVersion("beep"))
   dir.create(diretorio, recursive = TRUE, showWarnings = FALSE)

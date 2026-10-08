@@ -216,7 +216,7 @@ admin_app <- function(raiz = NULL, projeto = NULL, titulo = NULL,
   if (is.null(titulo))
     titulo <- sprintf("Admin do lote - %s", projeto)
   tema <- if (is.null(tema)) beep_tema_paleta_default() else
-    match.arg(tema, c("govbr", "pb"))
+    match.arg(tema, c("govbr", "pb", "brasil"))
   versao <- as.character(utils::packageVersion("beep"))
 
   ui <- shiny::tagList(

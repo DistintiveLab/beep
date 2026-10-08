@@ -116,7 +116,10 @@ gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
   # "todos" (ou NULL) -> ano = NULL na chamada: o tsebr puxa todas as
   # eleicoes disponiveis da familia e devolve a serie completa
   ano_param <- if (is.null(ano) || identical(ano, "todos")) "NULL" else
-    paste0(as.integer(ano))
+    paste0("c(", paste(sort(unique(as.integer(ano))), collapse = ", "), ")")
+  ano_mapa <- if (is.null(ano) || identical(ano, "todos"))
+    max(tsebr::tse_anos_disponiveis("todas")) else
+    max(as.integer(ano), na.rm = TRUE)
   uf <- if (identical(tolower(uf), "all")) "all" else toupper(uf)
   con_snippet <- paste0(
     "con <- DBI::dbConnect(RPostgres::Postgres(), ",
@@ -124,7 +127,7 @@ gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
     "password=Sys.getenv('password','aEd1#man@gR'), ",
     "host=Sys.getenv('host','127.0.0.1'), ",
     "dbname=Sys.getenv('dbname','beepdb'))\n",
-    "mapa <- tsebr::tse_municipios(", max(as.integer(ano), na.rm = TRUE), ", con=con, uf='", uf, "')\n",
+    "mapa <- tsebr::tse_municipios(ano_mapa, con=con, uf='", uf, "')\n",
     "DBI::dbDisconnect(con)\n")
   if (identical(familia, "resultados_nominais")) {
     corpo <- paste0(con_snippet,

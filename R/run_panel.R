@@ -42,7 +42,7 @@
 #' @export
 #' @importFrom shiny shinyApp
 panel_app <- function(titulo = "Painel de Indicadores",
-                      paleta = c("govbr", "pb"),
+                      paleta = c("govbr", "pb", "brasil"),
                       assets_dir = NULL) {
   paleta <- painel_brand_paleta(match.arg(paleta))
   if (is.null(assets_dir))

@@ -15,7 +15,7 @@
 app_ui <- function(tema = NULL){
 
   tema <- if (is.null(tema)) beep_tema_paleta_default() else
-    match.arg(tema, c("govbr", "pb"))
+    match.arg(tema, c("govbr", "pb", "brasil"))
 
   shiny::tagList(
 

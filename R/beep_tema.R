@@ -17,7 +17,7 @@
 #' `.Renviron` sem tocar em código. Valores: "govbr" (padrão) ou "pb".
 #' @keywords internal
 beep_tema_paleta_default <- function(default = "govbr") {
-  match.arg(Sys.getenv("beep_paleta", default), c("govbr", "pb"))
+  match.arg(Sys.getenv("beep_paleta", default), c("govbr", "pb", "brasil"))
 }
 
 #' Recursos do núcleo do tema: CSS + JS + base Gov.br + div raiz
@@ -27,7 +27,7 @@ beep_tema_paleta_default <- function(default = "govbr") {
 #' raiz `#beep_tema_raiz` com o `data-paleta` inicial lido pelo JS.
 #' Colocar uma única vez por app, junto aos recursos de cabeçalho.
 #' @keywords internal
-beep_tema_recursos <- function(paleta = c("govbr", "pb")) {
+beep_tema_recursos <- function(paleta = c("govbr", "pb", "brasil")) {
   paleta <- match.arg(paleta)
   tema_dir <- system.file("tema", package = "beep")
   if (!nzchar(tema_dir) ||
