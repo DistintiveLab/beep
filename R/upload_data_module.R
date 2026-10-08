@@ -987,6 +987,9 @@ tipocarga <- reactive({
               lapply(names(tabela), \(nm)
                      transform(tabela[[nm]], variavel = nm)),
               fill = TRUE)
+            if (all(grepl("^[0-9]+$", combinada$local))) {
+              combinada$local <- as.numeric(combinada$local)
+            }
 
             ####DATAFILE WRITER
 
@@ -998,6 +1001,9 @@ tipocarga <- reactive({
 
             for (nm in names(tabela)) {
               tt <- tabela[[nm]]
+              if (all(grepl("^[0-9]+$", tt$local))) {
+                tt$local <- as.numeric(tt$local)
+              }
               mdatac <- data.frame(
                 orig_name=input$nomefonte,
                 data_name=paste0(input$nomefonte,"_",nm),

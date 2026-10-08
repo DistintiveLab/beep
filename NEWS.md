@@ -1,3 +1,19 @@
+# beep 0.9.3.9000
+
+## Fontes TSE/Censo multi-anos e nível setor censitário
+
+- Fonte TSE: seletor "Todos os anos disponiveis" — `ano = NULL` puxa
+  todas as eleições (1996..2026) e grava a série completa (um
+  `periodo` por ano) em uma única inserção; correção do eval de
+  multi-expressões (o painel avaliava só a primeira linha do call
+  string — a conexão — e `write_csv` recebia um objeto de conexão).
+- Fonte censo: nível **setor censitário** (origem tracts) gravado nos
+  blocos submunicipais; códigos normalizados para numeric (o caminho
+  de códigos longos do db_datawrite resolve por geoloc_id completo).
+- ROADMAP-fontes-multianos.md documenta fases e status (bairro
+  depende da tabela setor→bairro do incorporar_bairros).
+
+
 # beep 0.9.2.9004
 
 ## Fim do bloco PNAD resolvido dinamicamente (linha Brasil)

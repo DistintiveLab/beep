@@ -18,13 +18,13 @@ test_that("call string traz marcador de familia e codigo parseavel", {
 test_that("familias nominais, prestacao e candidaturas geram chamadas proprias", {
   nom <- gerar_call_tsebr("resultados_nominais", 2026, "SP",
                           cargo = "PRESIDENTE", nr_votavel = "13")
-  expect_match(nom, "tse_resultados_municipio\\(2026, uf='SP'")
+  expect_match(nom, "tse_resultados_municipio\\(ano = 2026, uf='SP'")
   expect_match(nom, "cargo=\"PRESIDENTE\"")
   expect_match(nom, "nr_votavel=\"13\"")
 
   prest <- gerar_call_tsebr("prestacao", 2026, "DF", tipo = "despesas")
   expect_match(prest, "^# tsebr-familia: prestacao")
-  expect_match(prest, "tse_prestacao_uf\\(2026, tipo='despesas'\\)")
+  expect_match(prest, "tse_prestacao_uf\\(ano = 2026, tipo='despesas'\\)")
   expect_false(grepl("tse_municipios", prest))
 
   cand <- gerar_call_tsebr("candidaturas", 2026, "all", cargo = "GOVERNADOR")

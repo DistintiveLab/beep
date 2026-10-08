@@ -121,8 +121,6 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
   ## recortes_geograficos nasce sem a coluna
   geobrsemiarid <- ler_geobr_seguro(geobr::read_semiarid, year = 2022)
   geobramazonia_legal <- ler_geobr_seguro(geobr::read_amazon, year = 2019)
-  cat("LOADS: cities=", !is.null(geobrcities), " states=", !is.null(geobrstates),
-      " semiarid=", !is.null(geobrsemiarid), "\n")
   if (is.null(geobrsemiarid)) warning("semiarido indisponivel - recorte nao criado")
   if (is.null(geobramazonia_legal)) warning("amazonia legal indisponivel - recorte nao criado")
 
@@ -177,8 +175,6 @@ populate_initialdb <- \(con = NULL, dbtype = "pgsql",
       esp <- espec_retwritegeo[[levelgeo]]
       stopifnot(!is.null(esp), !is.null(esp$dados))
       d <- ler_geobr_seguro(esp$dados)
-      cat("RW-DBG:", levelgeo, "| d nrow:", tryCatch(nrow(d), error = \(e) -1),
-          "| geobrstates nrow:", tryCatch(nrow(geobrstates), error = \(e) -1), "\n")
       stopifnot(!is.null(d))
       sf::st_sf(
         geoloc_id = as.numeric(d[[esp$code]]),
