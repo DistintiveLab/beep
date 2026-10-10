@@ -15,6 +15,12 @@
 #'
 #' @importFrom shiny NS tagList selectizeInput uiOutput
 
+# Anos TSE habilitados no painel (ATE SEGUNDA ORDEM): restrito aos
+# pleitos com banco pre-carregado via tsesqlr — o tsedb cobre 2022 e
+# 2026. Amplie este vetor (e reabra o seletor) quando novos anos
+# entrarem no banco.
+tse_anos_painel <- c(2022L, 2026L)
+
 upload_tsebr_ui <- function(id, parent_session) {
   ns <- shiny::NS(id)
   nsp <- parent_session$ns
@@ -29,8 +35,7 @@ upload_tsebr_ui <- function(id, parent_session) {
         "candidaturas (referência, só CSV)" = "candidaturas"),
       selected = "resultados_detalhe", multiple = FALSE),
     shiny::selectizeInput(ns("tseano"), "Ano eleitoral",
-                          choices = c("Todos os anos disponiveis" = "todos",
-                                      2026, 2024, 2022, 2020, 2018),
+                          choices = tse_anos_painel,
                           selected = 2022, multiple = FALSE),
     shiny::selectizeInput(ns("tseuf"), "UF",
                           choices = c("AC", "AL", "AM", "AP", "BA", "CE",
@@ -113,13 +118,13 @@ upload_tsebr_server <- function(id, parent_session) {
 gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
                              nr_votavel = NULL, metrica = NULL,
                              tipo = NULL) {
-  # "todos" (ou NULL) -> ano = NULL na chamada: o tsebr puxa todas as
-  # eleicoes disponiveis da familia e devolve a serie completa
-  ano_param <- if (is.null(ano) || identical(ano, "todos")) "NULL" else
-    paste0("c(", paste(sort(unique(as.integer(ano))), collapse = ", "), ")")
-  ano_mapa <- if (is.null(ano) || identical(ano, "todos"))
-    max(tsebr::tse_anos_disponiveis("todas")) else
-    max(as.integer(ano), na.rm = TRUE)
+  # "todos" (ou NULL) -> todos os anos HABILITADOS no painel (ate
+  # segunda ordem, 2022 e 2026 — o tsedb pre-carregado via tsesqlr
+  # cobre apenas esses)
+  anos <- if (is.null(ano) || identical(ano, "todos")) tse_anos_painel else
+    sort(unique(as.integer(ano)))
+  ano_param <- paste0("c(", paste(anos, collapse = ", "), ")")
+  ano_mapa <- max(anos)
   uf <- if (identical(tolower(uf), "all")) "all" else toupper(uf)
   if (identical(familia, "resultados_nominais")) {
     corpo <- paste0("tsebr::tse_resultados_municipio(ano = ", ano_param,
@@ -137,7 +142,7 @@ gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
     corpo <- paste0("tsebr::tse_prestacao_uf(ano = ", ano_param,
                     ", tipo='", tipo %||% "receitas", "')")
   } else if (identical(familia, "candidaturas")) {
-    corpo <- paste0("tsebr::tse_candidaturas(", ano,
+    corpo <- paste0("tsebr::tse_candidaturas(ano = ", ano_param,
                     ", uf='", uf, "'",
                     if (!is.null(cargo))
                       paste0(", cargo=", deparse(cargo)) else "",

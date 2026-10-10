@@ -48,3 +48,16 @@ test_that("familia desconhecida aborta", {
   expect_error(gerar_call_tsebr("perfil_secao", 2026, "DF"),
                "familia desconhecida")
 })
+
+test_that("anos TSE restritos a 2022 e 2026 (ate segunda ordem)", {
+  expect_identical(tse_anos_painel, c(2022L, 2026L))
+  # "todos" resolve para os anos habilitados, nao para o catalogo cheio
+  chamada <- gerar_call_tsebr("resultados_nominais", "todos", "DF")
+  expect_match(chamada, "ano = c\\(2022, 2026\\)")
+  # candidaturas agora recebem vetor de anos explicito
+  cand <- gerar_call_tsebr("candidaturas", "todos", "DF")
+  expect_match(cand, "ano = c\\(2022, 2026\\)")
+  # ano especifico segue como antes
+  um <- gerar_call_tsebr("candidaturas", 2022, "DF")
+  expect_match(um, "ano = c\\(2022\\)")
+})
