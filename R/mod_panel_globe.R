@@ -58,7 +58,7 @@ mod_panel_globe_server <- function(id,
 
     disponiveis <- shiny::reactive({
       ind <- suppressWarnings(as.integer(indicador()))[1]
-      shiny::req(!is.na(ind))
+      if (is.na(ind)) return(character(0))
       if (identical(modo_geo()$modo, "uf"))
         painel_ufs_com_dados_cache(ind, nivel())
       else
@@ -90,7 +90,7 @@ mod_panel_globe_server <- function(id,
                        !is.na(atual)) as.character(atual) else "",
         destaque = "",
         contexto = "")
-      pronto <- if (is.null(input$pronto)) -1L else as.integer(input$pronto)
+      pronto <- if (is.null(input$pronto)) -1L else input$pronto
       geo_chave <- paste(md$modo, nivel())
       remontou <- !identical(pronto, instancia)
       if (remontou || !identical(enviado$geo, geo_chave)) {

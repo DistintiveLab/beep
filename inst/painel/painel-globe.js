@@ -29,6 +29,10 @@
   let registered = false;
   let bootFrame = 0;
   let handshake = 0;
+  // A ultima mensagem persiste no window: uma re-avaliacao do script cria
+  // uma instancia nova sem mensagens (Shiny nao reenvia custom messages) e
+  // ela parte daqui em vez de deixar o globo preso no carregamento.
+  if (!latest && root.__painelGlobeMessage) latest = root.__painelGlobeMessage;
 
   const labels = {
     globe: "Globo interativo das delimitações territoriais do IBGE",
@@ -116,10 +120,15 @@
     const events = new root.AbortController();
     const signal = events.signal;
     const reducedMotion = root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)");
+    // Ids derivados do host para quem nasce sem mensagem: o namespace do
+    // modulo e comum, entao o sufixo -globo do host partilha o prefixo de
+    // -clique e -pronto.
+    const derivedInputId = host && host.id ? String(host.id).replace(/-globo$/, "-clique") : "";
+    const derivedReadyId = host && host.id ? String(host.id).replace(/-globo$/, "-pronto") : "";
     const state = {
       host: host, ufs: new Map(), disponiveis: new Set(), selected: "",
-      inputId: latest ? String(latest.inputId || "") : "",
-      readyId: latest ? String(latest.readyId || "") : "",
+      inputId: (latest ? String(latest.inputId || "") : "") || derivedInputId,
+      readyId: (latest ? String(latest.readyId || "") : "") || derivedReadyId,
       localClick: null,
       features: [], rotation: [53.5, 10.5, 0], width: 360, radius: 160,
       zoom: 1, world: [], modo: "uf",
@@ -619,13 +628,17 @@
       // contem): a geometria viaja quando muda; o cliente guarda a ultima.
       state.destaqueCode = String(message.destaque || "");
       if (message.destaqueGeojson) {
-        state.destaque = parseGeojsonFeature(message.destaqueGeojson);
+        try {
+          state.destaque = parseGeojsonFeature(message.destaqueGeojson);
+        } catch (error) { /* mantem o destaque atual */ }
       } else if (!state.destaqueCode) state.destaque = null;
       if (state.destaque && state.destaqueCode) state.destaque.code = state.destaqueCode;
       if (!state.destaqueCode) state.destaque = null;
       state.contextoCode = String(message.contexto || "");
       if (message.contextoGeojson) {
-        state.contexto = parseGeojsonFeature(message.contextoGeojson);
+        try {
+          state.contexto = parseGeojsonFeature(message.contextoGeojson);
+        } catch (error) { /* mantem o contexto atual */ }
       } else if (!state.contextoCode) state.contexto = null;
       if (state.contexto && state.contextoCode) state.contexto.code = state.contextoCode;
       if (!state.contextoCode) state.contexto = null;
@@ -667,11 +680,25 @@
     if (latest) update(latest);
     load();
     loadWorld();
-    // Handshake: o servidor reenvia a geometria apos cada remontagem do host.
-    if (state.readyId && root.Shiny && root.Shiny.setInputValue) {
-      root.Shiny.setInputValue(state.readyId, ++handshake, { priority: "event" });
+    // Handshake: o servidor reenvia a geometria apos cada remontagem do
+    // host. O valor e unico por instancia (Date.now()): um contador de
+    // modulo reiniciaria em zero numa re-avaliacao do script e o servidor,
+    // via identical(), ignoraria o pedido. Retentativas com o mesmo valor
+    // cobrem um Shiny ainda nao conectado (o reenvio completo ocorre no
+    // maximo uma vez) e param na primeira mensagem viva deste controlador.
+    let live = false;
+    function sendHandshake() {
+      if (live || state.disposed || !host.isConnected) return;
+      if (!state.readyId || !root.Shiny || !root.Shiny.setInputValue) return;
+      root.Shiny.setInputValue(state.readyId, handshake, { priority: "event" });
     }
-    return { host: host, update: update, destroy: destroy };
+    if (latest) {
+      handshake = Date.now();
+      sendHandshake();
+      root.setTimeout(sendHandshake, 1000);
+      root.setTimeout(sendHandshake, 3000);
+    }
+    return { host: host, update: function (message) { live = true; update(message); }, destroy: destroy };
   }
 
   function findHost() {
@@ -700,6 +727,7 @@
   function receive(message) {
     if (!message || typeof message !== "object") return;
     latest = message;
+    try { root.__painelGlobeMessage = message; } catch (error) { /* window somente leitura */ }
     boot();
     if (controller) controller.update(latest);
   }

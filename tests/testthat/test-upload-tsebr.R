@@ -79,11 +79,19 @@ test_that("fonte tsesqlr gera consulta ao banco com mapa, sem download", {
 })
 
 test_that("familias sem cobertura no banco seguem no tsebr", {
-  # resolver_fonte_tse: detalhe/prestacao nao tem tabela no tsedb
+  # detalhe cai no tsebr quando o tsedb nao o cobre (pode ter sido
+  # carregado depois); prestacao e familias fora do switch nunca consultam
+  # o banco
   skip_if_not(requireNamespace("tsesqlr", quietly = TRUE))
-  expect_identical(beep:::resolver_fonte_tse("resultados_detalhe", 2022, "DF"),
-                   "tsebr")
+  if (!isTRUE(tryCatch(
+    tsesqlr::tsesqlr_disponivel("detalhe", 2022L, "DF"),
+    error = \(e) FALSE))) {
+    expect_identical(beep:::resolver_fonte_tse("resultados_detalhe", 2022, "DF"),
+                     "tsebr")
+  }
   expect_identical(beep:::resolver_fonte_tse("prestacao", 2026, "DF"),
+                   "tsebr")
+  expect_identical(beep:::resolver_fonte_tse("familia_fora_do_switch", 2022, "DF"),
                    "tsebr")
 })
 
