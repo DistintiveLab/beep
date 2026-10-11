@@ -146,6 +146,17 @@ aplica a sanitização de `<input type="text">` e **remove `\n`** do valor
 — um call string multi-linha viraria um comentário único e o eval
 devolveria NULL.
 
+**Política de origem TSE (duas camadas de cache):** o submódulo decide
+via `resolver_fonte_tse()` — se o pacote `tsesqlr` está instalado, o
+banco responde e **todos** os anos pedidos do tipo/UF estão em `cargas`
+(linha `uf = 'ALL'` cobre qualquer UF), a call string consulta direto o
+banco pré-carregado
+(`tsesqlr::tsesqlr_resultados_municipio()`/`tsesqlr_candidatos()`,
+instantâneo); caso contrário cai no download CKAN/CDN via `tsebr`. O
+banco tse usa a env var própria `tsedbname` (default `tsedb`) para não
+conflitar com o `dbname` do DW. Anos TSE do painel: até segunda ordem,
+só 2022 e 2026 (`tse_anos_painel`).
+
 Datasources `TSE` e `IBGE Censo` são criados sob demanda no DW por
 `garantir_datasource_tse()` / `garantir_datasource_censo()`
 (idempotentes pelo nome; types 4=ckan e 6=ibge_ftp). Dados por seção
