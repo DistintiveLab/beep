@@ -61,3 +61,47 @@ test_that("anos TSE restritos a 2022 e 2026 (ate segunda ordem)", {
   um <- gerar_call_tsebr("candidaturas", 2022, "DF")
   expect_match(um, "ano = c\\(2022\\)")
 })
+
+test_that("fonte tsesqlr gera consulta ao banco com mapa, sem download", {
+  chamada <- gerar_call_tsebr("resultados_nominais", 2022, "DF",
+                              cargo = "PRESIDENTE", nr_votavel = "13",
+                              fonte = "tsesqlr")
+  expect_match(chamada, "tsesqlr::tsesqlr_resultados_municipio")
+  expect_match(chamada, "mapa=tsebr::tse_mapa_municipios\\(2022, 'DF'\\)")
+  expect_false(grepl("tse_resultados_municipio", chamada))
+  # parseavel pelo ramo do selected_files
+  codigo <- stripar_marcador(chamada)
+  expect_silent(parse(text = paste0("{\n", codigo, "\n}")))
+
+  cand <- gerar_call_tsebr("candidaturas", "todos", "DF", fonte = "tsesqlr")
+  expect_match(cand, "tsesqlr::tsesqlr_candidatos")
+  expect_match(cand, "ano = c\\(2022, 2026\\)")
+})
+
+test_that("familias sem cobertura no banco seguem no tsebr", {
+  # resolver_fonte_tse: detalhe/prestacao nao tem tabela no tsedb
+  skip_if_not(requireNamespace("tsesqlr", quietly = TRUE))
+  expect_identical(beep:::resolver_fonte_tse("resultados_detalhe", 2022, "DF"),
+                   "tsebr")
+  expect_identical(beep:::resolver_fonte_tse("prestacao", 2026, "DF"),
+                   "tsebr")
+})
+
+test_that("resolver_fonte_tse prefere o banco quando o escopo esta carregado", {
+  skip_if_not(requireNamespace("tsesqlr", quietly = TRUE))
+  # tsesqlr antigo (sem tsesqlr_disponivel): usar a arvore dev se
+  # existir, senao pular sem erro
+  if (!"tsesqlr_disponivel" %in% getNamespaceExports("tsesqlr")) {
+    dev <- "/home/distintive/pRojetos/tsesqlr"
+    skip_if_not(dir.exists(dev))
+    pkgload::load_all(dev, quiet = TRUE)
+  }
+  skip_if_not(isTRUE(tryCatch(
+    tsesqlr::tsesqlr_disponivel("resultados", 2022, "DF"),
+    error = \(e) FALSE)))
+  expect_identical(beep:::resolver_fonte_tse("resultados_nominais", 2022, "DF"),
+                   "tsesqlr")
+  # escopo ausente no banco -> download
+  expect_identical(beep:::resolver_fonte_tse("resultados_nominais", 2026, "SP"),
+                   "tsebr")
+})

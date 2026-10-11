@@ -92,8 +92,10 @@ upload_tsebr_server <- function(id, parent_session) {
 
     observe({
       shiny::req(input$buscatsebr, input$tsefam, input$tseano, input$tseuf)
+      fonte <- resolver_fonte_tse(input$tsefam, input$tseano, input$tseuf)
       chamada <- gerar_call_tsebr(
         familia = input$tsefam, ano = input$tseano, uf = input$tseuf,
+        fonte = fonte,
         cargo = if (identical(input$tsefam, "candidaturas")) {
           if (is.null(input$tsecargoref) || !nzchar(input$tsecargoref)) NULL
           else input$tsecargoref
@@ -104,11 +106,46 @@ upload_tsebr_server <- function(id, parent_session) {
                     else input$tsenrvotavel,
         metrica = input$tsemetrica, tipo = input$tsetipo)
       shiny::updateTextInput(session = session, "urlapi",
-                             value = "CKAN/CDN do TSE via tsebr")
+                             value = if (identical(fonte, "tsesqlr"))
+                               "banco tsedb via tsesqlr (sem download)" else
+                                 "CKAN/CDN do TSE via tsebr")
       shiny::updateTextInput(session = parent_session, "upload_file",
                              value = chamada)
     })
   })
+}
+
+#' Decide a origem dos dados TSE: banco pré-carregado ou download
+#'
+#' Política (duas camadas de cache): se o tsesqlr está instalado, o
+#' banco responde e TODOS os anos pedidos do escopo já estão
+#' carregados em `cargas`, a consulta vai direto ao banco tsedb
+#' (instantânea, sem download); caso contrário cai no download do
+#' CKAN/CDN via tsebr. Famílias sem cobertura no banco (detalhe,
+#' prestação) sempre baixam.
+#'
+#' @param familia Familia do submódulo (`resultados_nominais`,
+#'   `candidaturas`, ...)
+#' @param ano Ano do seletor (valor, vetor ou "todos")
+#' @param uf Sigla da UF ou "all"
+#' @return "tsesqlr" ou "tsebr"
+#' @noRd
+resolver_fonte_tse <- function(familia, ano, uf) {
+  tipo <- switch(familia,
+                 resultados_nominais = "resultados",
+                 candidaturas = "candidatos",
+                 NULL)
+  if (is.null(tipo)) return("tsebr")
+  if (!requireNamespace("tsesqlr", quietly = TRUE)) return("tsebr")
+  anos <- if (is.null(ano) || identical(ano, "todos")) tse_anos_painel else
+    sort(unique(as.integer(ano)))
+  # versao antiga do tsesqlr (sem tsesqlr_disponivel) ou banco fora do
+  # ar: cai no download sem quebrar o modulo
+  ok <- tryCatch(
+    tsesqlr::tsesqlr_disponivel(tipo, anos, uf),
+    error = \(e) FALSE)
+  if (!isTRUE(ok)) return("tsebr")
+  "tsesqlr"
 }
 
 #' Gera a call string do submódulo tsebr (função pura, testável
@@ -116,10 +153,12 @@ upload_tsebr_server <- function(id, parent_session) {
 #' selected_files consome; o resto é código R visível/editável no
 #' painel, no mesmo contrato dos demais submódulos.
 #'
+#' @param fonte "tsebr" (download CKAN/CDN; default) ou "tsesqlr"
+#'   (banco pré-carregado; decidido por resolver_fonte_tse())
 #' @noRd
 gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
                              nr_votavel = NULL, metrica = NULL,
-                             tipo = NULL) {
+                             tipo = NULL, fonte = "tsebr") {
   # "todos" (ou NULL) -> todos os anos HABILITADOS no painel (ate
   # segunda ordem, 2022 e 2026 — o tsedb pre-carregado via tsesqlr
   # cobre apenas esses)
@@ -128,14 +167,24 @@ gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
   ano_param <- paste0("c(", paste(anos, collapse = ", "), ")")
   ano_mapa <- max(anos)
   uf <- if (identical(tolower(uf), "all")) "all" else toupper(uf)
+  mapa_arg <- if (identical(fonte, "tsesqlr"))
+    paste0(", mapa=tsebr::tse_mapa_municipios(", ano_mapa, ", '", uf, "')") else ""
   if (identical(familia, "resultados_nominais")) {
-    corpo <- paste0("tsebr::tse_resultados_municipio(ano = ", ano_param,
-                    ", uf='", uf, "'",
-                    if (!is.null(cargo))
-                      paste0(", cargo=", deparse(cargo)) else "",
-                    if (!is.null(nr_votavel))
-                      paste0(", nr_votavel=", deparse(nr_votavel)) else "",
-                    ")")
+    corpo <- if (identical(fonte, "tsesqlr"))
+      paste0("tsesqlr::tsesqlr_resultados_municipio(ano = ", ano_param,
+              ", uf='", uf, "'",
+              if (!is.null(cargo))
+                paste0(", cargo=", deparse(cargo)) else "",
+              if (!is.null(nr_votavel))
+                paste0(", nr_votavel=", deparse(nr_votavel)) else "",
+              mapa_arg, ")") else
+      paste0("tsebr::tse_resultados_municipio(ano = ", ano_param,
+              ", uf='", uf, "'",
+              if (!is.null(cargo))
+                paste0(", cargo=", deparse(cargo)) else "",
+              if (!is.null(nr_votavel))
+                paste0(", nr_votavel=", deparse(nr_votavel)) else "",
+              ")")
   } else if (identical(familia, "resultados_detalhe")) {
     corpo <- paste0("tsebr::tse_detalhe_municipio(ano = ", ano_param,
                     ", uf='", uf, "', metrica='",
@@ -144,11 +193,17 @@ gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
     corpo <- paste0("tsebr::tse_prestacao_uf(ano = ", ano_param,
                     ", tipo='", tipo %||% "receitas", "')")
   } else if (identical(familia, "candidaturas")) {
-    corpo <- paste0("tsebr::tse_candidaturas(ano = ", ano_param,
-                    ", uf='", uf, "'",
-                    if (!is.null(cargo))
-                      paste0(", cargo=", deparse(cargo)) else "",
-                    ")")
+    corpo <- if (identical(fonte, "tsesqlr"))
+      paste0("tsesqlr::tsesqlr_candidatos(ano = ", ano_param,
+              ", uf='", uf, "'",
+              if (!is.null(cargo))
+                paste0(", cargo=", deparse(cargo)) else "",
+              ")") else
+      paste0("tsebr::tse_candidaturas(ano = ", ano_param,
+              ", uf='", uf, "'",
+              if (!is.null(cargo))
+                paste0(", cargo=", deparse(cargo)) else "",
+              ")")
   } else {
     stop("gerar_call_tsebr: familia desconhecida: ", familia)
   }
