@@ -156,11 +156,12 @@ test_that("painel_xlsx_indicador traduz o codigo para o IBGE quando mapeado", {
   expect_equal(tab$Valor, c(1.5, 2.5, 9))
 })
 
-test_that("painel_codigo_mun_cache traz codigo IBGE de 7 digitos por local_id", {
+test_that("painel_codigo_mun_cache traz codigo IBGE municipal e submunicipal", {
   codigos <- beep:::painel_codigo_mun_cache()
-  expect_length(codigos, 5571L)
-  expect_true(all(grepl("^[0-9]{7}$", codigos)))
-  expect_identical(sum(startsWith(codigos, "31")), 853L)  # MG
+  # municipal 7d + submunicipal (setor/bairro/area de ponderacao, >10d)
+  expect_true(all(grepl("^[0-9]{7}$", codigos) | nchar(codigos) > 10))
+  expect_true(sum(grepl("^[0-9]{7}$", codigos)) >= 5571)
+  expect_true(sum(startsWith(codigos, "31")) >= 853)  # MG
 })
 
 test_that("mod_panel_baixar_ui monta os dois cards de download", {

@@ -101,7 +101,24 @@ test_that("resolver_fonte_tse prefere o banco quando o escopo esta carregado", {
     error = \(e) FALSE)))
   expect_identical(beep:::resolver_fonte_tse("resultados_nominais", 2022, "DF"),
                    "tsesqlr")
-  # escopo ausente no banco -> download
-  expect_identical(beep:::resolver_fonte_tse("resultados_nominais", 2026, "SP"),
+  # escopo ausente no banco -> download (2024 nao entra no tsedb;
+  # 2026 ja esta carregado para todas as UFs)
+  expect_identical(beep:::resolver_fonte_tse("resultados_nominais", 2024, "SP"),
                    "tsebr")
+})
+
+test_that("guarda de consolidacao detecta serie parcial antes de gravar", {
+  codigo <- "tsebr::tse_detalhe_municipio(ano = c(2022, 2026), uf='all', metrica='abstencoes')"
+  parcial <- data.frame(local = 5300108, periodo = as.Date("2022-12-31"),
+                        valor = 1)
+  expect_identical(anos_tse_faltando(codigo, parcial), 2026L)
+  completa <- rbind(parcial,
+                    data.frame(local = 5300108,
+                               periodo = as.Date("2026-12-31"), valor = 2))
+  expect_identical(anos_tse_faltando(codigo, completa), integer(0))
+  # ano unico e chamada sem bloco ano=c(...) nao bloqueiam
+  expect_identical(anos_tse_faltando("x(ano = c(2022))", parcial), integer(0))
+  expect_identical(anos_tse_faltando("x()", parcial), integer(0))
+  # ano fora de faixa e tabela sem coluna periodo ignoram a guarda
+  expect_identical(anos_tse_faltando(codigo, data.frame(a = 1)), integer(0))
 })

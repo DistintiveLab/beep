@@ -107,7 +107,7 @@ painel_geo_mun <- function(con) {
   sf::st_read(con, query = paste(
     "SELECT l.local_id, l.local_name, g.geometry",
     "FROM local l JOIN geoloc g USING (geoloc_id)",
-    "WHERE", painel_municipio_filtro(con)), quiet = TRUE)
+    "WHERE", painel_municipio_filtro()), quiet = TRUE)
 }
 
 #' Localidades do DW rotuladas por nome + id (ha nomes repetidos entre
@@ -133,7 +133,7 @@ painel_codigo_mun <- function(con) {
   cod <- DBI::dbGetQuery(con, paste(
     "SELECT l.local_id, g.geoloc_id::text AS codigo",
     "FROM local l JOIN geoloc g USING (geoloc_id)",
-    "WHERE", painel_municipio_filtro(con),
+    "WHERE", painel_municipio_filtro(),
     "OR length(g.geoloc_id::text) > 10",
     "ORDER BY l.local_id"))
   setNames(cod$codigo, as.character(cod$local_id))
@@ -514,6 +514,11 @@ painel_locais_nivel <- function(con, nivel_id) {
   rotulo <- if (identical(p$nivel, 7L) && !p$pnad) {
     sigla <- unname(painel_uf_sigla[q$uf])
     ifelse(is.na(sigla), q$local_name, paste0(q$local_name, " (", sigla, ")"))
+  } else if (p$pnad) {
+    # estratos PNAD dividem nomes com municipios (ex.: "Brasilia" e
+    # tambem a RM PNAD): rotulo explicito evita escolher o estrato
+    # esperando o municipio
+    paste0(q$local_name, " (PNAD)")
   } else {
     q$local_name
   }

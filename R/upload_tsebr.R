@@ -133,6 +133,7 @@ upload_tsebr_server <- function(id, parent_session) {
 resolver_fonte_tse <- function(familia, ano, uf) {
   tipo <- switch(familia,
                  resultados_nominais = "resultados",
+                 resultados_detalhe = "detalhe",
                  candidaturas = "candidatos",
                  NULL)
   if (is.null(tipo)) return("tsebr")
@@ -146,6 +147,29 @@ resolver_fonte_tse <- function(familia, ano, uf) {
     error = \(e) FALSE)
   if (!isTRUE(ok)) return("tsebr")
   "tsesqlr"
+}
+
+#' Anos pedidos na chamada ausentes na tabela avaliada
+#'
+#' Garante de consolidacao antes do db_datawrite: extrai `ano = c(...)`
+#' da call string e confere se a tabela devolvida cobre TODOS os anos
+#' pedidos. Vetor vazio = serie consolidada; senao, os anos que faltam
+#' (serie parcial nao deve ser gravada).
+#'
+#' @param codigo Call string (apos o strip do marcador)
+#' @param tabela Resultado do eval da chamada
+#' @return Vetor de anos ausentes na tabela (integer(0) se completa)
+#' @noRd
+anos_tse_faltando <- function(codigo, tabela) {
+  m <- regmatches(codigo, regexpr("ano = c\\(([0-9, ]+)\\)", codigo))
+  if (!length(m) || !nzchar(m)) return(integer(0))
+  pedidos <- suppressWarnings(as.integer(
+    strsplit(gsub("ano = c\\(|\\)", "", m), ",\\s*")[[1]]))
+  pedidos <- pedidos[!is.na(pedidos) & pedidos >= 1990 & pedidos <= 2100]
+  if (!length(pedidos) || !is.data.frame(tabela) ||
+      !"periodo" %in% names(tabela)) return(integer(0))
+  presentes <- unique(as.integer(format(as.Date(tabela$periodo), "%Y")))
+  setdiff(pedidos, presentes)
 }
 
 #' Gera a call string do submódulo tsebr (função pura, testável
@@ -186,9 +210,13 @@ gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
                 paste0(", nr_votavel=", deparse(nr_votavel)) else "",
               ")")
   } else if (identical(familia, "resultados_detalhe")) {
-    corpo <- paste0("tsebr::tse_detalhe_municipio(ano = ", ano_param,
-                    ", uf='", uf, "', metrica='",
-                    metrica %||% "abstencoes", "')")
+    corpo <- if (identical(fonte, "tsesqlr"))
+      paste0("tsesqlr::tsesqlr_detalhe_municipio(ano = ", ano_param,
+              ", uf='", uf, "', metrica='",
+              metrica %||% "abstencoes", "'", mapa_arg, ")") else
+      paste0("tsebr::tse_detalhe_municipio(ano = ", ano_param,
+              ", uf='", uf, "', metrica='",
+              metrica %||% "abstencoes", "')")
   } else if (identical(familia, "prestacao")) {
     corpo <- paste0("tsebr::tse_prestacao_uf(ano = ", ano_param,
                     ", tipo='", tipo %||% "receitas", "')")

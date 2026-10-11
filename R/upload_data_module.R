@@ -955,6 +955,14 @@ tipocarga <- reactive({
             tabela <- eval(parse(text = paste0("{\n", codigo, "\n}")))
             if (!is.data.frame(tabela))
               stop("Fonte TSE: o call string nao devolveu um data.frame")
+            # garante de consolidacao: serie multi-anos so grava com
+            # TODOS os anos pedidos — parcial ficou de fora do DW
+            faltando <- anos_tse_faltando(codigo, tabela)
+            if (length(faltando))
+              stop("Fonte TSE: serie incompleta — sem dados para ",
+                   paste(faltando, collapse = ", "),
+                   "; nada foi gravado. Carregue quando a fonte publicar",
+                   " ou rode so com os anos disponiveis.")
             tabela
 
             ####DATAFILE WRITER
