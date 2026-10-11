@@ -464,6 +464,13 @@ tipocarga <- reactive({
                       "(remotes::install_github('DistintiveLab/censoagg')) ",
                       "e censobr para habilitar dados do Censo.")
     }
+  } else {
+    # dados.gov.br (3), ckan (4), ibge_ftp (6), ipeadata (7), bcb (8)
+    # e url de pasta/combinada (10): placeholders da fase de
+    # scaffolding, sem modulo de coleta implementado (nem no AEDi)
+    shiny::helpText("Este tipo de fonte ainda não tem módulo de coleta ",
+                    "no beep. Use as fontes com módulo (sidra, datasus, ",
+                    "rais, inep, tse, censo) ou um arquivo/URL.")
   }
 
 })

@@ -133,7 +133,7 @@ upload_sidraibge_server <- function(id,parent_session){
 
       shiny::updateSelectizeInput(session, inputId = 'sidrafilt',
                                 label="Procure palavras-chave",
-                                choices = sidrameta[1:2], server = TRUE,
+                                choices = sidrameta[, c("value","label")], server = TRUE,
                                 selected=character(0),
                                 options=list(
                                   maxOptions=13000,

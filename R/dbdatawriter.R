@@ -155,9 +155,11 @@ if(!lubridate::is.Date(datadf$periodo)) {
 
 ###  prepare data for writing
 
-  # replace=TRUE reusa o id antigo; carga nova pega max+1
-  newmdataid <- if (!is.na(existing_id)) existing_id else
-    1+as.numeric(max(oldmdata$mdata_id))
+  # replace=TRUE reusa o id antigo; carga nova pega max+1 (DW sem
+  # nenhum indicador ainda: max de vetor vazio e -Inf, o que quebrava
+  # o COPY com 'invalid input syntax for type integer: "-Inf"')
+  newmdataid <- if (!is.na(existing_id)) existing_id else if (nrow(oldmdata))
+    1 + as.numeric(max(oldmdata$mdata_id, na.rm = TRUE)) else 1L
 
   addmid <- \(x){cbind(mdata_id=newmdataid,x)}
 
