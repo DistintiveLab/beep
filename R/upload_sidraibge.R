@@ -60,7 +60,11 @@ upload_sidraibge_server <- function(id,parent_session){
 
       shiny::req(input$sidravar,input$sidratab,input$buscasidra)
       print("gerando url api")
-      metasid <- desctabela(input$sidratab)
+      metasid <- tryCatch(desctabela(input$sidratab), error = \(e) {
+        shinyjs::alert(paste0("SIDRA: ", conditionMessage(e)))
+        NULL
+      })
+      if (is.null(metasid)) return(NULL)
       localidade <- max(c(metasid$nivelTerritorial,1))
       variavel <- gsub("[^[:digit:]].*$","",input$sidravar)
       url <- paste0("https://servicodados.ibge.gov.br/api/v3/agregados/",
@@ -105,9 +109,9 @@ upload_sidraibge_server <- function(id,parent_session){
     observe({
 #            shiny::req(input$sidratab)
             i <- input$sidratab
-          escolhas <- try(desctabela(i))
-          if(class(escolhas)!="try-error") {
-          escolhas <- escolhas$variaveis[,1:2]
+          escolhas <- tryCatch(desctabela(i), error = \(e) NULL)
+          if (!is.null(escolhas)) {
+          escolhas <- escolhas$variaveis[,1:2, drop = FALSE]
           names(escolhas) <- c("value","label")} else {
             escolhas <- data.frame(value="",label="Aguardando valor")
           }
