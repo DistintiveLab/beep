@@ -89,6 +89,11 @@ if(sanitize){
   print("sanitizing locals")
   ##PROCESS - PAIR LOC NAME WITH LOCAL ID
   locais <- DBI::dbGetQuery(condw,"select local_id,local_name,geoloc_id from local")
+  # BIGINT volta do RPostgres como integer64: sem este coerce, o
+  # left_join com `local` (double das fontes TSE/Censo) aborta com
+  # "incompatible types". as.numeric e exato para todo codigo IBGE
+  # real (16 digitos < 2^53)
+  locais$geoloc_id <- as.numeric(locais$geoloc_id)
   # zona de carga municipal: municipios + agregados convencionais + faixa
   # PNAD historica, SEM os blocos submunicipais (o prefixo 6d de um setor
   # e o codigo do municipio — nao pode vazar para o join). A fronteira

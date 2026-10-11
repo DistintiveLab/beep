@@ -35,7 +35,9 @@ upload_tsebr_ui <- function(id, parent_session) {
         "candidaturas (referência, só CSV)" = "candidaturas"),
       selected = "resultados_detalhe", multiple = FALSE),
     shiny::selectizeInput(ns("tseano"), "Ano eleitoral",
-                          choices = tse_anos_painel,
+                          choices = c(
+                            "Todos os anos (2022 e 2026)" = "todos",
+                            rev(tse_anos_painel)),
                           selected = 2022, multiple = FALSE),
     shiny::selectizeInput(ns("tseuf"), "UF",
                           choices = c("AC", "AL", "AM", "AP", "BA", "CE",
