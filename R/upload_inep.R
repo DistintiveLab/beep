@@ -27,8 +27,13 @@
 
   infoideb <- .dado_edubr("metaideb")
 
-gruposinep <- unique(infoinep$assunto_id)
-names(gruposinep) <- unique(infoinep$assunto)
+# assunto_id vem com NA em linhas do metainep sem grupo: sem o filtro,
+# o selectizeInput quebrava a UI em "NAs are not allowed in subscripted
+# assignments" (choicesWithNames/setDefaultNames)
+grupos <- unique(infoinep[!is.na(infoinep$assunto_id) &
+                            !is.na(infoinep$assunto),
+                          c("assunto", "assunto_id")])
+gruposinep <- setNames(grupos$assunto_id, grupos$assunto)
 
 infoinep$tabunica <- paste0(infoinep$assunto,"-",infoinep$tabela)
 
@@ -38,9 +43,11 @@ names(assuntos_ideb) <-
     "IDEB - Municipal - Ensino Fundamental - Anos Finais",
     "IDEB - Municipal - Ensino Médio")
 
-variaveisideb <- unique(c(infoideb[[1]]$indicador,infoideb[[2]]$indicador))
+variaveisideb <- unique(stats::na.omit(
+  c(infoideb[[1]]$indicador, infoideb[[2]]$indicador)))
 
-recortes <- sort(unique(c(infoideb[[1]]$rede,infoideb[[2]]$rede)))
+recortes <- sort(unique(stats::na.omit(
+  c(infoideb[[1]]$rede, infoideb[[2]]$rede))))
 
 
 }
