@@ -181,6 +181,10 @@
 - [`sidebar_ui()`](https://distintivelab.github.io/beep/dev/reference/sidebar_ui.md)
   : Sidebar UI
 
+- [`tse_detalhe_secao()`](https://distintivelab.github.io/beep/dev/reference/tse_detalhe_secao.md)
+  : Detalhe da votacao por secao agregado ao nivel municipal ou
+  submunicipal
+
 - [`tse_harmonizar_secoes()`](https://distintivelab.github.io/beep/dev/reference/tse_harmonizar_secoes.md)
   :
 
