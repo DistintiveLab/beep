@@ -1116,6 +1116,98 @@ painel_compostos <- function(con) {
     "ORDER BY m.orig_name"))
 }
 
+#' Nome do grupo curado do resumo no catalogo (tabela datagroup): os
+#' indicadores ligados a ele em mdata_group sao os cartoes do "Resumo da
+#' regiao", escolhidos no app do beep (aba Variaveis e Indicadores). Deve
+#' bater com [beep_grupo_resumo_nome] do pacote (guardado por teste)
+#' @keywords internal
+painel_grupo_resumo_nome <- "Resumo"
+
+#' Separador do rotulo dos cartoes do resumo (travessao, em UTF-8)
+#' @keywords internal
+painel_resumo_sep <- " \u2014 "
+
+#' Fonte de cada indicador do catalogo — base do agrupamento "por fonte"
+#' do resumo quando o DW nao tem eixos/objetivos nem grupo Resumo
+#' @keywords internal
+painel_fontes <- function(con) {
+  DBI::dbGetQuery(con, paste(
+    "SELECT m.mdata_id, m.orig_name, m.data_name, e.data_class_id,",
+    "coalesce(d.datasource_name, 'Sem fonte cadastrada') AS fonte",
+    "FROM mdata m",
+    "LEFT JOIN mdata_exts e ON e.mdata_id = m.mdata_id",
+    "LEFT JOIN datasource d ON d.datasource_id = e.datasource_id",
+    "ORDER BY m.mdata_id"))
+}
+
+#' Membros do grupo Resumo do catalogo (datagroup "Resumo" via mdata_group),
+#' com a fonte de cada um — vazio quando o grupo nao existe ou nao tem
+#' vinculos; o painel le fail-open e cai nos compostos ou nas fontes
+#' @keywords internal
+painel_grupo_resumo <- function(con) {
+  DBI::dbGetQuery(con, paste(
+    "SELECT m.mdata_id, m.orig_name, m.data_name, e.data_class_id,",
+    "coalesce(d2.datasource_name, 'Sem fonte cadastrada') AS fonte",
+    "FROM mdata m",
+    "JOIN mdata_group g ON g.mdata_id = m.mdata_id",
+    "JOIN datagroup d ON d.datagroup_id = g.datagroup_id",
+    "LEFT JOIN mdata_exts e ON e.mdata_id = m.mdata_id",
+    "LEFT JOIN datasource d2 ON d2.datasource_id = e.datasource_id",
+    "WHERE d.datagroup_name = 'Resumo'",
+    "ORDER BY m.mdata_id"))
+}
+
+#' Nucleo do resumo: valor mais recente (e o anterior) de cada indicador
+#' pedido na localidade, ate a data de corte
+#'
+#' @param indicadores data.frame com `mdata_id`, `rotulo`, `grupo` e `raiz`
+#'   (uma linha por cartao do resumo, na ordem desejada)
+#' @param valores tabela de [painel_valores_local_todos()]
+#' @param refdate data de corte: sem ela, a observacao mais recente; com ela,
+#'   a ultima observacao em ou antes da data (slider por data do resumo)
+#' @keywords internal
+painel_resumo_linhas <- function(indicadores, valores, refdate = NULL) {
+  vazio <- data.frame(grupo = character(0), raiz = character(0),
+                      mdata_id = integer(0), rotulo = character(0),
+                      valor = numeric(0), refdate = as.Date(character(0)),
+                      valor_ant = numeric(0),
+                      refdate_ant = as.Date(character(0)))
+  if (!NROW(indicadores) || !NROW(valores)) return(vazio)
+  refdate <- as.Date(refdate)[1]
+  linhas <- lapply(seq_len(nrow(indicadores)), function(i) {
+    v <- valores[valores$mdata_id == indicadores$mdata_id[i] &
+                   is.finite(valores$value), ]
+    if (!nrow(v)) return(NULL)
+    if (!is.na(refdate))
+      v <- v[v$refdate <= refdate, , drop = FALSE]
+    if (!nrow(v)) return(NULL)
+    v <- v[order(v$refdate), , drop = FALSE]
+    ultimo <- nrow(v)
+    anterior <- ultimo - 1L
+    data.frame(grupo = indicadores$grupo[i], raiz = indicadores$raiz[i],
+               mdata_id = indicadores$mdata_id[i],
+               rotulo = indicadores$rotulo[i],
+               valor = v$value[ultimo], refdate = v$refdate[ultimo],
+               valor_ant = if (anterior) v$value[anterior] else NA_real_,
+               refdate_ant = if (anterior) v$refdate[anterior]
+                            else as.Date(NA))
+  })
+  linhas <- linhas[!vapply(linhas, is.null, logical(1))]
+  if (!length(linhas)) return(vazio)
+  resumo <- do.call(rbind, linhas)
+  rownames(resumo) <- NULL
+  resumo
+}
+
+#' Rotulo de exibicao de um indicador do catalogo (data_name ou orig_name)
+#' @keywords internal
+painel_resumo_nome <- function(orig_name, data_name) {
+  nome <- trimws(as.character(data_name))
+  sem_nome <- is.na(nome) | !nzchar(nome)
+  nome[sem_nome] <- trimws(as.character(orig_name))[sem_nome]
+  nome
+}
+
 #' Resumo por grupo do catalogo: um cartao por indicador composto com o
 #' valor mais recente na localidade ate a data de corte (rotulo, valor e
 #' data) — conteudo do "Resumo da regiao" na aba Regiao
@@ -1128,39 +1220,55 @@ painel_compostos <- function(con) {
 #' @keywords internal
 painel_resumo_grupos <- function(hierarquia, compostos, valores,
                                refdate = NULL) {
-  vazio <- data.frame(grupo = character(0), raiz = character(0),
-                      mdata_id = integer(0), rotulo = character(0),
-                      valor = numeric(0), refdate = as.Date(character(0)),
-                      valor_ant = numeric(0),
-                      refdate_ant = as.Date(character(0)))
-  if (!NROW(hierarquia) || !NROW(compostos) || !NROW(valores)) return(vazio)
-  h <- hierarquia[hierarquia$mdata_id %in% compostos$mdata_id, ]
-  if (!nrow(h)) return(vazio)
-  refdate <- as.Date(refdate)[1]
-  linhas <- lapply(seq_len(nrow(h)), function(i) {
-    v <- valores[valores$mdata_id == h$mdata_id[i] &
-                   is.finite(valores$value), ]
-    if (!nrow(v)) return(NULL)
-    if (!is.na(refdate))
-      v <- v[v$refdate <= refdate, , drop = FALSE]
-    if (!nrow(v)) return(NULL)
-    ultimo <- which.max(v$refdate)
-    anterior <- if (ultimo > 1L) ultimo - 1L else 0L
-    nome <- h$data_name[i]
-    if (is.na(nome) || !nzchar(nome)) nome <- h$orig_name[i]
-    data.frame(grupo = h$datagroup_name[i], raiz = h$raiz_nome[i],
-               mdata_id = h$mdata_id[i],
-               rotulo = paste0(trimws(nome), " — ", h$datagroup_name[i]),
-               valor = v$value[ultimo], refdate = v$refdate[ultimo],
-               valor_ant = if (anterior) v$value[anterior] else NA_real_,
-               refdate_ant = if (anterior) v$refdate[anterior]
-                            else as.Date(NA))
-  })
-  linhas <- linhas[!vapply(linhas, is.null, logical(1))]
-  if (!length(linhas)) return(vazio)
-  resumo <- do.call(rbind, linhas)
-  rownames(resumo) <- NULL
-  resumo
+  h <- NULL
+  if (NROW(hierarquia) && NROW(compostos))
+    h <- hierarquia[hierarquia$mdata_id %in% compostos$mdata_id, , drop = FALSE]
+  if (!NROW(h)) return(painel_resumo_linhas(NULL, valores, refdate))
+  ind <- data.frame(
+    mdata_id = h$mdata_id,
+    rotulo = paste0(painel_resumo_nome(h$orig_name, h$data_name),
+                    painel_resumo_sep, h$datagroup_name),
+    grupo = h$datagroup_name, raiz = h$raiz_nome)
+  painel_resumo_linhas(ind, valores, refdate)
+}
+
+#' Resumo por fonte (fallback geral): um cartao por indicador do catalogo
+#' com valor na localidade, rotulado com a fonte e ordenado por fonte —
+#' alimenta o "Resumo da regiao" quando nao ha grupo Resumo curado nem
+#' compostos por eixo/objetivo
+#' @keywords internal
+painel_resumo_fontes <- function(fontes, valores, refdate = NULL) {
+  if (!NROW(fontes)) return(painel_resumo_linhas(NULL, valores, refdate))
+  fonte <- as.character(fontes$fonte)
+  if (!length(fonte) || all(is.na(fonte)))
+    fonte <- rep("Sem fonte cadastrada", NROW(fontes))
+  fonte[is.na(fonte)] <- "Sem fonte cadastrada"
+  ordem <- order(fonte, fontes$mdata_id)
+  ind <- data.frame(
+    mdata_id = fontes$mdata_id[ordem],
+    rotulo = paste0(painel_resumo_nome(fontes$orig_name, fontes$data_name)[ordem],
+                    painel_resumo_sep, fonte[ordem]),
+    grupo = fonte[ordem],
+    raiz = rep("Por fonte", length(ordem)))
+  painel_resumo_linhas(ind, valores, refdate)
+}
+
+#' Resumo com os membros do grupo Resumo (curados no app do beep): um
+#' cartao por membro, rotulado com a fonte quando ela existe
+#' @keywords internal
+painel_resumo_membros <- function(membros, valores, refdate = NULL) {
+  if (!NROW(membros)) return(painel_resumo_linhas(NULL, valores, refdate))
+  fonte <- as.character(membros$fonte)
+  fonte[is.na(fonte)] <- "Sem fonte cadastrada"
+  rotulo <- painel_resumo_nome(membros$orig_name, membros$data_name)
+  tem_fonte <- !is.na(fonte) & fonte != "Sem fonte cadastrada"
+  rotulo[tem_fonte] <- paste0(rotulo[tem_fonte], painel_resumo_sep,
+                              fonte[tem_fonte])
+  ind <- data.frame(
+    mdata_id = membros$mdata_id, rotulo = rotulo,
+    grupo = rep(painel_grupo_resumo_nome, nrow(membros)),
+    raiz = rep(painel_grupo_resumo_nome, nrow(membros)))
+  painel_resumo_linhas(ind, valores, refdate)
 }
 
 #' Valores de TODOS os indicadores em uma localidade — alimenta o resumo
@@ -1487,6 +1595,21 @@ painel_hierarquia_cache <- function() {
 painel_compostos_cache <- function() {
   painel_cache_get(painel_cache_chave("compostos"), painel_cache_ttl[["catalogo"]],
                    function() painel_com_con(painel_compostos))
+}
+
+#' Fonte de cada indicador, cacheado
+#' @keywords internal
+painel_fontes_cache <- function() {
+  painel_cache_get(painel_cache_chave("fontes"), painel_cache_ttl[["catalogo"]],
+                   function() painel_com_con(painel_fontes))
+}
+
+#' Membros do grupo Resumo, cacheado
+#' @keywords internal
+painel_grupo_resumo_cache <- function() {
+  painel_cache_get(painel_cache_chave("grupo_resumo"),
+                   painel_cache_ttl[["catalogo"]],
+                   function() painel_com_con(painel_grupo_resumo))
 }
 
 #' Geometrias municipais, cacheado

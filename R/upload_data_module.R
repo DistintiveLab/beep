@@ -140,6 +140,24 @@ upload_data_ui <- function(id) {
       ),
       fluidRow(
         shiny::uiOutput(ns("grupo_filtro"))
+      ),
+      fluidRow(
+        column(9,
+          shiny::selectizeInput(
+            ns("grupo_resumo_vars"),
+            "Grupo Resumo do painel: indicadores dos cartões do Resumo da região",
+            choices = NULL, multiple = TRUE, width = "100%",
+            options = list(
+              placeholder = "Escolha os indicadores do resumo",
+              plugins = list("remove_button"))),
+          shiny::actionButton(ns("grupo_resumo_salvar"),
+                              "Salvar grupo Resumo",
+                              icon = shiny::icon("bookmark")),
+          tags$p(class = "help-block",
+                 "Sem escolha, o painel usa os indicadores compostos",
+                 " (quando houver) ou agrupa os indicadores por fonte.")
+        ),
+        column(3)
       )
       )
   )
@@ -755,6 +773,80 @@ tipocarga <- reactive({
   names(novoindicador) <- c("valor","periodo","local")
   db_datawrite(list(mdata_nind,mdataext_nind),novoindicador,sanitize=F)
 
+  })
+
+  # Grupo Resumo do painel: catalogo de indicadores e membros atuais do
+  # datagroup "Resumo" (cartões do Resumo da região), para edição e
+  # sincronização via [atualizar_grupo_resumo()] no DW
+  catalogo_resumo <- shiny::reactive({
+    tryCatch({
+      con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),
+                            dbname=Sys.getenv("dbname"),
+                            user=Sys.getenv("user"),
+                            password=Sys.getenv("password"),
+                            host = Sys.getenv("host"))
+      res <- list(
+        catalogo = DBI::dbGetQuery(con, paste(
+          "SELECT mdata_id, orig_name, data_name FROM mdata",
+          "ORDER BY orig_name")),
+        membros = beep::ler_grupo_resumo(con)
+      )
+      DBI::dbDisconnect(con)
+      res
+    }, error = function(e) {
+      try(DBI::dbDisconnect(con), silent = TRUE)
+      warning("upload_data: banco principal indisponivel (",
+              conditionMessage(e),
+              ") - grupo Resumo do painel nao carregado")
+      NULL
+    })
+  })
+
+  shiny::observe({
+    cat_resumo <- catalogo_resumo()
+    shiny::req(cat_resumo, nrow(cat_resumo$catalogo))
+    rotulos <- ifelse(is.na(cat_resumo$catalogo$data_name) |
+                        !nzchar(cat_resumo$catalogo$data_name),
+                      cat_resumo$catalogo$orig_name,
+                      cat_resumo$catalogo$data_name)
+    shiny::updateSelectizeInput(session, "grupo_resumo_vars",
+      choices = setNames(cat_resumo$catalogo$orig_name, rotulos),
+      selected = cat_resumo$membros$orig_name, server = TRUE)
+  })
+
+  shiny::observeEvent(input$grupo_resumo_salvar, {
+    escolhidos <- input$grupo_resumo_vars
+    cat_resumo <- catalogo_resumo()
+    if (is.null(cat_resumo)) {
+      shiny::showNotification(
+        "Banco principal indisponível: confira dbname/user/password/host no .Renviron.",
+        type = "error", duration = 10)
+      return(NULL)
+    }
+    ids <- if (length(escolhidos))
+      cat_resumo$catalogo$mdata_id[match(escolhidos,
+                                         cat_resumo$catalogo$orig_name)] else
+        integer(0)
+    salvo <- tryCatch({
+      con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),
+                            dbname=Sys.getenv("dbname"),
+                            user=Sys.getenv("user"),
+                            password=Sys.getenv("password"),
+                            host = Sys.getenv("host"))
+      beep::atualizar_grupo_resumo(mdata_ids = ids, con = con, verbose = FALSE)
+      DBI::dbDisconnect(con)
+      TRUE
+    }, error = function(e) {
+      try(DBI::dbDisconnect(con), silent = TRUE)
+      shiny::showNotification(
+        paste0("Falha ao salvar o grupo Resumo: ", conditionMessage(e)),
+        type = "error", duration = 10)
+      FALSE
+    })
+    if (isTRUE(salvo))
+      shiny::showNotification(
+        sprintf("Grupo Resumo salvo: %d indicador(es) no resumo do painel.",
+                length(ids)), type = "message", duration = 8)
   })
 
   selected_files <- reactive({

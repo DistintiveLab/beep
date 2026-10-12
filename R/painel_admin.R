@@ -137,6 +137,8 @@ aquecer_painel <- function(diretorio = NULL, valores = TRUE, limpar = TRUE) {
   marcar("catalogo_niveis", painel_niveis_cache())
   marcar("catalogo_hierarquia", painel_hierarquia_cache())
   marcar("catalogo_compostos", painel_compostos_cache())
+  marcar("catalogo_fontes", painel_fontes_cache())
+  marcar("catalogo_grupo_resumo", painel_grupo_resumo_cache())
   marcar("catalogo_codigo_mun", painel_codigo_mun_cache())
   marcar("geo_mun", painel_geo_mun_cache())
   marcar("geo_uf", painel_geo_uf_cache())

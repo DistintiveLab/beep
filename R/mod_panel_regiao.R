@@ -1,10 +1,13 @@
 #' panel_regiao UI Function
 #'
-#' @description Resumo da região (valores recentes dos indicadores
-#'   compostos dos 7 eixos, dos 4 objetivos e dos estratos PNAD) com botao
-#'   "mostrar mais" expandindo um accordeon por raiz (Eixos, Objetivos,
-#'   Estratos PNAD), grupo e indicador com mini-graficos, alem da serie
-#'   temporal de um indicador do banco de dados do painel para a
+#' @description Resumo da região: cartões com os valores recentes dos
+#'   indicadores do grupo Resumo (curados no app do beep via aba Variáveis
+#'   e Indicadores) ou, na falta dele, dos indicadores compostos dos 7
+#'   eixos, dos 4 objetivos e dos estratos PNAD ou, ainda, de todos os
+#'   indicadores agrupados por fonte — com botão "mostrar mais" expandindo
+#'   um accordeon por raiz (Eixos, Objetivos, Estratos PNAD ou Por fonte),
+#'   grupo e indicador com mini-gráficos, alem da serie temporal de um
+#'   indicador do banco de dados do painel para a
 #'   localidade escolhida dentro de um nivel territorial (regiao, UF,
 #'   regiao intermediaria, microrregiao, regiao imediata, municipio).
 #'   Opcionalmente (painel_geolocalizacao=1), um botao ao lado do seletor
@@ -75,7 +78,7 @@ mod_panel_regiao_ui <- function(id) {
       # fica 1..1 ate a cobertura chegar
       tags$div(class = "painel-resumo-periodo",
         shiny::sliderInput(ns("resumo_data"),
-          "Data de referência dos compostos", min = 1, max = 1, value = 1,
+          "Data de referência do resumo", min = 1, max = 1, value = 1,
           step = 1, sep = "", ticks = FALSE, width = "100%")),
       shiny::uiOutput(ns("resumo")),
       shiny::uiOutput(ns("detalhes"))),
@@ -120,6 +123,8 @@ mod_panel_regiao_server <- function(id,
     niveis <- painel_niveis_cache()
     hierarquia <- painel_hierarquia_cache()
     compostos <- painel_compostos_cache()
+    fontes <- painel_fontes_cache()
+    grupo_resumo <- painel_grupo_resumo_cache()
     shiny::updateSelectizeInput(session, "indicador",
                                 choices = painel_opcoes_indicador(md),
                                 selected = if (nrow(md))
@@ -334,8 +339,9 @@ mod_panel_regiao_server <- function(id,
     })
 
     # Resumo da localidade (labourvaluesdatapanel-like): todos os valores
-    # da localidade em uma leitura; chips com o valor de cada indicador
-    # composto por objetivo na data de referencia do slider
+    # da localidade em uma leitura; cartões na data de referencia do
+    # slider com os indicadores do grupo Resumo (curados no app do beep)
+    # ou, na falta, os compostos por eixo/objetivo ou todos por fonte
     resumo_vals <- shiny::reactive({
       shiny::req(input$localidade)
       painel_valores_local_todos_cache(input$localidade)
@@ -343,14 +349,26 @@ mod_panel_regiao_server <- function(id,
 
     expandido <- shiny::reactiveVal(FALSE)
 
-    # Slider de data do resumo: recorte temporal dos chips dos compostos
+    # Indicadores que puxam o resumo: grupo Resumo quando curado; sem
+    # ele, os compostos da hierarquia (ancestral) ou todo o catalogo
+    # (agrupamento por fonte)
+    resumo_ids <- shiny::reactive({
+      if (NROW(grupo_resumo)) return(grupo_resumo$mdata_id)
+      if (NROW(hierarquia) && NROW(compostos))
+        return(intersect(hierarquia$mdata_id, compostos$mdata_id))
+      if (NROW(fontes)) return(fontes$mdata_id)
+      integer(0)
+    })
+
+    # Slider de data do resumo: recorte temporal dos cartões
     # (valor e ranking na data escolhida; default = data mais recente com
     # dados). Os limites vem dos refdates disponiveis dos proprios
-    # compostos na localidade corrente
+    # indicadores do resumo na localidade corrente
     datas_resumo <- shiny::reactive({
       v <- resumo_vals()
-      if (!NROW(v) || !NROW(compostos)) return(as.Date(character(0)))
-      datas <- sort(unique(v$refdate[v$mdata_id %in% compostos$mdata_id]))
+      ids <- resumo_ids()
+      if (!NROW(v) || !length(ids)) return(as.Date(character(0)))
+      datas <- sort(unique(v$refdate[v$mdata_id %in% ids]))
       datas <- datas[!is.na(datas)]
       ano_piso <- 1995L
       datas_filtradas <-
@@ -389,11 +407,13 @@ mod_panel_regiao_server <- function(id,
       datas[i]
     })
 
-    # Chips do resumo: um por indicador composto do catalogo (7 eixos, 4
-    # objetivos e os estratos PNAD), com o valor mais recente na localidade
-    # e a posicao dela entre os municipios da propria UF e do pais naquela
-    # data (uma leitura cacheada por indicador/data; NA fora do nivel
-    # municipal)
+    # Cartões do resumo: membros do grupo Resumo (curados no app do
+    # beep); sem grupo, os compostos da hierarquia (7 eixos, 4 objetivos e
+    # os estratos PNAD); sem nenhum dos dois, um cartão por indicador do
+    # catalogo agrupado por fonte — em todos os casos com o valor mais
+    # recente na localidade e a posicao dela entre os municipios da
+    # propria UF e do pais naquela data (uma leitura cacheada por
+    # indicador/data; NA fora do nivel municipal)
     rotulo_chip <- function(mid, data_ref) {
       v <- resumo_vals()
       if (is.na(data_ref)) return(format(data_ref, "%Y"))
@@ -407,8 +427,14 @@ mod_panel_regiao_server <- function(id,
     }
 
     resumo <- shiny::reactive({
-      r <- painel_resumo_grupos(hierarquia, compostos, resumo_vals(),
-                                resumo_data())
+      v <- resumo_vals()
+      r <- if (NROW(grupo_resumo)) {
+        painel_resumo_membros(grupo_resumo, v, resumo_data())
+      } else if (NROW(hierarquia) && NROW(compostos)) {
+        painel_resumo_grupos(hierarquia, compostos, v, resumo_data())
+      } else {
+        painel_resumo_fontes(fontes, v, resumo_data())
+      }
       if (!NROW(r)) return(r)
       ranks <- lapply(seq_len(nrow(r)), function(i)
         painel_ranking_local_cache(r$mdata_id[i], input$localidade,
@@ -425,11 +451,6 @@ mod_panel_regiao_server <- function(id,
       shiny::validate(shiny::need(nrow(md) > 0,
         "Banco de dados do painel sem indicadores (tabela mdata vazia): confira as variáveis user, password, host e dbname e reinicie a sessão R antes de relançar o app."))
       shiny::req(input$localidade)
-      if (!nrow(hierarquia) || !nrow(compostos)) {
-        return(tags$p(class = "painel-resumo-nota",
-          "Sem agrupamentos por objetivo e indicadores compostos no catálogo",
-          " do banco de dados do painel."))
-      }
       r <- resumo()
       chips <- lapply(seq_len(nrow(r)), function(i) {
         ranking <- painel_ranking_texto(r$rank_uf[i], r$n_uf[i],
@@ -458,7 +479,7 @@ mod_panel_regiao_server <- function(id,
           tags$div(class = "painel-resumo-grade", chips)
         } else {
           tags$p(class = "painel-resumo-nota",
-            "Sem valores de indicadores compostos para esta localidade.")
+            "Sem valores dos indicadores do resumo para esta localidade.")
         },
         tags$div(class = "painel-resumo-acoes",
           shiny::actionButton(session$ns("mostrar_mais"),
@@ -469,10 +490,12 @@ mod_panel_regiao_server <- function(id,
       expandido(!expandido())
     })
 
-    # Accordeon do "mostrar mais": raizes (Eixos, Objetivos) > grupo >
-    # indicador com mini-grafico da serie na localidade corrente
-    indicador_bloco <- function(mid) {
-      linha <- hierarquia[match(mid, hierarquia$mdata_id), ]
+    # Accordeon do "mostrar mais": raizes (Eixos, Objetivos ou Por
+    # fonte) > grupo > indicador com mini-grafico da serie na localidade
+    # corrente. indicador_bloco recebe a linha do catalogo (hierarquia ou
+    # fontes), que traz data_name/orig_name/data_class_id
+    indicador_bloco <- function(linha) {
+      mid <- linha$mdata_id[1]
       nome <- linha$data_name[1]
       if (is.na(nome) || !nzchar(nome)) nome <- linha$orig_name[1]
       composto <- !is.na(linha$data_class_id[1]) &&
@@ -485,14 +508,14 @@ mod_panel_regiao_server <- function(id,
     }
 
     grupo_bloco <- function(gid) {
-      linhas <- hierarquia[hierarquia$datagroup_id == gid, ]
-      ids <- unique(linhas$mdata_id[!is.na(linhas$mdata_id)])
-      if (!length(ids)) return(NULL)
+      linhas <- hierarquia[hierarquia$datagroup_id == gid, , drop = FALSE]
+      linhas <- linhas[!duplicated(linhas$mdata_id), , drop = FALSE]
+      if (!nrow(linhas)) return(NULL)
       tags$details(class = "painel-grupo painel-grupo-nivel2",
         tags$summary(linhas$datagroup_name[1],
-          tags$small(paste0(" · ", length(ids), " indicadores"))),
+          tags$small(paste0(" · ", nrow(linhas), " indicadores"))),
         tags$div(class = "painel-grupo-corpo",
-          lapply(ids, indicador_bloco)))
+          lapply(seq_len(nrow(linhas)), function(i) indicador_bloco(linhas[i, ]))))
     }
 
     raiz_bloco <- function(rnome, aberta = FALSE) {
@@ -509,19 +532,42 @@ mod_panel_regiao_server <- function(id,
           lapply(filhos$datagroup_id, grupo_bloco)))
     }
 
+    # Fallback sem eixos/objetivos: raiz unica "Por fonte" com um bloco
+    # por fonte do catalogo, indicadores na ordem do mdata_id
+    fonte_bloco <- function(fnome) {
+      linhas <- fontes[fontes$fonte == fnome, , drop = FALSE]
+      if (!nrow(linhas)) return(NULL)
+      tags$details(class = "painel-grupo painel-grupo-nivel2",
+        tags$summary(fnome,
+          tags$small(paste0(" · ", nrow(linhas), " indicadores"))),
+        tags$div(class = "painel-grupo-corpo",
+          lapply(seq_len(nrow(linhas)), function(i) indicador_bloco(linhas[i, ]))))
+    }
+
     output$detalhes <- shiny::renderUI({
       shiny::req(expandido())
-      if (!nrow(hierarquia)) return(NULL)
-      raizes <- c("Eixos", "Objetivos", "Estratos PNAD")
-      raizes <- raizes[raizes %in% unique(hierarquia$raiz_nome)]
-      raizes <- c(raizes, setdiff(unique(hierarquia$raiz_nome), raizes))
-      lapply(seq_along(raizes), function(i)
-        raiz_bloco(raizes[i], aberta = i == 1))
+      if (nrow(hierarquia)) {
+        raizes <- c("Eixos", "Objetivos", "Estratos PNAD")
+        raizes <- raizes[raizes %in% unique(hierarquia$raiz_nome)]
+        raizes <- c(raizes, setdiff(unique(hierarquia$raiz_nome), raizes))
+        return(lapply(seq_along(raizes), function(i)
+          raiz_bloco(raizes[i], aberta = i == 1)))
+      }
+      if (!nrow(fontes)) return(NULL)
+      nomes_fontes <- unique(fontes$fonte[!is.na(fontes$fonte)])
+      ids <- fontes$mdata_id[!is.na(fontes$mdata_id)]
+      tagList(tags$details(class = "painel-grupo", open = TRUE,
+        tags$summary("Por fonte",
+          tags$small(paste0(" · ", length(ids), " indicadores"))),
+        tags$div(class = "painel-grupo-corpo",
+          lapply(nomes_fontes, fonte_bloco))))
     })
 
     # Mini-graficos: outputs registrados uma unica vez para os indicadores
-    # da hierarquia; cada render filtra resumo_vals() pelo proprio id
-    ids_hierarquia <- unique(hierarquia$mdata_id[!is.na(hierarquia$mdata_id)])
+    # da hierarquia e do catalogo de fontes; cada render filtra
+    # resumo_vals() pelo proprio id
+    ids_hierarquia <- unique(c(hierarquia$mdata_id, fontes$mdata_id))
+    ids_hierarquia <- ids_hierarquia[!is.na(ids_hierarquia)]
     invisible(lapply(ids_hierarquia, function(mid) {
       local({
         id <- mid

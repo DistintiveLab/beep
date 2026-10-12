@@ -1,6 +1,6 @@
 Package: beep
 Title: Pacote de inclusão de fontes de dados, indicadores, e filtros de variáveis
-Version: 0.9.3.9033
+Version: 0.9.3.9034
 Date: 2026-10-02
 Authors@R: 
     c(person(given = "Rodrigo",
@@ -106,6 +106,7 @@ Collate:
     'executa_atualizacao.R'
     'explorar_indicadores.R'
     'gravar_serie_dw.R'
+    'grupo_resumo.R'
     'grupos_catalogo.R'
     'header_buttons_module.R'
     'incorporar_areas_ponderacao.R'
