@@ -38,6 +38,12 @@ beep_tema_recursos <- function(paleta = c("govbr", "pb", "brasil")) {
     htmltools::includeCSS(file.path(tema_dir, "beep-tema.css")),
     htmltools::includeScript(file.path(tema_dir, "beep-tema.js")),
     shinyGovBRstyle::use_govbr(),
+    # O core.min.css do Gov.br (shinyGovBRstyle >= 1.0.0) define .row como
+    # display:flex; como o Bootstrap 3 nunca seta display em .row, a regra
+    # sobrevive e colapsa a grade do app (buckets de arrastar-e-soltar
+    # dentro de uiOutput encolhem para a largura do conteúdo). Restaura a
+    # semântica de linha em bloco do BS3 — vale para app e admin.
+    htmltools::tags$style(".row { display: block; }"),
     shiny::tags$div(id = "beep_tema_raiz", `data-paleta` = paleta,
                     class = "hidden"))
 }
