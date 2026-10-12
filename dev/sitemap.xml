@@ -232,8 +232,11 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_ranking_texto.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_ranking_vazio.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_recursos.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_refdates.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_refdates_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_resumo_grupos.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_rodape.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_rotulo_data.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_rotulo_tempo.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_sem_camadas_vazias.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_slug.html</loc></url>
@@ -252,6 +255,8 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_valores_local_todos_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_valores_por_ano.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_valores_por_ano_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_valores_refdate.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_valores_refdate_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_xlsx_indicador.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_xlsx_regiao.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/panel_app.html</loc></url>
