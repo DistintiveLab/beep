@@ -1,3 +1,15 @@
+#' Resumo dos locais que nao casaram com a tabela local do DW apos a
+#' sanitizacao (nucleo puro, testavel offline)
+#' @keywords internal
+.resumo_locais_nao_casados <- function(local, local_id) {
+  sem_id <- is.na(local_id)
+  list(
+    n = sum(sem_id),
+    total = length(local_id),
+    amostra = utils::head(as.character(local[sem_id]), 5)
+  )
+}
+
 #' Do some checking, sanitizing and write to backend database
 #' `db_datawrite()` does some checking, sanitizing and writes new data to
 #' backend database
@@ -24,7 +36,6 @@
 #'
 #' @importFrom DBI dbConnect dbGetQuery dbAppendTable
 #' @importFrom data.table rbindlist
-
 db_datawrite <- \(metadf,datadf,construct,grp=FALSE,engine="postgresql",sanitize=TRUE,forceunique=T,replace=FALSE) {
   if(engine!="postgresql"){
     return("Em construção, não disponível outra engine ainda")
@@ -178,7 +189,22 @@ if(!lubridate::is.Date(datadf$periodo)) {
      value=datadf$valor))
 
 
-   print(datadf[is.na(datadf$local_id),])
+  # locais sem casamento: relatorio compacto no lugar do print do frame
+  # inteiro (carga nacional inundava o console) + guarda contra indicador
+  # fantasma: nenhum local casado = nada a gravar, aborta antes do insert
+  col_local <- if ("local" %in% names(datadf)) datadf$local else datadf$geoloc_idc
+  nao_cas <- .resumo_locais_nao_casados(col_local, datadf$local_id)
+  if (nao_cas$n > 0) {
+    banco <- Sys.getenv("dbname", "beepdb")
+    msg <- sprintf(
+      "%d de %d linhas sem correspondencia na tabela local do banco '%s'; codigos exemplo: %s",
+      nao_cas$n, nao_cas$total, banco, paste(nao_cas$amostra, collapse = ", "))
+    if (nao_cas$n == nao_cas$total) {
+      stop(msg, " - NENHUM local casou: confira o banco alvo (.Renviron dbname) e se o nivel territorial da carga ja foi incorporado (ampliar_nivel_territorial). Indicador NAO gravado.",
+           call. = FALSE)
+    }
+    warning(msg, call. = FALSE)
+  }
 
    ndv <- ndv[!is.na(ndv$local_id),]
 
