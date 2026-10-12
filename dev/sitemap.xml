@@ -3,6 +3,7 @@
 <url><loc>https://distintivelab.github.io/beep/dev/LICENSE-text.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/LICENSE.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/ROADMAP-fontes-multianos.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/ROADMAP-formato-valores.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/ROADMAP-niveis-submunicipais.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/authors.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/index.html</loc></url>
@@ -173,6 +174,7 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_irmaos_nivel_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_local.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_local_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_mais_proxima.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_malha_foco_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_mun.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_mun_cache.html</loc></url>
@@ -189,6 +191,7 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_vazio.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geojson.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geojson_orientar.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geolocalizacao_ativa.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_grupo_indicador.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_grupo_raiz.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_grupos_selecao.html</loc></url>
