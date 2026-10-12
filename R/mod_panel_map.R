@@ -4,8 +4,9 @@
 #'   indicador do DW (beepdb) no ano escolhido (ultimo refdate do ano):
 #'   indicadores municipais mantem a malha historica; indicadores de outros
 #'   niveis (UF, regiao, submunicipais) recebem a malha do nivel ou, quando
-#'   ela excede o limite de feicoes, o contorno dos municipios com dados
-#'   (degradacao honesta). Slider de ano animado, paleta com seletor de
+#'   ela excede o limite de feicoes, malhas por municipio (teto de 6 mil
+#'   feicoes locais, com simplificacao adaptativa) e, acima disso, o
+#'   contorno dos municipios com dados (degradacao honesta). Slider de ano animado, paleta com seletor de
 #'   escala de cores (do zero, min-max ou quantil, invertivel) e
 #'   atualizacao incremental (port do
 #'   labourvaluesdatapanel): a geometria e enviada uma unica vez e apenas
@@ -112,8 +113,9 @@ mod_panel_map_server <- function(id) {
     # Malha do nivel territorial do indicador: municipal mantem o
     # comportamento historico; niveis leves (UF, regiao, 7p) carregam a
     # malha do nivel inteiro; niveis pesados (submunicipais) carregam malhas
-    # por municipio com dados e degradam para o contorno do municipio quando
-    # a malha local tambem excede o limite de feicoes
+    # por municipio com dados (teto de 6 mil feicoes locais, que cobre os
+    # setores censitarios de uma capital) e degradam para o contorno do
+    # municipio acima disso
     mapa_malha <- shiny::reactive({
       ind <- suppressWarnings(as.integer(input$indicador))[1]
       ch <- if (is.na(ind)) NA_character_ else painel_ind_nivel_cache(ind)

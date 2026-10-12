@@ -3,16 +3,25 @@
 \name{painel_geo_irmaos_nivel_cache}
 \alias{painel_geo_irmaos_nivel_cache}
 \title{Malha completa de um nivel submunicipal dentro de um municipio
-(geoloc de 7 digitos), cacheada por municipio — mesmo formato de chave
-de \code{\link[=painel_geo_malha_foco_cache]{painel_geo_malha_foco_cache()}}, que guarda a malha cheia e exclui o
-destaque fora do cache}
+(geoloc de 7 digitos), cacheada por municipio — chave derivada da de
+\code{\link[=painel_geo_malha_foco_cache]{painel_geo_malha_foco_cache()}}, com o teto no final para nao
+conflitar com a malha do globo. O teto e maior que o do globo: o mapa
+aguenta malhas de capital inteira (~5 mil setores) com a simplificacao
+adaptativa de \code{\link[=painel_geo_irmaos_mun]{painel_geo_irmaos_mun()}}}
 \usage{
-painel_geo_irmaos_nivel_cache(mun, tipo = NULL, larg = NULL)
+painel_geo_irmaos_nivel_cache(
+  mun,
+  tipo = NULL,
+  larg = NULL,
+  max_feicoes = 6000L
+)
 }
 \description{
 Malha completa de um nivel submunicipal dentro de um municipio
-(geoloc de 7 digitos), cacheada por municipio — mesmo formato de chave
-de \code{\link[=painel_geo_malha_foco_cache]{painel_geo_malha_foco_cache()}}, que guarda a malha cheia e exclui o
-destaque fora do cache
+(geoloc de 7 digitos), cacheada por municipio — chave derivada da de
+\code{\link[=painel_geo_malha_foco_cache]{painel_geo_malha_foco_cache()}}, com o teto no final para nao
+conflitar com a malha do globo. O teto e maior que o do globo: o mapa
+aguenta malhas de capital inteira (~5 mil setores) com a simplificacao
+adaptativa de \code{\link[=painel_geo_irmaos_mun]{painel_geo_irmaos_mun()}}
 }
 \keyword{internal}

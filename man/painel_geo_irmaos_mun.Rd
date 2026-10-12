@@ -9,7 +9,10 @@ malha do globo quando o destaque e submunicipal: as feicoes do nivel
 tesselam o municipio em foco. O nivel e selecionado pelo \code{nivel_tipo}
 (largura nao distingue bairro de subdistrito); sem tipo (legado), pela
 largura. Acima do teto de feicoes volta vazio e o globo fica apenas
-com o destaque sobre a UF (degradacao).}
+com o destaque sobre a UF (degradacao). Malhas grandes (acima de 2 mil
+feicoes, como os setores censitarios de uma capital inteira) ganham
+simplificacao mais forte no SQL para caberem no mapa, que usa teto
+proprio em \code{\link[=painel_geo_irmaos_nivel_cache]{painel_geo_irmaos_nivel_cache()}}.}
 \usage{
 painel_geo_irmaos_mun(con, mun, tipo = NULL, larg = NULL, max_feicoes = 2000L)
 }
@@ -21,6 +24,9 @@ malha do globo quando o destaque e submunicipal: as feicoes do nivel
 tesselam o municipio em foco. O nivel e selecionado pelo \code{nivel_tipo}
 (largura nao distingue bairro de subdistrito); sem tipo (legado), pela
 largura. Acima do teto de feicoes volta vazio e o globo fica apenas
-com o destaque sobre a UF (degradacao).
+com o destaque sobre a UF (degradacao). Malhas grandes (acima de 2 mil
+feicoes, como os setores censitarios de uma capital inteira) ganham
+simplificacao mais forte no SQL para caberem no mapa, que usa teto
+proprio em \code{\link[=painel_geo_irmaos_nivel_cache]{painel_geo_irmaos_nivel_cache()}}.
 }
 \keyword{internal}

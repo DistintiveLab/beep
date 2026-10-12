@@ -818,7 +818,10 @@ painel_geo_mun_uf <- function(con, uf) {
 #' tesselam o municipio em foco. O nivel e selecionado pelo `nivel_tipo`
 #' (largura nao distingue bairro de subdistrito); sem tipo (legado), pela
 #' largura. Acima do teto de feicoes volta vazio e o globo fica apenas
-#' com o destaque sobre a UF (degradacao).
+#' com o destaque sobre a UF (degradacao). Malhas grandes (acima de 2 mil
+#' feicoes, como os setores censitarios de uma capital inteira) ganham
+#' simplificacao mais forte no SQL para caberem no mapa, que usa teto
+#' proprio em [painel_geo_irmaos_nivel_cache()].
 #' @keywords internal
 painel_geo_irmaos_mun <- function(con, mun, tipo = NULL, larg = NULL,
                                   max_feicoes = 2000L) {
@@ -838,13 +841,16 @@ painel_geo_irmaos_mun <- function(con, mun, tipo = NULL, larg = NULL,
   if (!length(n_geo) || is.na(n_geo) || n_geo < 1L || n_geo > max_feicoes) {
     return(painel_geo_vazio())
   }
+  # tolerancia adaptativa: malhas grandes (capital inteira de setores)
+  # simplificam mais forte para o geojson caber no navegador
+  tol <- if (n_geo > 2000L) 0.001 else 0.0005
   geo <- sf::st_read(con, query = sprintf(paste(
     "SELECT l.local_id, l.local_name,",
-    "ST_SimplifyPreserveTopology(g.geometry, 0.0005) AS geometry",
+    "ST_SimplifyPreserveTopology(g.geometry, %s) AS geometry",
     "FROM local l JOIN geoloc g USING (geoloc_id)",
     "WHERE %s",
     "ORDER BY l.local_id"),
-    escopo), quiet = TRUE)
+    tol, escopo), quiet = TRUE)
   geo$code <- as.character(geo$local_id)
   geo$label <- geo$local_name
   geo[, c("code", "label", "geometry")]
@@ -1596,11 +1602,14 @@ painel_geo_malha_foco_cache <- function(local_id) {
 }
 
 #' Malha completa de um nivel submunicipal dentro de um municipio
-#' (geoloc de 7 digitos), cacheada por municipio — mesmo formato de chave
-#' de [painel_geo_malha_foco_cache()], que guarda a malha cheia e exclui o
-#' destaque fora do cache
+#' (geoloc de 7 digitos), cacheada por municipio — chave derivada da de
+#' [painel_geo_malha_foco_cache()], com o teto no final para nao
+#' conflitar com a malha do globo. O teto e maior que o do globo: o mapa
+#' aguenta malhas de capital inteira (~5 mil setores) com a simplificacao
+#' adaptativa de [painel_geo_irmaos_mun()]
 #' @keywords internal
-painel_geo_irmaos_nivel_cache <- function(mun, tipo = NULL, larg = NULL) {
+painel_geo_irmaos_nivel_cache <- function(mun, tipo = NULL, larg = NULL,
+                                          max_feicoes = 6000L) {
   mun <- trimws(as.character(mun)[1])
   if (is.na(mun) || !grepl("^[0-9]{7}$", mun)) return(painel_geo_vazio())
   tipo <- if (length(tipo) == 1 && !is.na(tipo) && nzchar(tipo)) tipo else NULL
@@ -1608,10 +1617,12 @@ painel_geo_irmaos_nivel_cache <- function(mun, tipo = NULL, larg = NULL) {
     suppressWarnings(as.character(as.integer(larg)[1]))
   if (is.na(chave_nivel)) return(painel_geo_vazio())
   painel_cache_get(
-    painel_cache_chave(sprintf("geo_irmaos_%s_%s", chave_nivel, mun)),
+    painel_cache_chave(sprintf("geo_irmaos_%s_%s_%d",
+                               chave_nivel, mun, as.integer(max_feicoes))),
     painel_cache_ttl[["geo"]],
     function() painel_com_con(function(con)
-      painel_geo_irmaos_mun(con, mun = mun, tipo = tipo, larg = larg)))
+      painel_geo_irmaos_mun(con, mun = mun, tipo = tipo, larg = larg,
+                            max_feicoes = max_feicoes)))
 }
 
 #' Contorno do municipio dono de um codigo submunicipal, cacheado
