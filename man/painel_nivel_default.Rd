@@ -2,13 +2,17 @@
 % Please edit documentation in R/painel_dw.R
 \name{painel_nivel_default}
 \alias{painel_nivel_default}
-\title{Nivel territorial de abertura default da aba Regiao: municipal quando
-disponivel, senao UF}
+\title{Nivel territorial de abertura default da aba Regiao: a variavel de
+ambiente \code{painel_nivel} (chave do nivel, ex.: \code{subdistrito} ou \code{2})
+decide quando o nivel existe no catalogo; sem a variavel ou com nivel
+indisponivel, municipal quando disponivel, senao UF}
 \usage{
-painel_nivel_default(niveis)
+painel_nivel_default(niveis, padrao = Sys.getenv("painel_nivel", ""))
 }
 \description{
-Nivel territorial de abertura default da aba Regiao: municipal quando
-disponivel, senao UF
+Nivel territorial de abertura default da aba Regiao: a variavel de
+ambiente \code{painel_nivel} (chave do nivel, ex.: \code{subdistrito} ou \code{2})
+decide quando o nivel existe no catalogo; sem a variavel ou com nivel
+indisponivel, municipal quando disponivel, senao UF
 }
 \keyword{internal}

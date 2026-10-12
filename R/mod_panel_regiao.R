@@ -31,7 +31,25 @@ mod_panel_regiao_ui <- function(id) {
         tags$label(`for` = ns("localidade"), "Localidade"),
         shiny::selectizeInput(ns("localidade"), NULL, choices = NULL,
                               width = "100%", options = painel_opcoes_select(
-                                "Digite parte do nome")))),
+                                "Digite parte do nome")),
+        # Botao "usar minha localizacao" (painel_geolocalizacao=1 no
+        # .Renviron): pede a posicao ao navegador e o server seleciona a
+        # localidade mais proxima do nivel corrente
+        if (painel_geolocalizacao_ativa()) {
+          tags$button(id = ns("geo"), type = "button",
+            class = "painel-info-btn",
+            title = "Usar minha localização",
+            `aria-label` = "Usar minha localização",
+            onclick = sprintf(paste0(
+              "navigator.geolocation.getCurrentPosition(",
+              "function(p){Shiny.setInputValue('%s',",
+              "{lat:p.coords.latitude,lon:p.coords.longitude},",
+              "{priority:'event'})},",
+              "function(e){alert('Não foi possível obter sua localização: '",
+              "+e.message)})"),
+              ns("geo_coords")),
+            shiny::icon("location-arrow"))
+        })),
     tags$div(class = "painel-card",
       tags$h3("Resumo da região"),
       tags$p(class = "painel-nota", shiny::textOutput(ns("resumo_local"))),
@@ -139,6 +157,34 @@ mod_panel_regiao_server <- function(id,
           shiny::updateSelectizeInput(session, "localidade",
             choices = locais(), selected = destino, server = TRUE)
         }
+      }
+    })
+
+    # Botao "usar minha localizacao": com a posicao do navegador,
+    # seleciona a localidade do nivel corrente cuja feicao contem o ponto
+    # (ou a de representacao interna mais proxima). Niveis pesados, sem
+    # malha leve no painel, avisam em vez de falharem em silencio
+    shiny::observeEvent(input$geo_coords, {
+      coords <- input$geo_coords
+      shiny::req(is.list(coords), !is.null(coords$lat),
+                 !is.null(coords$lon))
+      lat <- suppressWarnings(as.numeric(coords$lat)[1])
+      lon <- suppressWarnings(as.numeric(coords$lon)[1])
+      escolhas <- locais()
+      shiny::req(!is.na(lat), !is.na(lon), length(escolhas))
+      geo <- painel_geo_nivel_cache(input$nivel)
+      if (!nrow(geo)) {
+        shiny::showNotification(
+          paste0("Este nível não tem malha leve para localizar a ",
+                 "localidade mais próxima."), type = "warning")
+        return(NULL)
+      }
+      com_dados <- geo[geo$code %in% unlist(escolhas, use.names = FALSE), ]
+      if (!nrow(com_dados)) com_dados <- geo
+      alvo <- painel_geo_mais_proxima(com_dados, lat, lon)
+      if (!is.na(alvo) && alvo %in% unlist(escolhas, use.names = FALSE)) {
+        shiny::updateSelectizeInput(session, "localidade",
+          choices = escolhas, selected = alvo, server = TRUE)
       }
     })
 

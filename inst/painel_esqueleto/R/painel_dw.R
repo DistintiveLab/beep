@@ -583,10 +583,17 @@ painel_niveis <- function(con) {
   q[!is.na(q$rotulo), ]
 }
 
-#' Nivel territorial de abertura default da aba Regiao: municipal quando
-#' disponivel, senao UF
+#' Nivel territorial de abertura default da aba Regiao: a variavel de
+#' ambiente `painel_nivel` (chave do nivel, ex.: `subdistrito` ou `2`)
+#' decide quando o nivel existe no catalogo; sem a variavel ou com nivel
+#' indisponivel, municipal quando disponivel, senao UF
 #' @keywords internal
-painel_nivel_default <- function(niveis) {
+painel_nivel_default <- function(niveis, padrao = Sys.getenv("painel_nivel", "")) {
+  alvo <- trimws(as.character(padrao)[1])
+  if (!is.na(alvo) && nzchar(alvo) && !is.null(niveis) && NROW(niveis) &&
+      alvo %in% as.character(niveis$nivel_id)) {
+    return(alvo)
+  }
   if (is.null(niveis) || !nrow(niveis)) return("2")
   alvo <- which(grepl("Munic", niveis$rotulo, fixed = TRUE))
   if (length(alvo)) as.character(niveis$nivel_id[alvo[1]]) else "2"
@@ -709,6 +716,37 @@ painel_geo_nivel <- function(con, nivel_id, max_feicoes = 700L) {
   geo$code <- as.character(geo$local_id)
   geo$label <- geo$local_name
   geo[, c("code", "label", "geometry")]
+}
+
+#' Botao "usar minha localizacao" da aba Regiao esta ativo? A variavel de
+#' ambiente `painel_geolocalizacao=1` habilita o pedido de posicao ao
+#' navegador (Geolocation API, exige HTTPS ou localhost) para selecionar a
+#' localidade mais proxima do nivel corrente; qualquer outro valor (ou
+#' variavel ausente) mantem o painel sem o botao
+#' @keywords internal
+painel_geolocalizacao_ativa <- function() {
+  identical(Sys.getenv("painel_geolocalizacao"), "1")
+}
+
+#' Localidade mais proxima de um ponto (lat/lon WGS84) entre as feicoes de
+#' um nivel: a que contem o ponto quando ha, senao a de representacao
+#' interna mais proxima (st_point_on_surface tolera geometrias invalidas);
+#' NA quando nao ha feicoes ou coordenadas
+#' @keywords internal
+painel_geo_mais_proxima <- function(geo, lat, lon) {
+  if (is.null(geo) || !nrow(geo)) return(NA_character_)
+  lat <- suppressWarnings(as.numeric(lat)[1])
+  lon <- suppressWarnings(as.numeric(lon)[1])
+  if (is.na(lat) || is.na(lon)) return(NA_character_)
+  ponto <- sf::st_sfc(sf::st_point(c(lon, lat)), crs = 4326)
+  dentro <- unlist(sf::st_intersects(ponto, sf::st_geometry(geo),
+                                      sparse = TRUE))
+  if (length(dentro)) return(as.character(geo$code[dentro[1]]))
+  centros <- suppressWarnings(
+    sf::st_point_on_surface(sf::st_geometry(geo)))
+  d <- as.numeric(sf::st_distance(centros, ponto))
+  if (!length(d) || all(is.na(d))) return(NA_character_)
+  as.character(geo$code[which.min(d)])
 }
 
 #' Geometria de uma localidade (destaque do globo quando a base e a das
