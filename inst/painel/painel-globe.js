@@ -236,11 +236,16 @@
       host.dataset.latitude = (-state.rotation[1]).toFixed(4);
     }
 
-    function drawFeature(item, fill, stroke, lineWidth) {
+    function drawFeature(item, fill, stroke, lineWidth, alpha = 1) {
       context.beginPath();
       path(item.feature);
+      if (alpha < 1) {
+        context.save();
+        context.globalAlpha = alpha;
+      }
       context.fillStyle = fill;
       context.fill();
+      if (alpha < 1) context.restore();
       if (stroke) {
         context.strokeStyle = stroke;
         context.lineWidth = lineWidth;
@@ -316,7 +321,7 @@
           hovered && available ? colors.hoveredStroke : available ? colors.availableStroke : colors.unavailableStroke,
           hovered && available ? 1.2 : 0.55);
       });
-      if (selected) drawFeature(selected, colors.selected, colors.selectedStroke, 0.9);
+      if (selected) drawFeature(selected, colors.selected, colors.selectedStroke, 0.9, 0.15);
 
       // Malha municipal da UF em foco: so as bordas dos vizinhos, num
       // unico traco fino entre a base e o destaque.
@@ -330,7 +335,7 @@
 
       // Destaque (localidade fora das feicoes da base): por cima de tudo.
       if (state.destaque) {
-        drawFeature(state.destaque, colors.selected, colors.selectedStroke, 1.3);
+        drawFeature(state.destaque, colors.selected, colors.selectedStroke, 1.3, 0.15);
       }
 
       // UFs de area muito pequena (caso do DF) continuam clicaveis nesta
