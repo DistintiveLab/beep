@@ -113,7 +113,7 @@ are dynamically injected inside `upload_data_module` based on `input$sourcetype`
 | 11 | DATASUS | `upload_datasus.R` | `datasus::<func>(...)` call string |
 | 12 | RAIS (PostgreSQL) | `upload_raispsql.R` | RAIS query call string |
 | 13 | INEP / IDEB | `upload_inep.R` | `educabR::le_ideb(...)` call string |
-| 14 | TSE (via `tsebr`) | `upload_tsebr.R` | call string com marcador `# tsebr-familia:` -> séries municipais/UF (`tse_resultados_municipio`, `tse_detalhe_municipio`, `tse_prestacao_uf`); candidaturas = só CSV de referência |
+| 14 | TSE (via `tsebr`) | `upload_tsebr.R` | call string com marcador `# tsebr-familia:` -> séries municipais/UF (`tse_resultados_municipio`, `tse_detalhe_municipio`, `tse_prestacao_uf`); `detalhe_secao` = detalhe da votação por seção agregado ao nível submunicipal via `tse_secao_bairro`; candidaturas = só CSV de referência |
 | 15 | IBGE Censo (via `censoagg`/`censobr`) | `upload_censobr.R` | call string com marcador `# censo-origem:` -> lista nomeada variável -> long; uma série (`mdata`) por variável |
 | 1/2/9 | URL / local upload / server file | inline in `upload_data_module.R` | file path |
 
@@ -136,7 +136,8 @@ e **todos** os anos pedidos do tipo/UF estão em `cargas` (linha `uf = 'ALL'`
 cobre qualquer UF), a call string consulta direto o banco pré-carregado
 (`tsesqlr::tsesqlr_resultados_municipio()`/`tsesqlr_detalhe_municipio()`/
 `tsesqlr_candidatos()`, instantâneo); caso contrário cai no download CKAN/CDN
-via `tsebr` (2026+ sem zips: boletim de urna WEB). O banco tse usa a env var
+via `tsebr` (o zip nacional de detalhe por seção existe em 2026; as séries
+municipais de 2026+ saem do boletim de urna WEB). O banco tse usa a env var
 própria `tsedbname` (default `tsedb`) para não conflitar com o `dbname` do DW.
 Anos TSE do painel: até segunda ordem, só 2022 e 2026 (`tse_anos_painel`).
 Gravação TSE tem **guarda de consolidação** (`anos_tse_faltando`): série
@@ -145,10 +146,15 @@ antes de escrever.
 
 Datasources `TSE` e `IBGE Censo` são criados sob demanda no DW por
 `garantir_datasource_tse()` / `garantir_datasource_censo()` (idempotentes pelo
-nome; types 4=ckan e 6=ibge_ftp). Dados por seção eleitoral/setor censitário
-**não** entram no DW ainda (não há níveis submunicipais no `local`): perfis do
-eleitorado por seção ficam no pacote (`tsebr::tse_perfis_secao`) até o trilho
-territorial ser implementado.
+nome; types 4=ckan e 6=ibge_ftp). A seção de votação **nunca** é nível do DW:
+a família `detalhe_secao` baixa o detalhe por seção
+(`tsebr::tse_resultados_secao`, exportada a partir de tsebr 0.0.5.9013) e
+agrega ao nível submunicipal em `tse_detalhe_secao()` — a ponte seção→território
+é a tabela de harmonização `tse_secao_bairro` do DW, construída por
+`tse_pontuar_locais_votacao()` + `tse_harmonizar_secoes()` e auditável por
+`tse_resumo_harmonizacao()` (tudo em `R/tse_ponte_secao.R`; ponto do local de
+votação contido no polígono do nível, KNN como fallback). Perfis do eleitorado
+por seção continuam no pacote (`tsebr::tse_perfis_secao`).
 
 ### Data write pipeline
 
@@ -209,6 +215,7 @@ municipality as the 7-digit prefix:
 |---|---|---|---|
 | municipality | 7 | malha 2024 1..5571, PNAD 5572..7087 (or up to the "Brasil" row), then append after it | 6-digit codes always mean municipality (RAIS prefix map) |
 | bairro | 11-12 | 1000000..1999999 | derived from the Census (dissolve of tracts), `incorporar_bairros()` |
+| subdistrito | 11 | 3000000..3999999 | distrito administrativo; no DF = Região Administrativa (33 RAs), `incorporar_subdistritos()`; divide a largura 11 com o bairro — quem decide é o `nivel_tipo`, não a largura |
 | area de ponderacao | 13 | 2000000..2999999 | `incorporar_areas_ponderacao()` |
 | setor censitario | 15-16 | 100000..999999 | `incorporar_setores_censitarios()` |
 

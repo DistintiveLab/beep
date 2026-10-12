@@ -44,6 +44,29 @@ test_that("extracao do marcador replica a logica do selected_files", {
   expect_identical(fam, "prestacao")
 })
 
+test_that("familia detalhe_secao gera chamada ao beep com agregar_por", {
+  chamada <- gerar_call_tsebr("detalhe_secao", "todos", "DF",
+                              metrica = "abstencoes", agregar_por = "setor")
+  expect_match(chamada, "^# tsebr-familia: detalhe_secao")
+  expect_false(grepl("\n", chamada))
+  expect_match(chamada, "beep::tse_detalhe_secao")
+  expect_match(chamada, "ano = c\\(2022, 2026\\)")
+  expect_match(chamada, "metrica='abstencoes'")
+  expect_match(chamada, "agregar_por='setor'")
+  # defaults quando os seletores ainda nao responderam
+  def <- gerar_call_tsebr("detalhe_secao", 2026, "DF")
+  expect_match(def, "metrica='abstencoes'")
+  expect_match(def, "agregar_por='subdistrito'")
+  # parseavel pelo ramo do selected_files
+  codigo <- stripar_marcador(chamada)
+  expect_silent(parse(text = paste0("{\n", codigo, "\n}")))
+})
+
+test_that("detalhe submunicipal nunca consulta o banco pre-carregado", {
+  expect_identical(beep:::resolver_fonte_tse("detalhe_secao", 2026, "DF"),
+                   "tsebr")
+})
+
 test_that("familia desconhecida aborta", {
   expect_error(gerar_call_tsebr("perfil_secao", 2026, "DF"),
                "familia desconhecida")

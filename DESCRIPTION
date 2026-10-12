@@ -1,6 +1,6 @@
 Package: beep
 Title: Pacote de inclusão de fontes de dados, indicadores, e filtros de variáveis
-Version: 0.9.3.9016
+Version: 0.9.3.9017
 Date: 2026-10-02
 Authors@R: 
     c(person(given = "Rodrigo",
@@ -72,7 +72,7 @@ Suggests:
     readODS,
     testthat,
     censoagg,
-    tsebr,
+    tsebr (>= 0.0.5.9013),
     usethis
 RdMacros: 
     lifecycle

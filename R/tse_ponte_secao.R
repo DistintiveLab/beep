@@ -448,6 +448,31 @@ tse_resumo_harmonizacao <- function(con = NULL, ano = NULL, uf = NULL) {
   list(por_nivel = por_nivel, n_secoes_total = sum(por_nivel$n_secoes))
 }
 
+#' Nucleo puro de agregacao do detalhe por secao (testavel offline):
+#' dedupe `first()` por secao-turno (as metricas repetem em cada
+#' cargo), descarta linhas sem local e soma por local — espelho do
+#' `tsebr::tse_detalhe_municipio()`.
+#' @keywords internal
+.tse_agregar_detalhe_local <- function(d, local_chr, metrica, a) {
+  chaves <- intersect(c("uf", "cod_municipio_tse", "zona", "secao",
+                        "turno"), names(d))
+  data.table::rbindlist(lapply(metrica, function(m) {
+    d |>
+      dplyr::select(dplyr::all_of(c(chaves, m))) |>
+      dplyr::mutate(valor = as.numeric(.data[[m]]),
+                    local = local_chr, .keep = "unused") |>
+      dplyr::group_by(dplyr::across(dplyr::all_of(chaves))) |>
+      dplyr::summarise(valor = dplyr::first(valor),
+                       local = dplyr::first(local), .groups = "drop") |>
+      dplyr::filter(!is.na(local)) |>
+      dplyr::group_by(local) |>
+      dplyr::summarise(valor = sum(valor, na.rm = TRUE),
+                       .groups = "drop") |>
+      dplyr::mutate(metrica = m, ano = as.integer(a),
+                    periodo = as.Date(paste0(a, "-12-31")))
+  }), fill = TRUE)
+}
+
 #' Detalhe da votacao por secao agregado ao nivel municipal ou submunicipal
 #'
 #' Espelha a semantica de `tsebr::tse_detalhe_municipio()` (dedupe
@@ -570,21 +595,7 @@ tse_detalhe_secao <- function(con = NULL, ano, uf,
               a, "/", uf, " sem atribuicao '", agregar_por,
               "' descartada(s) (sem harmonizacao ou conflito)")
     }
-    data.table::rbindlist(lapply(metrica, function(m) {
-      d |>
-        dplyr::select(dplyr::all_of(c(chaves, m))) |>
-        dplyr::mutate(valor = as.numeric(.data[[m]]),
-                      local = local_chr, .keep = "unused") |>
-        dplyr::group_by(dplyr::across(dplyr::all_of(chaves))) |>
-        dplyr::summarise(valor = dplyr::first(valor),
-                         local = dplyr::first(local), .groups = "drop") |>
-        dplyr::filter(!is.na(local)) |>
-        dplyr::group_by(local) |>
-        dplyr::summarise(valor = sum(valor, na.rm = TRUE),
-                         .groups = "drop") |>
-        dplyr::mutate(metrica = m, ano = as.integer(a),
-                      periodo = as.Date(paste0(a, "-12-31")))
-    }), fill = TRUE)
+    .tse_agregar_detalhe_local(d, local_chr, metrica, a)
   }
 
   res <- data.table::rbindlist(lapply(anos, parte_ano), fill = TRUE)

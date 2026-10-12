@@ -409,3 +409,66 @@ Duas pontes independentes, ambas com o que já está instalado:
 RA do DF" visível de ponta a ponta no painel, com nota metodológica da
 ponte seção→RA e relatório de não-casados; Censo por setor como segundo
 indicador de fumaça.
+
+## 10. Execução do piloto (2026) — resultado
+
+P1–P5 executados em outubro/2026 contra o DW de produção. Números da
+validação, para reencontrar fácil:
+
+### P1 — Censo por setor (executado)
+
+- Carga emitida pela inserção do beep (marcador `# censo-origem:`); mdata_id
+  **4** no DW, **5342 setores** do DF com dado, soma **1.326.750** igual ao
+  valor municipal já gravado (diferença 0).
+- **76 setores ficaram sem dado** (sem domicílios recenseados ou sem a
+  variável — nota de fonte, não erro de carga).
+
+### P2 — Subdistrito/RA (executado)
+
+- `incorporar_subdistritos()` no pacote e **33 RAs** carregadas no DW (bloco
+  local_id 3000000+, `nivel_tipo = 'subdistrito'`); o painel rotula
+  "Subdistrito (RA)" com chave por tipo (largura 11 compartilhada com bairro,
+  quem decide é o `nivel_tipo`).
+
+### P3 — Ponte seção→território (executada)
+
+- Tabela de harmonização `tse_secao_bairro` no DW: **7050 seções** (2026/DF)
+  cruzadas contra **33 RAs e 552 setores**, **100% por ponto** (contém/KNN),
+  **0 conflitos** de fronteira, cobertura de eleitores **1.0000**
+  (2.253.132 eleitores).
+- Workaround de ambiente: KNN pesado em PostGIS derrubava o backend (crash
+  LLVM); `SET jit = off` na sessão resolve.
+
+### P4 — Detalhe por seção agregado (implementado)
+
+- Família `detalhe_secao` no upload (`tsebr::tse_resultados_secao`,
+  exportada a partir do tsebr 0.0.5.9013) + `tse_detalhe_secao()` no beep;
+  agregação espelha a semântica de `tse_detalhe_municipio` (dedupe first()
+  por seção-turno, soma por local, período 31/12) para manter comparabilidade
+  com as séries municipais.
+- Validação DF 2026 (nada gravado por essa via — a carga fica por conta do
+  app): abstenções **426.924** e aptos **2.258.320** idênticos nos três
+  níveis (RA = setor = município, diff 0), **zero seções descartadas**.
+- O zip nacional `detalhe_votacao_secao_2026.zip` **existe** (o comentário
+  antigo do tsebr "2026+ só bweb" estava errado e foi corrigido);
+  divergência bweb×zip no agregado municipal (426.077 vs 426.924 abstenções,
+  ~0,2%; ~0,6% em aptos) anotada como nota de fonte.
+
+### P5 — Fechamento (esta seção)
+
+- **+23 testes** (ponte ponto-no-polígono, dedupe seção-turno, agregação
+  sintética, call string da família `detalhe_secao`, resolução de fonte,
+  níveis): suíte **FAIL 0 | SKIP 9 | PASS 909** (baseline 886).
+- **Veredicto leafletgl:** não adotado. A aba Mapa é municipal-only por
+  design e o globo em canvas d3 já absorve as 33 RAs; os 5418 setores do DF
+  degradam para destaque+UF pelo teto de feições (comportamento existente).
+  Se um dia o tesselado municipal-completo por setor for exigido,
+  `addGlPolygons` como Suggests com fallback no `addPolygons` é viável —
+  não vale a dependência hoje.
+- **Incorporação perdida (diagnóstico do caso relatado):** a chamada manual
+  `ampliar_nivel_territorial(...)` do usuário falhou por três motivos — typo
+  no nome da função, `con = NULL` gravaria no beepdb em vez do DW do painel,
+  e a chamada direta não registra `niveis_carga`. Além disso o atributo
+  `code_neighborhood` é vazio em 5418/5418 setores do DF e o geobr
+  `neighborhoods_2022` não cobre a UF 53 — o recorte submunicipal correto
+  no DF é o subdistrito/RA (P2).
