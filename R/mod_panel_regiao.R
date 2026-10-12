@@ -7,6 +7,9 @@
 #'   temporal de um indicador do banco de dados do painel para a
 #'   localidade escolhida dentro de um nivel territorial (regiao, UF,
 #'   regiao intermediaria, microrregiao, regiao imediata, municipio).
+#'   Opcionalmente (painel_geolocalizacao=1), um botao ao lado do seletor
+#'   de localidade pede a posicao ao navegador e seleciona a localidade
+#'   mais proxima do nivel corrente.
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
@@ -34,19 +37,33 @@ mod_panel_regiao_ui <- function(id) {
                                 "Digite parte do nome")),
         # Botao "usar minha localizacao" (painel_geolocalizacao=1 no
         # .Renviron): pede a posicao ao navegador e o server seleciona a
-        # localidade mais proxima do nivel corrente
+        # localidade mais proxima do nivel corrente. Os erros chegam
+        # mapeados por codigo: a mensagem crua do navegador (ex.: "Unknown
+        # error acquiring position", do Firefox do Linux sem servico de
+        # localizacao) nao orienta o usuario
         if (painel_geolocalizacao_ativa()) {
           tags$button(id = ns("geo"), type = "button",
             class = "painel-info-btn",
             title = "Usar minha localização",
             `aria-label` = "Usar minha localização",
             onclick = sprintf(paste0(
+              "(function(){",
+              "if(!('geolocation' in navigator)){",
+              "alert('Este navegador não oferece localização ou a página não ",
+              "está em HTTPS/localhost.');return;}",
               "navigator.geolocation.getCurrentPosition(",
               "function(p){Shiny.setInputValue('%s',",
               "{lat:p.coords.latitude,lon:p.coords.longitude},",
               "{priority:'event'})},",
-              "function(e){alert('Não foi possível obter sua localização: '",
-              "+e.message)})"),
+              "function(e){var m={",
+              "1:'permissão negada no navegador',",
+              "2:'posição indisponível (comum no Firefox do Linux, que não tem ",
+              "serviço de localização; tente outro navegador, como o Chrome)',",
+              "3:'tempo esgotado'}[e.code]||(e.message||'erro desconhecido');",
+              "alert('Não foi possível obter sua localização: '+m+' Escolha a ",
+              "localidade manualmente ou tente outro navegador.');},",
+              "{enableHighAccuracy:false,timeout:15000,maximumAge:300000});",
+              "})()"),
               ns("geo_coords")),
             shiny::icon("location-arrow"))
         })),

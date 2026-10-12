@@ -89,3 +89,18 @@ test_that("geolocalizacao so liga com painel_geolocalizacao=1", {
   Sys.unsetenv("painel_geolocalizacao")
   expect_false(beep:::painel_geolocalizacao_ativa())
 })
+
+test_that("botao de geolocalizacao so entra na UI com painel_geolocalizacao=1", {
+  antiga <- Sys.getenv("painel_geolocalizacao")
+  on.exit(if (nzchar(antiga)) Sys.setenv(painel_geolocalizacao = antiga) else
+    Sys.unsetenv("painel_geolocalizacao"), add = TRUE)
+  Sys.unsetenv("painel_geolocalizacao")
+  sem <- as.character(beep:::mod_panel_regiao_ui("reg"))
+  expect_false(grepl("geo_coords", sem, fixed = TRUE))
+  Sys.setenv(painel_geolocalizacao = "1")
+  com <- as.character(beep:::mod_panel_regiao_ui("reg"))
+  expect_true(grepl("geo_coords", com, fixed = TRUE))
+  # erros do navegador mapeados por codigo, alem da mensagem crua
+  expect_true(grepl("e.code", com, fixed = TRUE))
+  expect_true(grepl("geolocation", com, fixed = TRUE))
+})
