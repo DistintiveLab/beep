@@ -40,6 +40,21 @@ test_that("geo vazio ou coordenada invalida devolve NA", {
                    NA_character_)
 })
 
+test_that("feicao com vertice duplicado (anel invalido do Censo) nao derruba a busca", {
+  # malhas do Censo 2022 chegam com aros invalidos; com s2 ligado a
+  # construcao da geografia falha antes de qualquer predicado
+  anel <- matrix(c(-49.5, -20, -48.5, -20, -48.5, -19, -48.5, -19,
+                   -49.5, -19, -49.5, -20), ncol = 2, byrow = TRUE)
+  ruim <- sf::st_sf(code = "3000003",
+    geometry = sf::st_as_sfc(list(sf::st_polygon(list(anel))),
+                             crs = 4326))
+  sf::sf_use_s2(TRUE)
+  expect_identical(beep:::painel_geo_mais_proxima(ruim, -19.5, -49),
+                   "3000003")
+  expect_identical(beep:::painel_geo_mais_proxima(ruim, -22, -50),
+                   "3000003")
+})
+
 niveis <- data.frame(
   nivel_id = c("2", "7", "subdistrito"),
   rotulo = c("Município", "Setor censitário", "Subdistrito/RA"),

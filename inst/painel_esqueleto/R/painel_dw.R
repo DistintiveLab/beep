@@ -730,14 +730,19 @@ painel_geolocalizacao_ativa <- function() {
 
 #' Localidade mais proxima de um ponto (lat/lon WGS84) entre as feicoes de
 #' um nivel: a que contem o ponto quando ha, senao a de representacao
-#' interna mais proxima (st_point_on_surface tolera geometrias invalidas);
-#' NA quando nao ha feicoes ou coordenadas
+#' interna mais proxima. Opera sem o s2 (GEOS plano, suficiente em escala
+#' de cidade) porque malhas do Censo chegam com aneis invalidos (vertice
+#' duplicado) que derrubam a construcao da geografia s2 antes de qualquer
+#' predicado; NA quando nao ha feicoes ou coordenadas
 #' @keywords internal
 painel_geo_mais_proxima <- function(geo, lat, lon) {
   if (is.null(geo) || !nrow(geo)) return(NA_character_)
   lat <- suppressWarnings(as.numeric(lat)[1])
   lon <- suppressWarnings(as.numeric(lon)[1])
   if (is.na(lat) || is.na(lon)) return(NA_character_)
+  s2_antigo <- sf::sf_use_s2()
+  on.exit(sf::sf_use_s2(s2_antigo), add = TRUE)
+  sf::sf_use_s2(FALSE)
   ponto <- sf::st_sfc(sf::st_point(c(lon, lat)), crs = 4326)
   dentro <- unlist(sf::st_intersects(ponto, sf::st_geometry(geo),
                                       sparse = TRUE))
