@@ -170,6 +170,7 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_delta_camadas.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_filtrar_ano.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_irmaos_mun.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_irmaos_nivel_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_local.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_local_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_malha_foco_cache.html</loc></url>
@@ -177,6 +178,8 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_mun_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_mun_uf.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_mun_uf_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_municipio_codigo.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_municipio_codigo_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_nivel.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_nivel_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_pai_uf.html</loc></url>
@@ -190,6 +193,10 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_grupos_selecao.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_hierarquia.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_hierarquia_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_ind_nivel.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_ind_nivel_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_ind_tem_dados.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_indicador_com_dados.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_indicador_default.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_locais.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_locais_com_dados.html</loc></url>
@@ -206,6 +213,8 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_mdata_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_mdata_extras.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_municipio_filtro.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_muns_nivel_dados.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_muns_nivel_dados_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_niveis.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_niveis_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_nivel_default.html</loc></url>
@@ -226,6 +235,7 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_resumo_grupos.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_rodape.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_rotulo_tempo.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_sem_camadas_vazias.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_slug.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_tema_botao.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_tipo_grafico.html</loc></url>
