@@ -209,8 +209,12 @@ continuam no pacote
 
 The app reads DB credentials via
 [`Sys.getenv()`](https://rdrr.io/r/base/Sys.getenv.html). A `.Renviron`
-file in the project root provides them. **The app will not start without
-these set.**
+file in the project root provides them. **Without one the app silently
+falls back to hardcoded dev defaults (`beepdb` at 127.0.0.1)** — running
+[`beep::run_app()`](https://distintivelab.github.io/beep/dev/reference/run_app.md)
+from the wrong root targets the wrong DB (the load finds no `local` rows
+and aborts; see `db_datawrite`). Run the app from the project root that
+owns the DW.
 
 | Variable(s) | Used for | Where |
 |----|----|----|
@@ -456,7 +460,10 @@ the app from the project root, not from `inst/` or a temp dir.
 macro-region, two-digit = UF (state), seven-digit (first six =
 municipality code) = municipality. `db_datawrite` matches incoming
 `local` values (numeric IBGE codes or `"CODE Name"` strings) against the
-`local` table. Unmatched locals are silently dropped from the write.
+`local` table. Unmatched locals are dropped with a `warning` summarizing
+counts + sample codes; if **nothing** matches, `db_datawrite` aborts
+before writing (no empty phantom indicator) and the message names the
+dbname in use.
 
 ## Testing
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9017</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9018</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -176,7 +176,7 @@ app_server()  (R/server_app.R)
 </ul></div>
 <div class="section level3">
 <h3 id="connection--environment-variables-from-renviron">Connection / environment variables (from <code>.Renviron</code>)<a class="anchor" aria-label="anchor" href="#connection--environment-variables-from-renviron"></a></h3>
-<p>The app reads DB credentials via <code><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv()</a></code>. A <code>.Renviron</code> file in the project root provides them. <strong>The app will not start without these set.</strong></p>
+<p>The app reads DB credentials via <code><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv()</a></code>. A <code>.Renviron</code> file in the project root provides them. <strong>Without one the app silently falls back to hardcoded dev defaults (<code>beepdb</code> at 127.0.0.1)</strong> — running <code><a href="reference/run_app.html">beep::run_app()</a></code> from the wrong root targets the wrong DB (the load finds no <code>local</code> rows and aborts; see <code>db_datawrite</code>). Run the app from the project root that owns the DW.</p>
 <table class="table"><colgroup><col width="33%"><col width="33%"><col width="33%"></colgroup><thead><tr><th>Variable(s)</th>
 <th>Used for</th>
 <th>Where</th>
@@ -364,7 +364,7 @@ app_server()  (R/server_app.R)
 </div>
 <div class="section level3">
 <h3 id="ibge-local_id-encoding">IBGE local_id encoding<a class="anchor" aria-label="anchor" href="#ibge-local_id-encoding"></a></h3>
-<p><code>local_id</code> / <code>geoloc_id</code> follow IBGE conventions: single-digit = macro-region, two-digit = UF (state), seven-digit (first six = municipality code) = municipality. <code>db_datawrite</code> matches incoming <code>local</code> values (numeric IBGE codes or <code>"CODE Name"</code> strings) against the <code>local</code> table. Unmatched locals are silently dropped from the write.</p>
+<p><code>local_id</code> / <code>geoloc_id</code> follow IBGE conventions: single-digit = macro-region, two-digit = UF (state), seven-digit (first six = municipality code) = municipality. <code>db_datawrite</code> matches incoming <code>local</code> values (numeric IBGE codes or <code>"CODE Name"</code> strings) against the <code>local</code> table. Unmatched locals are dropped with a <code>warning</code> summarizing counts + sample codes; if <strong>nothing</strong> matches, <code>db_datawrite</code> aborts before writing (no empty phantom indicator) and the message names the dbname in use.</p>
 </div>
 </div>
 <div class="section level2">
