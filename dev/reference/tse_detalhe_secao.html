@@ -19,7 +19,7 @@ a serie municipal do tsebr — o cheque natural de sanidade."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9020</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9021</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -109,9 +109,12 @@ tsebr).</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code>data.frame</code> long: <code>local</code> (geoloc_id numerico do DW),
-<code>periodo</code> (31/12 do ano), <code>valor</code>, <code>uf</code>, <code>metrica</code> — mesmo shape
-do <code><a href="https://rdrr.io/pkg/tsebr/man/tse_detalhe_municipio.html" class="external-link">tsebr::tse_detalhe_municipio()</a></code>, aceito de pronto pelo ramo
-TSE do upload de fontes.</p>
+<code>periodo</code>, <code>valor</code>, <code>uf</code>, <code>metrica</code> e <code>turno</code> quando o detalhe
+traz a coluna (cada turno e um ponto proprio, com <code>periodo</code> no
+domingo da eleicao segundo <code><a href="https://rdrr.io/pkg/tsebr/man/tse_periodo_eleicao.html" class="external-link">tsebr::tse_periodo_eleicao()</a></code>, em vez
+do 31/12 do ano); mesmo shape do
+<code><a href="https://rdrr.io/pkg/tsebr/man/tse_detalhe_municipio.html" class="external-link">tsebr::tse_detalhe_municipio()</a></code>, aceito de pronto pelo ramo TSE
+do upload de fontes.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

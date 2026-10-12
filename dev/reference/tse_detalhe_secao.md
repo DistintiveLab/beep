@@ -55,8 +55,11 @@ tse_detalhe_secao(
 
 ## Value
 
-`data.frame` long: `local` (geoloc_id numerico do DW), `periodo` (31/12
-do ano), `valor`, `uf`, `metrica` — mesmo shape do
+`data.frame` long: `local` (geoloc_id numerico do DW), `periodo`,
+`valor`, `uf`, `metrica` e `turno` quando o detalhe traz a coluna (cada
+turno e um ponto proprio, com `periodo` no domingo da eleicao segundo
+[`tsebr::tse_periodo_eleicao()`](https://rdrr.io/pkg/tsebr/man/tse_periodo_eleicao.html),
+em vez do 31/12 do ano); mesmo shape do
 [`tsebr::tse_detalhe_municipio()`](https://rdrr.io/pkg/tsebr/man/tse_detalhe_municipio.html),
 aceito de pronto pelo ramo TSE do upload de fontes.
 
