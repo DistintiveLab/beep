@@ -8,7 +8,9 @@ populate_initialdb(
   con = NULL,
   dbtype = "pgsql",
   dir_dadostat = NULL,
-  pndr_groups = FALSE
+  pndr_groups = FALSE,
+  pnadc_inicio = 5572L,
+  limpar = TRUE
 )
 }
 \arguments{
@@ -26,6 +28,12 @@ com \code{pndr_groups = TRUE}.}
 \code{recortes_geograficos} tolera a ausencia (colunas NA). Os
 recortes territoriais universais (Faixa de Fronteira, Amazonia
 Legal, Semiarido, SUDENE, regioes, UF/Regiao) sempre entram.}
+
+\item{pnadc_inicio}{Primeiro \code{local_id} do bloco de estratos PNAD
+(default 5572: municípios da malha 2024 ocupam 1..5571).}
+
+\item{limpar}{Truncar \code{local_group}/\code{local}/\code{geoloc} antes de
+popular (default TRUE - torna o seeder re-executavel).}
 }
 \description{
 Portado de pndr_dashboard/data-raw/populate_initialdb.R (o
@@ -48,5 +56,6 @@ esses vem dos pipelines de cada projeto.
 
 Uso: \code{data-raw/populate_initialdb.R | populate_initialdb()}
 (requer conexao ao Postgres do DW e os pacotes Suggests
-brazilmaps/geobr/readODS/rvest).
+geobr/readODS/rvest (brazilmaps não é mais usado: a v1.0.0
+quebrou API e o geobr cobre todos os níveis).
 }

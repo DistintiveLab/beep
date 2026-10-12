@@ -2,13 +2,21 @@
 % Please edit documentation in R/painel_dw.R
 \name{painel_codigo_mun}
 \alias{painel_codigo_mun}
-\title{Codigo IBGE dos municipios (geoloc_id de 7 digitos) indexado pelo
-local_id — traduz a coluna "Codigo" das planilhas da aba Baixar}
+\title{Codigo IBGE das localidades com codigo externo, indexado pelo local_id —
+traduz a coluna "Codigo" das planilhas da aba Baixar: municipios
+(geoloc_id de 7 digitos) e niveis submunicipais (setor, bairro, area de
+ponderacao; larguras acima de 10, cujos geoloc_id sao os codigos
+divulgados pelo IBGE). Os demais niveis (UF, regioes, PNAD) nao tem
+codigo externo e continuam mostrando o local_id.}
 \usage{
 painel_codigo_mun(con)
 }
 \description{
-Codigo IBGE dos municipios (geoloc_id de 7 digitos) indexado pelo
-local_id — traduz a coluna "Codigo" das planilhas da aba Baixar
+Codigo IBGE das localidades com codigo externo, indexado pelo local_id —
+traduz a coluna "Codigo" das planilhas da aba Baixar: municipios
+(geoloc_id de 7 digitos) e niveis submunicipais (setor, bairro, area de
+ponderacao; larguras acima de 10, cujos geoloc_id sao os codigos
+divulgados pelo IBGE). Os demais niveis (UF, regioes, PNAD) nao tem
+codigo externo e continuam mostrando o local_id.
 }
 \keyword{internal}

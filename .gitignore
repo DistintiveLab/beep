@@ -17,6 +17,7 @@
 manipula/cache/
 documenta/cache/
 visualiza/cache/
+cache/
 
 # Workspace de execução do beep (coleta gerada na raiz de onde o app roda;
 # o lote versionado vive no projeto concreto)

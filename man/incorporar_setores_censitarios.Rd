@@ -16,14 +16,14 @@ incorporar_setores_censitarios(
 \arguments{
 \item{con}{conexao DBI com o DW; default abre o beepdb local}
 
-\item{ufs}{"all" ou vetor de codigos de UF (2 digitos) ou municipio
+\item{ufs}{\code{"all"} ou vetor de codigos de UF (2 digitos) ou municipio
 IBGE (7 digitos) — a malha nacional completa e uma operacao de
 minutos-horas e ~GB de geometria; o uso comum e por estado ou municipio}
 
-\item{ano}{Censo de referencia: 2010 (zone "urban"/"rural"/"all")
+\item{ano}{Censo de referencia: 2010 (zone \code{"urban"}/\code{"rural"}/\code{"all"})
 ou 2022, quando a malha publicada/geobr disponivel nao exigir zona}
 
-\item{zone}{zona dos setores no Censo 2010 (default "all")}
+\item{zone}{zona dos setores no Censo 2010 (default \code{"all"})}
 
 \item{simplificar}{dTolerance (graus) da simplificacao no SQL}
 
@@ -35,10 +35,10 @@ invisivel data.frame (escopo, n_localidades) com o resumo da
 carga — o mesmo registro vai para a tabela \code{niveis_carga}
 }
 \description{
-Baixa a malha do Censo via [geobr::read_census_tract()] e insere cada
-setor com ampliar_nivel_territorial() (tipo "setor": geoloc_id =
-codigo do setor em 15-16 digitos, local_id no bloco 100000-999999;
-o municipio pai e o prefixo 7d do codigo, sem vinculo em
-recortes_geograficos). Cargas repetidas sao idempotentes por codigo
-e ficam registradas em niveis_carga.
+Baixa a malha do Censo via \code{\link[geobr:read_census_tract]{geobr::read_census_tract()}} e insere cada
+setor com \code{\link[=ampliar_nivel_territorial]{ampliar_nivel_territorial()}} (tipo "setor": \code{geoloc_id} =
+codigo do setor em 15-16 digitos, \code{local_id} no bloco 100000-999999,
+\code{nivel_tipo = "setor"}; o municipio pai e o prefixo 7d do codigo, sem
+vinculo em \code{recortes_geograficos}). Cargas repetidas sao idempotentes
+por codigo e ficam registradas em \code{niveis_carga}.
 }

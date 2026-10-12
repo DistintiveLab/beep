@@ -330,10 +330,14 @@ painel_ranking_texto <- function(rank_uf, n_uf, rank_br, n_br) {
 # local_id (6941..7086) — publicadas so pelos indicadores pnadc*/comp_pnadc*
 # (verificado 2026-09-22: nenhum indicador municipal publica nelas, e nenhum
 # pnadc publica em municipio).
-# Niveis submunicipais (roadmap-niveis-submunicipais): bairro 11-12,
-# area de ponderacao 10, setor censitario 15-16 digitos — larguras que nao
-# colidem entre si nem com 1..8. Manter sincrono com R/niveis_territoriais.R
-# (o esqueleto do painel e autocontido de proposito).
+# Niveis submunicipais (roadmap-niveis-submunicipais) usam CHAVE POR TIPO
+# (o proprio `nivel_tipo` gravado em `local`): bairro, subdistrito, setor,
+# area de ponderacao. A largura deixa de ser identificadora porque bairro
+# e subdistrito dividem os 11 digitos — quem decide e o nivel_tipo. As
+# chaves numericas de largura ("10"/"11"/"12"/"15"/"16") seguem listadas
+# como legado para linhas gravadas antes do nivel_tipo. Manter sincrono
+# com R/niveis_territoriais.R (o esqueleto do painel e autocontido de
+# proposito).
 painel_niveis_rotulo <- c(
   "1" = "Região",
   "2" = "Unidade da Federação",
@@ -347,7 +351,18 @@ painel_niveis_rotulo <- c(
   "12" = "Bairro",
   "10" = "Área de ponderação",
   "15" = "Setor censitário",
-  "16" = "Setor censitário")
+  "16" = "Setor censitário",
+  "bairro" = "Bairro",
+  "subdistrito" = "Subdistrito (RA)",
+  "setor" = "Setor censitário",
+  "area_ponderacao" = "Área de ponderação")
+
+# Largura representativa de cada nivel submunicipal (para os consumers que
+# so olham p$nivel: rotulo com sigla de UF em 7, simplificacao de geometria
+# abaixo de 3...). Chave = nivel_tipo; copia local de
+# R/niveis_territoriais.R — o esqueleto do painel e autocontido.
+painel_nivel_tipo_largura <- c(
+  bairro = 11L, subdistrito = 11L, area_ponderacao = 10L, setor = 15L)
 
 # Fronteira entre os municipios e as regioes de interesse em PNAD Contínua
 # dentro da largura 7 do geoloc_id — mesma convencao adotada pelo
@@ -397,20 +412,34 @@ painel_municipio_filtro <- function(alias = "l") {
 #'
 #' A chave e a largura do geoloc_id como texto ("1".."8") ou "7p" para as
 #' regioes de interesse em PNAD Contínua, que dividem a largura 7 com os
-#' municipios. Devolve o nivel numerico, se e o subnivel PNAD e o fragmento
-#' SQL que seleciona os locais do nivel (pressupoe aliases `l` e `g` no
-#' chamador).
+#' municipios. Niveis submunicipais usam o proprio `nivel_tipo` como chave
+#' ("bairro", "subdistrito", "setor", "area_ponderacao") — bairro e
+#' subdistrito dividem a largura 11, entao a largura nao distingue niveis.
+#' Devolve o nivel numerico (largura representativa nos submunicipais), o
+#' tipo quando ha, se e o subnivel PNAD e o fragmento SQL que seleciona os
+#' locais do nivel (pressupoe aliases `l` e `g` no chamador).
 #' @keywords internal
 painel_nivel_parse <- function(nivel_id) {
   chave <- suppressWarnings(trimws(as.character(nivel_id)[1]))
   if (is.na(chave)) chave <- ""
-  pnad <- nzchar(chave) && tolower(chave) == "7p"
-  nivel <- if (pnad) 7L else suppressWarnings(as.integer(chave))[1]
+  chave <- tolower(chave)
+  pnad <- nzchar(chave) && chave == "7p"
+  tipo <- if (!pnad && grepl("^[a-z_]+$", tolower(chave))) tolower(chave) else
+    NA_character_
+  nivel <- if (pnad) {
+    7L
+  } else if (!is.na(tipo) && tipo %in% names(painel_nivel_tipo_largura)) {
+    unname(painel_nivel_tipo_largura[tipo])
+  } else {
+    suppressWarnings(as.integer(chave))[1]
+  }
   if (!is.na(nivel) && nivel < 1L) nivel <- NA_integer_
   bloco_fim <- if (!is.null(.painel_bloco_env$fim)) .painel_bloco_env$fim else
     painel_pnad_bloco_fim
   filtro <- if (is.na(nivel)) {
     "1 = 0"
+  } else if (!is.na(tipo)) {
+    sprintf("l.nivel_tipo = '%s'", tipo)
   } else if (pnad) {
     sprintf("length(g.geoloc_id::text) = 7 AND l.local_id >= %d AND l.local_id <= %d",
             painel_municipio_limite_id, bloco_fim)
@@ -422,8 +451,8 @@ painel_nivel_parse <- function(nivel_id) {
     sprintf("length(g.geoloc_id::text) = %d", nivel)
   }
   list(nivel = nivel, pnad = pnad,
-       chave = if (is.na(nivel)) NA_character_ else
-         if (pnad) "7p" else as.character(nivel),
+       chave = if (is.na(nivel)) NA_character_ else chave,
+       tipo = tipo,
        filtro = filtro)
 }
 
@@ -436,9 +465,13 @@ painel_uf_sigla <- c(
   "51" = "MT", "52" = "GO", "53" = "DF")
 
 #' Niveis territoriais disponiveis no DW: apenas os que possuem dados,
-#' com quantidade de localidades distintas. A largura 7 aparece em duas
-#' linhas — municipios ("7") e regioes de interesse em PNAD Contínua
-#' ("7p") — para nao somar 5.570 + 146 numa unica entrada. O EXISTS varre
+#' com quantidade de localidades distintas. Niveis submunicipais sao
+#' chaveados pelo `nivel_tipo` ("bairro", "subdistrito", "setor",
+#' "area_ponderacao") — a largura nao distingue bairro de subdistrito;
+#' linhas submunicipais gravadas antes do nivel_tipo caem na chave de
+#' largura legada. A largura 7 aparece em duas linhas — municipios ("7")
+#' e regioes de interesse em PNAD Contínua ("7p") — para nao somar
+#' 5.570 + 146 numa unica entrada. O EXISTS varre
 #' o catalogo de locais (milissegundos com o indice
 #' data_values(local_id), ver [garantir_indice_valores()]) em vez de
 #' agregar os ~10 milhoes de pontos do data_values
@@ -446,8 +479,9 @@ painel_uf_sigla <- c(
 painel_niveis <- function(con) {
   painel_pnad_bloco_fim_resolver(con)
   q <- DBI::dbGetQuery(con, paste(
-    "SELECT CASE WHEN length(g.geoloc_id::text) = 7",
-    sprintf("AND l.local_id >= %d AND l.local_id <= %d THEN '7p'",
+    "SELECT CASE WHEN l.local_id >=", painel_submunicipal_inicio,
+    "THEN coalesce(l.nivel_tipo, length(g.geoloc_id::text)::text)",
+    sprintf("WHEN length(g.geoloc_id::text) = 7 AND l.local_id >= %d AND l.local_id <= %d THEN '7p'",
             painel_municipio_limite_id,
             painel_pnad_bloco_fim_resolver(con)),
     "ELSE length(g.geoloc_id::text)::text END AS nivel_id,",
@@ -650,17 +684,23 @@ painel_geo_mun_uf <- function(con, uf) {
 }
 
 #' Feicoes submunicipais do mesmo nivel dentro de um municipio (prefixo de
-#' 7 digitos do geoloc_id — setor, bairro e area de ponderacao codificam o
-#' municipio nos primeiros digitos), simplificadas no SQL — malha do globo
-#' quando o destaque e submunicipal: as feicoes do nivel tesselam o
-#' municipio em foco. Acima do teto de feicoes volta vazio e o globo fica
-#' apenas com o destaque sobre a UF (degradacao).
+#' 7 digitos do geoloc_id — setor, bairro, subdistrito e area de ponderacao
+#' codificam o municipio nos primeiros digitos), simplificadas no SQL —
+#' malha do globo quando o destaque e submunicipal: as feicoes do nivel
+#' tesselam o municipio em foco. O nivel e selecionado pelo `nivel_tipo`
+#' (largura nao distingue bairro de subdistrito); sem tipo (legado), pela
+#' largura. Acima do teto de feicoes volta vazio e o globo fica apenas
+#' com o destaque sobre a UF (degradacao).
 #' @keywords internal
-painel_geo_irmaos_mun <- function(con, mun, larg = NULL, max_feicoes = 2000L) {
+painel_geo_irmaos_mun <- function(con, mun, tipo = NULL, larg = NULL,
+                                  max_feicoes = 2000L) {
   mun <- trimws(as.character(mun)[1])
   if (is.na(mun) || !grepl("^[0-9]{7}$", mun)) return(painel_geo_vazio())
   escopo <- sprintf("left(g.geoloc_id::text, 7) = '%s'", mun)
-  escopo <- if (!is.null(larg))
+  tipo <- if (length(tipo) == 1 && !is.na(tipo) && nzchar(tipo)) tipo else NULL
+  escopo <- if (!is.null(tipo))
+    paste(escopo, sprintf("AND l.nivel_tipo = '%s'", tipo))
+  else if (!is.null(larg))
     paste(escopo, sprintf("AND length(g.geoloc_id::text) = %d",
                           as.integer(larg)))
   else paste(escopo, "AND length(g.geoloc_id::text) > 10")
@@ -1214,8 +1254,9 @@ painel_geo_mun_uf_cache <- function(local_id) {
 #' Malha decorativa do globo em torno da localidade em foco: selecao
 #' municipal desenha as bordas dos demais municipios do estado
 #' ([painel_geo_mun_uf_cache()]); selecao submunicipal (setor, bairro,
-#' area de ponderacao — geoloc_id com mais de 10 digitos) troca as bordas
-#' pelas proprias feicoes do nivel dentro do municipio em foco
+#' subdistrito, area de ponderacao — geoloc_id com mais de 10 digitos)
+#' troca as bordas pelas proprias feicoes do nivel (pelo `nivel_tipo` da
+#' localidade) dentro do municipio em foco
 #' ([painel_geo_irmaos_mun()]), que tesselam o municipio inteiro. A feicao
 #' do destaque sai fora do cache (cada selecao exclui a si mesma), como em
 #' [painel_geo_mun_uf_cache()].
@@ -1223,21 +1264,24 @@ painel_geo_mun_uf_cache <- function(local_id) {
 painel_geo_malha_foco_cache <- function(local_id) {
   local_id <- suppressWarnings(as.integer(local_id))[1]
   if (is.na(local_id)) return(painel_geo_vazio())
-  codigo <- painel_com_con(function(con) DBI::dbGetQuery(con, sprintf(paste(
-    "SELECT g.geoloc_id::text AS codigo",
+  info <- painel_com_con(function(con) DBI::dbGetQuery(con, sprintf(paste(
+    "SELECT g.geoloc_id::text AS codigo, l.nivel_tipo AS nivel_tipo",
     "FROM local l JOIN geoloc g USING (geoloc_id)",
     "WHERE l.local_id = %d"),
-    local_id))$codigo)
-  codigo <- as.character(codigo)[1]
+    local_id)))
+  codigo <- as.character(info$codigo)[1]
+  nivel_tipo <- as.character(info$nivel_tipo)[1]
   if (is.na(codigo) || !nzchar(codigo)) return(painel_geo_vazio())
   if (nchar(codigo) > 10L) {
-    larg <- nchar(codigo)
     mun <- substr(codigo, 1, 7)
+    tipo <- if (!is.na(nivel_tipo) && nzchar(nivel_tipo)) nivel_tipo else NULL
+    chave_nivel <- if (!is.null(tipo)) tipo else as.character(nchar(codigo))
     malha <- painel_cache_get(
-      painel_cache_chave(sprintf("geo_irmaos_%d_%s", larg, mun)),
+      painel_cache_chave(sprintf("geo_irmaos_%s_%s", chave_nivel, mun)),
       painel_cache_ttl[["geo"]],
       function() painel_com_con(function(con)
-        painel_geo_irmaos_mun(con, mun = mun, larg = larg)))
+        painel_geo_irmaos_mun(con, mun = mun, tipo = tipo,
+                              larg = nchar(codigo))))
     return(malha[malha$code != as.character(local_id), , drop = FALSE])
   }
   painel_geo_mun_uf_cache(local_id)
@@ -1260,12 +1304,12 @@ painel_ufs_com_dados_cache <- function(mdata_id, nivel_id) {
 #' @keywords internal
 painel_local_top_uf_cache <- function(mdata_id, nivel_id, uf_local_id) {
   mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
-  nivel_id <- suppressWarnings(as.integer(nivel_id))[1]
+  p <- painel_nivel_parse(nivel_id)
   uf_local_id <- suppressWarnings(as.integer(uf_local_id))[1]
-  if (is.na(mdata_id) || is.na(nivel_id) || is.na(uf_local_id)) return(NULL)
+  if (is.na(mdata_id) || is.na(p$nivel) || is.na(uf_local_id)) return(NULL)
   painel_cache_get(
-    painel_cache_chave(sprintf("local_top_uf_%d_%d_%d",
-                               mdata_id, nivel_id, uf_local_id)),
+    painel_cache_chave(sprintf("local_top_uf_%d_%s_%d",
+                               mdata_id, p$chave, uf_local_id)),
     painel_cache_ttl[["catalogo"]],
     function() painel_com_con(function(con)
       painel_local_top_uf(con, mdata_id, nivel_id, uf_local_id)))

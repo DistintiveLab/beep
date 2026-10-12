@@ -12,7 +12,7 @@ incorporar_bairros(
   con = NULL,
   simplificar = 0.001,
   refrescar = FALSE,
-  ano = NA
+  ano = NA_integer_
 )
 }
 \arguments{
@@ -32,7 +32,7 @@ municipio pai; CRS qualquer (reprojetado para 4326 na gravacao)}
 Custa minutos em DW grande; ETL em lote prefere refrescar uma unica vez}
 
 \item{ano}{ano de referencia do atributo de bairro (proveniencia em
-niveis_carga; default NA — ver nota na descricao)}
+\code{niveis_carga}; default NA — ver nota acima)}
 }
 \value{
 invisivel data.frame (escopo, n_localidades) com o resumo da
@@ -42,12 +42,12 @@ carga por municipio — o mesmo registro vai para \code{niveis_carga}
 Dissolve os setores por bairro (codigo derivado do Censo: municipio
 7 digitos + sequencial 4-5; codigos completos de 11-12 digitos tambem
 sao aceitos como-is) e grava cada bairro com
-ampliar_nivel_territorial() (tipo "bairro": geoloc_id de 11-12
-digitos, local_id no bloco 1000000-1999999). Setores sem bairro
+\code{\link[=ampliar_nivel_territarial]{ampliar_nivel_territarial()}} (tipo "bairro": \code{geoloc_id} de 11-12
+digitos, \code{local_id} no bloco 1000000-1999999). Setores sem bairro
 informado ficam de fora — o bairro nunca e inferido. Cargas repetidas
-sao idempotentes por codigo e registradas em niveis_carga com fonte
-"dissolve_setores" (uma linha por municipio; ano e apenas
-proveniencia — com o default NA cada carga gera uma linha nova, pois
-NULL nunca colide no UNIQUE; passe um ano fixo para atualizar a mesma
+sao idempotentes por codigo e registradas em \code{niveis_carga} com fonte
+"dissolve_setores" (uma linha por municipio; \code{ano} e apenas
+proveniencia — com o default \code{NA} cada carga gera uma linha nova, pois
+NULL nunca colide no UNIQUE; passe um \code{ano} fixo para atualizar a mesma
 linha).
 }

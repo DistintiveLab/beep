@@ -24,7 +24,7 @@
 #' @param dados sf com a coluna de codigo (`col_codigo`) e opcionalmente
 #'   nome (`col_nome`), geometria em EPSG:4326 ou reprojetavel
 #' @param tipo um de `niveis_blocos_local_id$tipo`: "setor",
-#'   "area_ponderacao", "bairro"
+#'   "area_ponderacao", "bairro", "subdistrito"
 #' @param col_codigo,col_nome nomes das colunas de codigo/nome no sf
 #' @param con conexao DBI com o DW; default abre o beepdb local
 #' @param simplificar dTolerance (graus) da simplificacao no SQL
@@ -49,7 +49,8 @@ ampliar_nivel_territorial <- function(dados, tipo,
     padrao <- switch(tipo,
                      setor = "setor|tract|census",
                      area_ponderacao = "ponder|weight",
-                     bairro = "bairro")
+                     bairro = "bairro",
+                     subdistrito = "subdistrict|distrito")
     cand <- grep(padrao, names(dados), value = TRUE,
                  ignore.case = TRUE)
     if (!length(cand)) {

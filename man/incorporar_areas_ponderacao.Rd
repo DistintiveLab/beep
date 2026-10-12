@@ -2,7 +2,7 @@
 % Please edit documentation in R/incorporar_areas_ponderacao.R
 \name{incorporar_areas_ponderacao}
 \alias{incorporar_areas_ponderacao}
-\title{Incorpora a malha de areas de ponderacao do Censo}
+\title{Incorpora a malha de areas de ponderacao de UFs/municipios}
 \usage{
 incorporar_areas_ponderacao(
   con = NULL,
@@ -15,25 +15,24 @@ incorporar_areas_ponderacao(
 \arguments{
 \item{con}{conexao DBI com o DW; default abre o beepdb local}
 
-\item{ufs}{"all" ou vetor de codigos de UF (2 digitos) ou municipio
-IBGE (7 digitos)}
+\item{ufs}{\code{"all"} ou vetor de codigos de UF (2 digitos) ou municipio
+IBGE (7 digitos) para carga parcial}
 
-\item{ano}{Censo de referencia (2010 e o publicado para areas de
-ponderacao)}
+\item{ano}{Censo de referencia (2010 — unico com malha de AP publicada)}
 
 \item{simplificar}{dTolerance (graus) da simplificacao no SQL}
 
-\item{refrescar}{atualizar as matviews named/geonamed_datavalues ao fim?
-Custa minutos em DW grande; ETL em lote prefere refrescar uma unica vez}
+\item{refrescar}{atualizar as matviews named/geonamed_datavalues ao fim?}
 }
 \value{
 invisivel data.frame (escopo, n_localidades) com o resumo da
 carga — o mesmo registro vai para a tabela \code{niveis_carga}
 }
 \description{
-Baixa a malha via [geobr::read_weighting_area()] e insere cada area com
-ampliar_nivel_territorial() (tipo "area_ponderacao": geoloc_id de 13
-digitos, local_id no bloco 2000000-2999999; o municipio pai e o prefixo
-7d do codigo). Cargas repetidas sao idempotentes por codigo e ficam
-registradas em niveis_carga.
+Baixa via \code{\link[geobr:read_weighting_area]{geobr::read_weighting_area()}} (Censo 2010) e insere cada area
+com \code{\link[=ampliar_nivel_territorial]{ampliar_nivel_territorial()}} (tipo "area_ponderacao": \code{geoloc_id} =
+codigo de 13 digitos, \code{local_id} no bloco 2000000-2999999). O municipio
+pai e o prefixo 7d do codigo; sem vinculo em \code{recortes_geograficos}.
+Cargas repetidas sao idempotentes por codigo e ficam registradas em
+\code{niveis_carga}.
 }

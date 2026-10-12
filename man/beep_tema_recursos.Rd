@@ -4,7 +4,7 @@
 \alias{beep_tema_recursos}
 \title{Recursos do núcleo do tema: CSS + JS + base Gov.br + div raiz}
 \usage{
-beep_tema_recursos(paleta = c("govbr", "pb"))
+beep_tema_recursos(paleta = c("govbr", "pb", "brasil"))
 }
 \description{
 Inclui as variáveis/toggle de paleta (inst/tema), a base Rawline/Gov.br

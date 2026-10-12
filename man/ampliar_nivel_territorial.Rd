@@ -19,7 +19,7 @@ ampliar_nivel_territorial(
 nome (\code{col_nome}), geometria em EPSG:4326 ou reprojetavel}
 
 \item{tipo}{um de \code{niveis_blocos_local_id$tipo}: "setor",
-"area_ponderacao", "bairro"}
+"area_ponderacao", "bairro", "subdistrito"}
 
 \item{col_codigo, col_nome}{nomes das colunas de codigo/nome no sf}
 
@@ -38,7 +38,7 @@ data.frame invisivel com os codigos incorporados e seus local_ids
 }
 \description{
 O sf precisa trazer o codigo longo do nivel (digitos apenas; largura
-validada contra o registro de \code{niveis_territoriais_tipos}) e, opcionalmente,
+validada contra o registro de \link{niveis_territoriais_tipos}) e, opcionalmente,
 um nome. Feicoes cujo codigo ja existe em \code{geoloc} sao puladas
 (idempotente por codigo). As novas ganham \code{local_id} sequencial dentro do
 bloco do tipo e \code{nivel_tipo} preenchido. A matview \code{recortes_geograficos}

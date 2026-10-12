@@ -16,6 +16,8 @@ painel): arrastar gira livremente pelo mundo, a roda e os botoes
 aproximam estilo Google Earth e clicar numa area com dados escolhe a
 localidade na aba Regiao. No nivel municipal (sem geometria coletiva
 leve) a base sao as UFs com o municipio escolhido destacado, a UF
-inteira em foco e a malha de bordas dos demais municipios do estado.
+inteira em foco e a malha de bordas dos demais municipios do estado;
+nos niveis submunicipais pesados a malha troca pelas proprias
+feicoes do nivel dentro do municipio em foco.
 Port do globo do labourvaluesdatapanel.
 }

@@ -5,7 +5,7 @@
 \title{Recursos de cabecalho (meta, núcleo do tema, CSS/JS do painel, Gov.br)
 e div raiz da paleta}
 \usage{
-painel_recursos(assets_dir, paleta = c("govbr", "pb"))
+painel_recursos(assets_dir, paleta = c("govbr", "pb", "brasil"))
 }
 \description{
 O núcleo do tema (beep-tema.css/js: variáveis --p-* e o toggle

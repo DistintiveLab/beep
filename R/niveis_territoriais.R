@@ -15,6 +15,14 @@
 #   setor censitario     local_id >= 100000    geoloc_id 15-16 digitos
 #   bairro               local_id >= 1000000   geoloc_id 11-12 digitos
 #   area de ponderacao   local_id >= 2000000   geoloc_id 10 digitos
+#   subdistrito          local_id >= 3000000   geoloc_id 11 digitos
+#
+# O subdistrito (distrito administrativo; no DF, Regiao Administrativa)
+# divide a largura 11 com o bairro: quem decide e o `nivel_tipo` gravado
+# em `local`, nunca a largura — o painel usa chaves por tipo para os
+# submunicipais (R/painel_dw.R). Municipios cujo Censo nao publica
+# atributo de bairro (DF e integrantes de RMs, tipicamente) tem no
+# subdistrito o recorte submunicipal com geometria oficial.
 #
 # Codigos submunicipais nao cabem no int4 do `geoloc_id` original (setor
 # chega a 16 digitos ~ 5.3e15, acima do int4 mas abaixo de 2^53), por isso a
@@ -43,9 +51,9 @@ niveis_submunicipal_inicio <- 100000L
 #' Blocos de local_id por tipo de nivel submunicipal (inicio/fim inclusive)
 #' @keywords internal
 niveis_blocos_local_id <- data.frame(
-  tipo = c("setor", "bairro", "area_ponderacao"),
-  bloco_inicio = c(100000L, 1000000L, 2000000L),
-  bloco_fim = c(999999L, 1999999L, 2999999L)
+  tipo = c("setor", "bairro", "area_ponderacao", "subdistrito"),
+  bloco_inicio = c(100000L, 1000000L, 2000000L, 3000000L),
+  bloco_fim = c(999999L, 1999999L, 2999999L, 3999999L)
 )
 
 #' Registro dos tipos de nivel territorial: rotulo do painel e larguras
@@ -58,14 +66,16 @@ niveis_blocos_local_id <- data.frame(
 #' @keywords internal
 niveis_territoriais_tipos <- data.frame(
   tipo = c("regiao", "uf", "rgint", "microrregiao", "rgim",
-           "municipio", "pnad", "bairro", "area_ponderacao", "setor"),
+           "municipio", "pnad", "bairro", "subdistrito",
+           "area_ponderacao", "setor"),
   rotulo = c("Região", "Unidade da Federação",
              "Região geográfica intermediária", "Microrregião",
              "Região geográfica imediata", "Município",
              "Região de interesse PNAD", "Bairro",
+             "Subdistrito (RA)",
              "Área de ponderação", "Setor censitário"),
-  largura_min = c(1L, 2L, 4L, 5L, 6L, 7L, 7L, 11L, 10L, 15L),
-  largura_max = c(1L, 2L, 4L, 5L, 6L, 7L, 7L, 12L, 10L, 16L)
+  largura_min = c(1L, 2L, 4L, 5L, 6L, 7L, 7L, 11L, 11L, 10L, 15L),
+  largura_max = c(1L, 2L, 4L, 5L, 6L, 7L, 7L, 12L, 11L, 10L, 16L)
 )
 
 #' Um local_id e municipio? (bloco malha 2024 + incorporados apos a

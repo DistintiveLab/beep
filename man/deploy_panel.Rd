@@ -7,7 +7,7 @@
 deploy_panel(
   diretorio = "painel",
   titulo = "Painel de Indicadores",
-  paleta = c("govbr", "pb"),
+  paleta = c("govbr", "pb", "brasil"),
   esqueleto = TRUE,
   sobrescrever = FALSE
 )

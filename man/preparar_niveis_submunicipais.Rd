@@ -2,7 +2,7 @@
 % Please edit documentation in R/niveis_territoriais.R
 \name{preparar_niveis_submunicipais}
 \alias{preparar_niveis_submunicipais}
-\title{Migra o schema do DW para aceitar niveis territoriais submunicipais}
+\title{Prepara o DW para niveis territoriais submunicipais (idempotente)}
 \usage{
 preparar_niveis_submunicipais(con = NULL)
 }
@@ -13,18 +13,21 @@ preparar_niveis_submunicipais(con = NULL)
 invisivel TRUE
 }
 \description{
-Tudo em uma transacao: falha em qualquer passo deixa o banco como estava.
-Bancos ja migrados sao no-op (verifica o tipo da coluna antes de agir).
+\enumerate{
+\item \code{geoloc.geoloc_id} e \code{local.geoloc_id} passam a BIGINT (codigos de
+setor chegam a 16 digitos). Matviews dependentes sao salvas
+(definicao + indices), dropadas com CASCADE e recriadas depois do
+ALTER — o PostgreSQL recusa alterar coluna usada por view/regra.
+Chaves estrangeiras que apontam para \code{geoloc(geoloc_id)} (ex.:
+\code{fk_geoloc_geoloc_id} criada pelo \code{prepare_db}) sao dropadas e
+recriadas com a mesma definicao.
+\item \code{local} ganha a coluna \code{nivel_tipo} (texto), com backfill pela
+largura do geoloc_id e pelo bloco PNAD de local_id; niveis
+submunicipais novos recebem o tipo dos loaders
+(\code{\link[=ampliar_nivel_territorial]{ampliar_nivel_territorial()}}).
+}
 }
 \details{
-\enumerate{
-\item \code{geoloc.geoloc_id} vira BIGINT (codigos submunicipais de 11-16
-digitos nao cabem no int4 original). Matviews dependentes sao salvas
-(definicao + indices via pg_rewrite/pg_depend), dropadas e recriadas ao
-fim; chaves estrangeiras que apontam para geoloc(geoloc_id) sao dropadas
-e recriadas com a mesma definicao.
-\item \code{local} ganha a coluna \code{nivel_tipo} (texto), com backfill pela
-largura do geoloc_id e pelo bloco PNAD de local_id; niveis submunicipais
-novos recebem o tipo dos loaders (ampliar_nivel_territorial()).
-}
+Tudo em uma transacao: falha em qualquer passo deixa o banco como estava.
+Bancos ja migrados sao no-op (verifica o tipo da coluna antes de agir).
 }

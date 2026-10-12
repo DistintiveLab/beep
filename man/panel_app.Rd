@@ -6,7 +6,7 @@
 \usage{
 panel_app(
   titulo = "Painel de Indicadores",
-  paleta = c("govbr", "pb"),
+  paleta = c("govbr", "pb", "brasil"),
   assets_dir = NULL
 )
 }
