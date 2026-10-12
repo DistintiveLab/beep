@@ -128,7 +128,8 @@ dplyr::across(dplyr::matches("dataunit|source|url|name|desc"),as.character))
       7,"quadrimestral",120,
       8,"semestral",180,
       9,"anual",365,
-      10,"bienal",730
+      10,"bienal",730,
+      11,"irregular",0
     )|>dplyr::mutate(dplyr::across(dplyr::contains("_id"),as.integer),
                      dplyr::across(dplyr::contains("name"),as.character))
 

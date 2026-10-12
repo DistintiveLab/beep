@@ -34,9 +34,12 @@ tsebr).}
 }
 \value{
 \code{data.frame} long: \code{local} (geoloc_id numerico do DW),
-\code{periodo} (31/12 do ano), \code{valor}, \code{uf}, \code{metrica} — mesmo shape
-do \code{tsebr::tse_detalhe_municipio()}, aceito de pronto pelo ramo
-TSE do upload de fontes.
+\code{periodo}, \code{valor}, \code{uf}, \code{metrica} e \code{turno} quando o detalhe
+traz a coluna (cada turno e um ponto proprio, com \code{periodo} no
+domingo da eleicao segundo \code{tsebr::tse_periodo_eleicao()}, em vez
+do 31/12 do ano); mesmo shape do
+\code{tsebr::tse_detalhe_municipio()}, aceito de pronto pelo ramo TSE
+do upload de fontes.
 }
 \description{
 Espelha a semantica de \code{tsebr::tse_detalhe_municipio()} (dedupe

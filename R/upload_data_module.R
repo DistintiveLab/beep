@@ -981,7 +981,7 @@ tipocarga <- reactive({
 
               mdata_exstse <- data.frame(
                 data_class_id=1,
-                data_freq_id=9,
+                data_freq_id=11,
                 data_type_id=1,
                 datasource_id=dsnid,
                 data_url=input$upload_file)

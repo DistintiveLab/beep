@@ -36,7 +36,15 @@ test_that("nucleo de agregacao deduplica secao-turno antes de somar", {
   expect_identical(nrow(res), 2L)
   expect_equal(res$valor[res$local == "53001080501"], 700)
   expect_equal(res$valor[res$local == "53001080502"], 280)
-  expect_true(all(res$periodo == as.Date("2026-12-31")))
+  # turno sobrevive como chave: cada turno e um ponto proprio, com
+  # periodo no domingo da eleicao (1o turno 04/10/2026; 2o cairia no
+  # ultimo domingo de outubro)
+  expect_identical(as.integer(res$turno[res$local == "53001080501"]), 1L)
+  expect_identical(as.integer(res$turno[res$local == "53001080502"]), 2L)
+  expect_true(res$periodo[res$local == "53001080501"] ==
+                as.Date("2026-10-04"))
+  expect_true(res$periodo[res$local == "53001080502"] ==
+                as.Date("2026-10-25"))
   expect_identical(res$metrica, rep("aptos", 2))
 })
 
@@ -50,5 +58,5 @@ test_that("nucleo empilha metricas e descarta secoes sem atribuicao", {
   expect_identical(nrow(res), 2L)
   expect_equal(res$valor[res$metrica == "aptos"], 90)
   expect_equal(res$valor[res$metrica == "abstencoes"], 10)
-  expect_true(all(res$periodo == as.Date("2022-12-31")))
+  expect_true(all(res$periodo == as.Date("2022-10-02")))
 })

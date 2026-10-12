@@ -94,7 +94,8 @@ painel_rotulo_tempo <- function(freq_name) {
   rotulos <- c(diaria = "Data", "diària" = "Data", semanal = "Semana",
                quinzenal = "Quinzena", mensal = "Mês", bimestral = "Bimestre",
                trimestral = "Trimestre", quadrimestral = "Quadrimestre",
-               semestral = "Semestre", anual = "Ano", bienal = "Ano")
+               semestral = "Semestre", anual = "Ano", bienal = "Ano",
+               irregular = "Ano")
   if (is.na(f) || !f %in% names(rotulos)) return("Ano")
   unname(rotulos[[f]])
 }

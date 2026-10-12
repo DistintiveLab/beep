@@ -450,12 +450,15 @@ tse_resumo_harmonizacao <- function(con = NULL, ano = NULL, uf = NULL) {
 
 #' Nucleo puro de agregacao do detalhe por secao (testavel offline):
 #' dedupe `first()` por secao-turno (as metricas repetem em cada
-#' cargo), descarta linhas sem local e soma por local — espelho do
+#' cargo), descarta linhas sem local e soma por local e turno (quando
+#' o detalhe traz a coluna, cada turno vira um ponto proprio com
+#' periodo no domingo da eleicao) — espelho do
 #' `tsebr::tse_detalhe_municipio()`.
 #' @keywords internal
 .tse_agregar_detalhe_local <- function(d, local_chr, metrica, a) {
   chaves <- intersect(c("uf", "cod_municipio_tse", "zona", "secao",
                         "turno"), names(d))
+  grupos_local <- c("local", intersect("turno", names(d)))
   data.table::rbindlist(lapply(metrica, function(m) {
     d |>
       dplyr::select(dplyr::all_of(c(chaves, m))) |>
@@ -465,11 +468,15 @@ tse_resumo_harmonizacao <- function(con = NULL, ano = NULL, uf = NULL) {
       dplyr::summarise(valor = dplyr::first(valor),
                        local = dplyr::first(local), .groups = "drop") |>
       dplyr::filter(!is.na(local)) |>
-      dplyr::group_by(local) |>
+      dplyr::group_by(dplyr::across(dplyr::all_of(grupos_local))) |>
       dplyr::summarise(valor = sum(valor, na.rm = TRUE),
                        .groups = "drop") |>
       dplyr::mutate(metrica = m, ano = as.integer(a),
-                    periodo = as.Date(paste0(a, "-12-31")))
+                    periodo = if ("turno" %in% grupos_local) {
+                      tsebr::tse_periodo_eleicao(a, .data$turno)
+                    } else {
+                      as.Date(paste0(a, "-12-31"))
+                    })
   }), fill = TRUE)
 }
 
@@ -505,9 +512,12 @@ tse_resumo_harmonizacao <- function(con = NULL, ano = NULL, uf = NULL) {
 #' @param dest_dir diretorio de cache do download (repassado ao
 #'   tsebr).
 #' @return `data.frame` long: `local` (geoloc_id numerico do DW),
-#'   `periodo` (31/12 do ano), `valor`, `uf`, `metrica` — mesmo shape
-#'   do `tsebr::tse_detalhe_municipio()`, aceito de pronto pelo ramo
-#'   TSE do upload de fontes.
+#'   `periodo`, `valor`, `uf`, `metrica` e `turno` quando o detalhe
+#'   traz a coluna (cada turno e um ponto proprio, com `periodo` no
+#'   domingo da eleicao segundo `tsebr::tse_periodo_eleicao()`, em vez
+#'   do 31/12 do ano); mesmo shape do
+#'   `tsebr::tse_detalhe_municipio()`, aceito de pronto pelo ramo TSE
+#'   do upload de fontes.
 #' @examples
 #' \dontrun{
 #' tse_detalhe_secao(2026, "DF", metrica = "abstencoes",
@@ -601,5 +611,6 @@ tse_detalhe_secao <- function(con = NULL, ano, uf,
   res <- data.table::rbindlist(lapply(anos, parte_ano), fill = TRUE)
   as.data.frame(res |>
     dplyr::mutate(local = as.numeric(local), uf = uf) |>
-    dplyr::select(local, periodo, valor, uf, metrica))
+    dplyr::select(dplyr::any_of(
+      c("local", "turno", "periodo", "valor", "uf", "metrica"))))
 }
