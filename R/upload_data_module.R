@@ -631,9 +631,9 @@ tipocarga <- reactive({
 
     if(nrow(selfrefdatasourcexist)==0){
       ###create institution, contact and datasource
-      niid <- 1+DBI::dbGetQuery(con,"select max(institution_id) from institution")$max
-      ncid <- 1+DBI::dbGetQuery(con,"select max(officialer_id) from officialer")$max
-      ndid <- 1+DBI::dbGetQuery(con,"select max(datasource_id) from datasource")$max
+      niid <- 1+DBI::dbGetQuery(con,"select coalesce(max(institution_id),0) as max from institution")$max
+      ncid <- 1+DBI::dbGetQuery(con,"select coalesce(max(officialer_id),0) as max from officialer")$max
+      ndid <- 1+DBI::dbGetQuery(con,"select coalesce(max(datasource_id),0) as max from datasource")$max
 
       beepnst <- data.frame(
         institution_id = niid,
