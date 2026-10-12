@@ -144,6 +144,10 @@
 - [`mod_panel_globe_ui()`](https://distintivelab.github.io/beep/dev/reference/mod_panel_globe_ui.md)
   : panel_globe UI Function
 
+- [`painel_cache_limpar()`](https://distintivelab.github.io/beep/dev/reference/painel_cache_limpar.md)
+  : Descarta o cache de memoria e de disco (rodar apos atualizar o DW
+  com ETL)
+
 - [`painel_municipio_filtro()`](https://distintivelab.github.io/beep/dev/reference/painel_municipio_filtro.md)
   :
 

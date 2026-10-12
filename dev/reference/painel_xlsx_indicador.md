@@ -1,15 +1,16 @@
-# Planilha "um indicador por ano": uma aba por ano, cada uma com todas as localidades do nivel territorial com dados naquele ano (codigo, nome e valor da ultima observacao do ano), mais aba "metadados" com o contexto
+# Planilha "um indicador por data": uma aba por data de referencia, cada uma com todas as localidades do nivel territorial com dados naquela data (codigo, nome e valor do refdate exato), mais aba "metadados" com o contexto
 
-Planilha "um indicador por ano": uma aba por ano, cada uma com todas as
-localidades do nivel territorial com dados naquele ano (codigo, nome e
-valor da ultima observacao do ano), mais aba "metadados" com o contexto
+Planilha "um indicador por data": uma aba por data de referencia, cada
+uma com todas as localidades do nivel territorial com dados naquela data
+(codigo, nome e valor do refdate exato), mais aba "metadados" com o
+contexto
 
 ## Usage
 
 ``` r
 painel_xlsx_indicador(
   arquivo,
-  por_ano,
+  por_data,
   locais,
   rotulo_indicador,
   nivel_rotulo,
@@ -24,12 +25,15 @@ painel_xlsx_indicador(
 
   caminho do .xlsx a gravar
 
-- por_ano:
+- por_data:
 
-  lista nomeada (ano em texto) de data.frames local_id/refdate/value JA
-  restritos ao nivel territorial escolhido e JA na regua de ultima
-  observacao do ano
-  ([`painel_valores_ano()`](https://distintivelab.github.io/beep/dev/reference/painel_valores_ano.md))
+  lista nomeada (rotulo de data de
+  [`painel_rotulo_aba()`](https://distintivelab.github.io/beep/dev/reference/painel_rotulo_aba.md))
+  de data.frames local_id/refdate/value JA restritos ao nivel
+  territorial escolhido e JA no refdate exato
+  ([`painel_valores_refdate()`](https://distintivelab.github.io/beep/dev/reference/painel_valores_refdate.md));
+  as abas seguem a ordem fornecida (refdates ascendentes no caller,
+  rótulos ISO ordenam lexicograficamente)
 
 - locais:
 

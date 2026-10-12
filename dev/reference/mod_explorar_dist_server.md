@@ -1,7 +1,8 @@
-# Server das distribuicoes: histograma do ano escolhido e boxplot da serie toda por ano, sobre a serie achatada
+# Server das distribuicoes: histograma da data escolhida e boxplot da serie toda por data de referencia (rotulo curto do slider por data), sobre a serie completa
 
-Server das distribuicoes: histograma do ano escolhido e boxplot da serie
-toda por ano, sobre a serie achatada
+Server das distribuicoes: histograma da data escolhida e boxplot da
+serie toda por data de referencia (rotulo curto do slider por data),
+sobre a serie completa
 
 ## Usage
 
