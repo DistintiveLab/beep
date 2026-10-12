@@ -24,6 +24,9 @@
 - [`aquecer_painel()`](https://distintivelab.github.io/beep/dev/reference/aquecer_painel.md)
   : Aquece o cache de disco do painel DW apos um ETL
 
+- [`atualizar_grupo_resumo()`](https://distintivelab.github.io/beep/dev/reference/atualizar_grupo_resumo.md)
+  : Define o grupo Resumo do painel no DW
+
 - [`atualizar_grupos_indicadores()`](https://distintivelab.github.io/beep/dev/reference/atualizar_grupos_indicadores.md)
   : Declara e reconcilia os grupos tematicos do catalogo no DW
 
@@ -137,6 +140,9 @@
 
 - [`ler_dependencias()`](https://distintivelab.github.io/beep/dev/reference/ler_dependencias.md)
   : Le a semente de dependencias versionada no projeto
+
+- [`ler_grupo_resumo()`](https://distintivelab.github.io/beep/dev/reference/ler_grupo_resumo.md)
+  : Lê os membros atuais do grupo Resumo no DW
 
 - [`listar_scripts_coleta()`](https://distintivelab.github.io/beep/dev/reference/listar_scripts_coleta.md)
   : Lista os scripts de coleta executaveis (sem .ignore)

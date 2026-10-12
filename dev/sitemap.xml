@@ -16,10 +16,12 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/app_server.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/app_ui.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/aquecer_painel.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/atualizar_grupo_resumo.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/atualizar_grupos_indicadores.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/atualizar_indicadores.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/atualizar_painel.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/beep-package.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/beep_grupo_resumo_nome.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/beep_tema_botao.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/beep_tema_paleta_default.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/beep_tema_recursos.html</loc></url>
@@ -102,6 +104,7 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/flucol.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/garantir_indice_valores.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/gravar_serie_dw.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/grupo_resumo_plano.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/grupos_catalogo_definicao.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/grupos_catalogo_plano.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/grupos_catalogo_tribbles.html</loc></url>
@@ -119,6 +122,7 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/insert_logo.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/ler_controle.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/ler_dependencias.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/ler_grupo_resumo.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/listar_scripts_coleta.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/logo_header_tag.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/logo_rodape_tag.html</loc></url>
@@ -170,6 +174,8 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_con.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_delta_camadas.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_filtrar_ano.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_fontes.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_fontes_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_irmaos_mun.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_irmaos_nivel_cache.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geo_local.html</loc></url>
@@ -194,6 +200,9 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_geolocalizacao_ativa.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_grupo_indicador.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_grupo_raiz.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_grupo_resumo.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_grupo_resumo_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_grupo_resumo_nome.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_grupos_selecao.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_hierarquia.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_hierarquia_cache.html</loc></url>
@@ -238,7 +247,12 @@
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_recursos.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_refdates.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_refdates_cache.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_resumo_fontes.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_resumo_grupos.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_resumo_linhas.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_resumo_membros.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_resumo_nome.html</loc></url>
+<url><loc>https://distintivelab.github.io/beep/dev/reference/painel_resumo_sep.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_rodape.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_rotulo_aba.html</loc></url>
 <url><loc>https://distintivelab.github.io/beep/dev/reference/painel_rotulo_data.html</loc></url>
