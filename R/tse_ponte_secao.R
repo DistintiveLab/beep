@@ -382,14 +382,14 @@ tse_harmonizar_secoes <- function(con = NULL, locais, ano, uf,
                                        c("ponto", "nome")], na.rm = TRUE)
   total <- sum(linhas$eleitores, na.rm = TRUE)
 
-  conflitos_df <- linhas[linhas$metodo == "conflito",
+  conflitos_df <- linhas[which(linhas$metodo == "conflito"),
                          c("municipio", "zona", "secao", "eleitores"),
                          drop = FALSE]
   rownames(conflitos_df) <- NULL
 
   concordancia <- NULL
-  if (!is.null(b1_por_secao) && any(linhas$metodo == "ponto")) {
-    pontos_df <- linhas[linhas$metodo == "ponto", ]
+  if (!is.null(b1_por_secao) && any(linhas$metodo == "ponto", na.rm = TRUE)) {
+    pontos_df <- linhas[which(linhas$metodo == "ponto"), ]
     b1 <- b1_por_secao[paste(pontos_df$ibge, pontos_df$zona,
                              pontos_df$secao, sep = "\r")]
     tem_ambos <- !is.na(b1)
