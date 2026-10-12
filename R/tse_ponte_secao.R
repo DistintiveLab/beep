@@ -21,6 +21,12 @@
 #    e auditavel — cobertura e conflitos ficam explicitos na propria tabela.
 # 5. A carga e idempotente por (ano, uf, nivel_tipo): reprocessar um trecho
 #    apaga e regrava so aquele trecho, sem tocar outros niveis.
+#
+# A ponte alimenta tse_detalhe_secao(): o detalhe da votacao por secao
+# (aptos/comparecimento/abstencoes/nulos/brancos) agregado ao nivel
+# harmonizado, com a mesma semantica de agregacao do
+# tsebr::tse_detalhe_municipio() para manter comparabilidade com as series
+# municipais do DW.
 
 #' Garante a tabela de harmonizacao secao x nivel submunicipal no DW
 #' (idempotente) e o indice GiST de geometria usado pelo KNN.
@@ -440,4 +446,149 @@ tse_resumo_harmonizacao <- function(con = NULL, ano = NULL, uf = NULL) {
     "order by ano, uf, nivel_tipo, metodo"),
     params = params)
   list(por_nivel = por_nivel, n_secoes_total = sum(por_nivel$n_secoes))
+}
+
+#' Detalhe da votacao por secao agregado ao nivel municipal ou submunicipal
+#'
+#' Espelha a semantica de `tsebr::tse_detalhe_municipio()` (dedupe
+#' `first()` por secao-turno — as metricas do detalhe repetem em cada
+#' cargo da mesma secao — e soma por localidade), mas agrega pela
+#' localidade do nivel `agregar_por` atribuida as secoes na tabela de
+#' harmonizacao `tse_secao_bairro` (preenchida por
+#' [tse_harmonizar_secoes()]). A soma por municipio bate, portanto, com
+#' a serie municipal do tsebr — o cheque natural de sanidade.
+#'
+#' Com `agregar_por = "municipio"` a harmonizacao nao e usada: o mapeio
+#' e direto pelo `tsebr::tse_mapa_municipios()` (codigo TSE -> IBGE de
+#' 7 digitos), reproduzindo o `tse_detalhe_municipio()`.
+#'
+#' Secoes sem atribuicao (sem harmonizacao previa, conflito ou ponto
+#' fora do raio) sao descartadas com `warning()` informando a contagem:
+#' nessas localidades o valor agregado fica abaixo do municipal na
+#' mesma proporcao da perda.
+#'
+#' @param con conexao DBI com o DW (default abre pelo idiom dos
+#'   `garantir_*`); usada so para ler `tse_secao_bairro` quando
+#'   `agregar_por != "municipio"`.
+#' @param ano ano eleitoral ou vetor (ex.: 2022, 2026).
+#' @param uf sigla da UF.
+#' @param metrica coluna(s) do detalhe a agregar: `aptos`,
+#'   `comparecimento`, `abstencoes`, `votos_nulos` ou `votos_brancos`.
+#' @param agregar_por nivel de agregacao: `subdistrito` (default),
+#'   `setor`, `bairro` ou `area_ponderacao` (exigem harmonizacao previa
+#'   no DW para o par ano/UF) ou `municipio` (mapa TSE x IBGE).
+#' @param dest_dir diretorio de cache do download (repassado ao
+#'   tsebr).
+#' @return `data.frame` long: `local` (geoloc_id numerico do DW),
+#'   `periodo` (31/12 do ano), `valor`, `uf`, `metrica` — mesmo shape
+#'   do `tsebr::tse_detalhe_municipio()`, aceito de pronto pelo ramo
+#'   TSE do upload de fontes.
+#' @examples
+#' \dontrun{
+#' tse_detalhe_secao(2026, "DF", metrica = "abstencoes",
+#'                   agregar_por = "subdistrito")
+#' }
+#' @export
+tse_detalhe_secao <- function(con = NULL, ano, uf,
+                              metrica = c("aptos", "comparecimento",
+                                          "abstencoes", "votos_nulos",
+                                          "votos_brancos"),
+                              agregar_por = c("subdistrito", "setor",
+                                              "municipio", "bairro",
+                                              "area_ponderacao"),
+                              dest_dir = NULL) {
+  metrica <- match.arg(metrica, several.ok = TRUE)
+  agregar_por <- match.arg(agregar_por)
+  anos <- sort(unique(as.integer(ano)))
+  uf <- toupper(as.character(uf))
+  fechar <- is.null(con)
+  if (fechar) {
+    con <- DBI::dbConnect(
+      RPostgres::Postgres(),
+      user = Sys.getenv("user", "beep"),
+      password = Sys.getenv("password", "aEd1#man@gR"),
+      host = Sys.getenv("host", "127.0.0.1"),
+      dbname = Sys.getenv("dbname", "beepdb"))
+  }
+  on.exit(if (fechar) DBI::dbDisconnect(con), add = TRUE)
+
+  parte_ano <- function(a) {
+    d <- tsebr::tse_resultados_secao(a, uf, detalhe = TRUE,
+                                     dest_dir = dest_dir)
+    if (is.null(d) || !nrow(d)) {
+      stop("tse_detalhe_secao: detalhe de secao vazio para ", a, "/", uf)
+    }
+    chaves <- intersect(c("uf", "cod_municipio_tse", "zona", "secao",
+                          "turno"), names(d))
+    falta <- setdiff(metrica, names(d))
+    if (length(falta)) {
+      stop("tse_detalhe_secao: metrica(s) ausente(s) no detalhe de ", a,
+           ": ", paste(falta, collapse = ", "))
+    }
+    d$cod_municipio_tse <- normalizar_codigo_geoloc(d$cod_municipio_tse)
+    d$zona <- normalizar_codigo_geoloc(d$zona)
+    d$secao <- normalizar_codigo_geoloc(d$secao)
+    chave3 <- paste(d$cod_municipio_tse, d$zona, d$secao, sep = "\r")
+
+    if (agregar_por == "municipio") {
+      mapa <- tsebr::tse_mapa_municipios(a, uf)
+      pos <- match(d$cod_municipio_tse,
+                   normalizar_codigo_geoloc(mapa$cod_municipio_tse))
+      if (anyNA(pos)) {
+        stop("tse_detalhe_secao: municipio(s) TSE sem mapa IBGE em ", a,
+             ": ", paste(unique(d$cod_municipio_tse[is.na(pos)]),
+                         collapse = ", "))
+      }
+      local_chr <- normalizar_codigo_geoloc(mapa$geoloc_id[pos])
+    } else {
+      harm <- DBI::dbGetQuery(con, paste(
+        "select cod_municipio_tse, zona, secao, bairro_codigo",
+        "from tse_secao_bairro",
+        "where ano = $1 and uf = $2 and nivel_tipo = $3",
+        "and bairro_local_id is not null"),
+        params = list(a, uf, agregar_por))
+      if (is.null(harm) || !nrow(harm)) {
+        stop("tse_detalhe_secao: sem harmonizacao para ", a, "/", uf,
+             " no nivel '", agregar_por,
+             "' — rode tse_harmonizar_secoes() antes")
+      }
+      pos <- match(chave3,
+                   paste(normalizar_codigo_geoloc(harm$cod_municipio_tse),
+                         normalizar_codigo_geoloc(harm$zona),
+                         normalizar_codigo_geoloc(harm$secao),
+                         sep = "\r"))
+      local_chr <- ifelse(is.na(pos), NA_character_,
+                          trimws(as.character(harm$bairro_codigo[pos])))
+    }
+
+    ## metricas do detalhe repetem em cada cargo da mesma secao-turno:
+    ## deduplicar ANTES de somar (espelho do tse_detalhe_municipio)
+    sem_local <- is.na(local_chr) &
+      !duplicated(d[, chaves, with = FALSE])
+    if (any(sem_local)) {
+      warning("tse_detalhe_secao: ", sum(sem_local), " secao(oes)-turno de ",
+              a, "/", uf, " sem atribuicao '", agregar_por,
+              "' descartada(s) (sem harmonizacao ou conflito)")
+    }
+    data.table::rbindlist(lapply(metrica, function(m) {
+      d |>
+        dplyr::select(dplyr::all_of(c(chaves, m))) |>
+        dplyr::mutate(valor = as.numeric(.data[[m]]),
+                      local = local_chr, .keep = "unused") |>
+        dplyr::group_by(dplyr::across(dplyr::all_of(chaves))) |>
+        dplyr::summarise(valor = dplyr::first(valor),
+                         local = dplyr::first(local), .groups = "drop") |>
+        dplyr::filter(!is.na(local)) |>
+        dplyr::group_by(local) |>
+        dplyr::summarise(valor = sum(valor, na.rm = TRUE),
+                         .groups = "drop") |>
+        dplyr::mutate(metrica = m, ano = as.integer(a),
+                      periodo = as.Date(paste0(a, "-12-31")))
+    }), fill = TRUE)
+  }
+
+  res <- data.table::rbindlist(lapply(anos, parte_ano), fill = TRUE)
+  as.data.frame(res |>
+    dplyr::mutate(local = as.numeric(local), uf = uf) |>
+    dplyr::select(local, periodo, valor, uf, metrica))
 }

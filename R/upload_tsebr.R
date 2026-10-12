@@ -3,11 +3,12 @@
 #' @description Submodule to add data from the TSE open data
 #' portal via the {tsebr} package (CKAN discovery + CDN download
 #' with SHA-512 verification). Familias disponiveis: resultados
-#' nominais e detalhe de secao (agregados ao municipio), prestacao
+#' nominais e detalhe de secao (agregados ao municipio), detalhe da
+#' votacao por localidade submunicipal (subdistrito/RA ou setor
+#' censitario, via secoes harmonizadas em tse_secao_bairro), prestacao
 #' de contas (totais por UF) e candidaturas (export CSV de
 #' referencia, sem gravacao no DW). Perfis do eleitorado por secao
-#' ficam no pacote (tsebr::tse_perfis_secao) ate o DW suportar
-#' niveis submunicipais.
+#' ficam no pacote (tsebr::tse_perfis_secao).
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
@@ -31,6 +32,8 @@ upload_tsebr_ui <- function(id, parent_session) {
         "votação nominal (votos por município)" = "resultados_nominais",
         "detalhe da votação (aptos/abstenções/nulos/brancos por município)" =
           "resultados_detalhe",
+        "detalhe da votação por localidade submunicipal (via seções)" =
+          "detalhe_secao",
         "prestação de contas (totais por UF)" = "prestacao",
         "candidaturas (referência, só CSV)" = "candidaturas"),
       selected = "resultados_detalhe", multiple = FALSE),
@@ -53,14 +56,24 @@ upload_tsebr_ui <- function(id, parent_session) {
                        value = "PRESIDENTE", width = "200px"),
       shiny::textInput(ns("tsenrvotavel"), "Nº do votável (opcional)",
                        value = "", width = "120px")),
+    ## metrica e compartilhada pelas duas familias de detalhe
     shiny::conditionalPanel(
-      condition = sprintf("input['%s'] == 'resultados_detalhe'",
-                          ns("tsefam")),
+      condition = sprintf(
+        "input['%s'] == 'resultados_detalhe' || input['%s'] == 'detalhe_secao'",
+        ns("tsefam"), ns("tsefam")),
       shiny::selectizeInput(ns("tsemetrica"), "Métrica",
                             choices = c("aptos", "comparecimento",
                                         "abstencoes", "votos_nulos",
                                         "votos_brancos"),
                             selected = "abstencoes", multiple = FALSE)),
+    shiny::conditionalPanel(
+      condition = sprintf("input['%s'] == 'detalhe_secao'", ns("tsefam")),
+      shiny::selectizeInput(
+        ns("tseagregar"), "Agregar por",
+        choices = c("município" = "municipio",
+                    "subdistrito/RA" = "subdistrito",
+                    "setor censitário" = "setor"),
+        selected = "subdistrito", multiple = FALSE)),
     shiny::conditionalPanel(
       condition = sprintf("input['%s'] == 'prestacao'", ns("tsefam")),
       shiny::selectizeInput(ns("tsetipo"), "Tipo",
@@ -104,7 +117,8 @@ upload_tsebr_server <- function(id, parent_session) {
         nr_votavel = if (is.null(input$tsenrvotavel) ||
                          !nzchar(input$tsenrvotavel)) NULL
                     else input$tsenrvotavel,
-        metrica = input$tsemetrica, tipo = input$tsetipo)
+        metrica = input$tsemetrica, tipo = input$tsetipo,
+        agregar_por = input$tseagregar)
       shiny::updateTextInput(session = session, "urlapi",
                              value = if (identical(fonte, "tsesqlr"))
                                "banco tsedb via tsesqlr (sem download)" else
@@ -182,7 +196,8 @@ anos_tse_faltando <- function(codigo, tabela) {
 #' @noRd
 gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
                              nr_votavel = NULL, metrica = NULL,
-                             tipo = NULL, fonte = "tsebr") {
+                             tipo = NULL, fonte = "tsebr",
+                             agregar_por = NULL) {
   # "todos" (ou NULL) -> todos os anos HABILITADOS no painel (ate
   # segunda ordem, 2022 e 2026 — o tsedb pre-carregado via tsesqlr
   # cobre apenas esses)
@@ -217,6 +232,13 @@ gerar_call_tsebr <- function(familia, ano, uf, cargo = NULL,
       paste0("tsebr::tse_detalhe_municipio(ano = ", ano_param,
               ", uf='", uf, "', metrica='",
               metrica %||% "abstencoes", "')")
+  } else if (identical(familia, "detalhe_secao")) {
+    # sempre via download tsebr + harmonizacao do DW (tsesqlr nao
+    # cobre submunicipal); beep:: por ser funcao do proprio pacote
+    corpo <- paste0("beep::tse_detalhe_secao(ano = ", ano_param,
+                    ", uf='", uf, "', metrica='",
+                    metrica %||% "abstencoes", "', agregar_por='",
+                    agregar_por %||% "subdistrito", "')")
   } else if (identical(familia, "prestacao")) {
     corpo <- paste0("tsebr::tse_prestacao_uf(ano = ", ano_param,
                     ", tipo='", tipo %||% "receitas", "')")
