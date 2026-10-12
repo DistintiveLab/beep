@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9016</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9017</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -278,6 +278,41 @@
 <ul><li>Verificação ponta a ponta no painel (Região, Mapa, Globo, Baixar) nos níveis subdistrito/setor com dados DF; caches e TTLs; testes de sync do esqueleto se <code>painel_dw.R</code> mudar; atualizar AGENTS.md e este roadmap com o resultado (incl. números da validação P3).</li>
 </ul><p><strong>Critério de pronto do piloto:</strong> indicador “abstenções 2026 (1º turno) por RA do DF” visível de ponta a ponta no painel, com nota metodológica da ponte seção→RA e relatório de não-casados; Censo por setor como segundo indicador de fumaça.</p>
 </div>
+</div>
+<div class="section level2">
+<h2 id="id_10-execução-do-piloto-2026--resultado">10. Execução do piloto (2026) — resultado<a class="anchor" aria-label="anchor" href="#id_10-execu%C3%A7%C3%A3o-do-piloto-2026--resultado"></a></h2>
+<p>P1–P5 executados em outubro/2026 contra o DW de produção. Números da validação, para reencontrar fácil:</p>
+<div class="section level3">
+<h3 id="p1--censo-por-setor-executado">P1 — Censo por setor (executado)<a class="anchor" aria-label="anchor" href="#p1--censo-por-setor-executado"></a></h3>
+<ul><li>Carga emitida pela inserção do beep (marcador <code># censo-origem:</code>); mdata_id <strong>4</strong> no DW, <strong>5342 setores</strong> do DF com dado, soma <strong>1.326.750</strong> igual ao valor municipal já gravado (diferença 0).</li>
+<li>
+<strong>76 setores ficaram sem dado</strong> (sem domicílios recenseados ou sem a variável — nota de fonte, não erro de carga).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="p2--subdistritora-executado">P2 — Subdistrito/RA (executado)<a class="anchor" aria-label="anchor" href="#p2--subdistritora-executado"></a></h3>
+<ul><li>
+<code><a href="reference/incorporar_subdistritos.html">incorporar_subdistritos()</a></code> no pacote e <strong>33 RAs</strong> carregadas no DW (bloco local_id 3000000+, <code>nivel_tipo = 'subdistrito'</code>); o painel rotula “Subdistrito (RA)” com chave por tipo (largura 11 compartilhada com bairro, quem decide é o <code>nivel_tipo</code>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="p3--ponte-seçãoterritório-executada">P3 — Ponte seção→território (executada)<a class="anchor" aria-label="anchor" href="#p3--ponte-se%C3%A7%C3%A3oterrit%C3%B3rio-executada"></a></h3>
+<ul><li>Tabela de harmonização <code>tse_secao_bairro</code> no DW: <strong>7050 seções</strong> (2026/DF) cruzadas contra <strong>33 RAs e 552 setores</strong>, <strong>100% por ponto</strong> (contém/KNN), <strong>0 conflitos</strong> de fronteira, cobertura de eleitores <strong>1.0000</strong> (2.253.132 eleitores).</li>
+<li>Workaround de ambiente: KNN pesado em PostGIS derrubava o backend (crash LLVM); <code>SET jit = off</code> na sessão resolve.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="p4--detalhe-por-seção-agregado-implementado">P4 — Detalhe por seção agregado (implementado)<a class="anchor" aria-label="anchor" href="#p4--detalhe-por-se%C3%A7%C3%A3o-agregado-implementado"></a></h3>
+<ul><li>Família <code>detalhe_secao</code> no upload (<code><a href="https://rdrr.io/pkg/tsebr/man/tse_resultados_secao.html" class="external-link">tsebr::tse_resultados_secao</a></code>, exportada a partir do tsebr 0.0.5.9013) + <code><a href="reference/tse_detalhe_secao.html">tse_detalhe_secao()</a></code> no beep; agregação espelha a semântica de <code>tse_detalhe_municipio</code> (dedupe first() por seção-turno, soma por local, período 31/12) para manter comparabilidade com as séries municipais.</li>
+<li>Validação DF 2026 (nada gravado por essa via — a carga fica por conta do app): abstenções <strong>426.924</strong> e aptos <strong>2.258.320</strong> idênticos nos três níveis (RA = setor = município, diff 0), <strong>zero seções descartadas</strong>.</li>
+<li>O zip nacional <code>detalhe_votacao_secao_2026.zip</code> <strong>existe</strong> (o comentário antigo do tsebr “2026+ só bweb” estava errado e foi corrigido); divergência bweb×zip no agregado municipal (426.077 vs 426.924 abstenções, ~0,2%; ~0,6% em aptos) anotada como nota de fonte.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="p5--fechamento-esta-seção">P5 — Fechamento (esta seção)<a class="anchor" aria-label="anchor" href="#p5--fechamento-esta-se%C3%A7%C3%A3o"></a></h3>
+<ul><li>
+<strong>+23 testes</strong> (ponte ponto-no-polígono, dedupe seção-turno, agregação sintética, call string da família <code>detalhe_secao</code>, resolução de fonte, níveis): suíte <strong>FAIL 0 | SKIP 9 | PASS 909</strong> (baseline 886).</li>
+<li>
+<strong>Veredicto leafletgl:</strong> não adotado. A aba Mapa é municipal-only por design e o globo em canvas d3 já absorve as 33 RAs; os 5418 setores do DF degradam para destaque+UF pelo teto de feições (comportamento existente). Se um dia o tesselado municipal-completo por setor for exigido, <code>addGlPolygons</code> como Suggests com fallback no <code>addPolygons</code> é viável — não vale a dependência hoje.</li>
+<li>
+<strong>Incorporação perdida (diagnóstico do caso relatado):</strong> a chamada manual <code>ampliar_nivel_territorial(...)</code> do usuário falhou por três motivos — typo no nome da função, <code>con = NULL</code> gravaria no beepdb em vez do DW do painel, e a chamada direta não registra <code>niveis_carga</code>. Além disso o atributo <code>code_neighborhood</code> é vazio em 5418/5418 setores do DF e o geobr <code>neighborhoods_2022</code> não cobre a UF 53 — o recorte submunicipal correto no DF é o subdistrito/RA (P2).</li>
+</ul></div>
 </div>
 </div>
 
