@@ -1194,23 +1194,64 @@ painel_geojson <- function(x) {
 
 #' Paleta de cores do mapa (port fiel do mypallet do labourvaluesdatapanel):
 #' divergente centrada em 0 quando ha negativos, com rampas invertidas
-#' conforme o argumento (checkbox "Inverter cores da escala")
+#' conforme o argumento (checkbox "Inverter cores da escala"; a inversao
+#' tambem vale para dados so positivos). O argumento escala controla o
+#' dominio das cores (seletor "Escala" da toolbar do mapa): "zero" ancora
+#' em 0 (historico, comparavel entre datas), "minmax" usa a faixa observada
+#' no refdate (contraste maximo em faixas estreitas, como taxas de 16 a
+#' 23%) e "quantil" classifica por posicao no ranking (colorQuantile).
 #' @keywords internal
-painel_paleta <- function(values, invertida = FALSE) {
+painel_paleta <- function(values, invertida = FALSE,
+                          escala = c("zero", "minmax", "quantil")) {
+  escala <- match.arg(escala)
   values[!is.finite(values)] <- NA_real_
   if (!any(is.finite(values))) {
     return(function(value) rep("transparent", length(value)))
   }
+  finitos <- values[is.finite(values)]
   qtt <- length(values)
   if (isTRUE(invertida)) {
-    negative <- grDevices::colorRampPalette(c("#0000FF", "#C8C8FF"))(qtt)
-    positive <- grDevices::colorRampPalette(c("#FFC8C8", "#FF0000"))(qtt)
+    rampa_neg <- grDevices::colorRampPalette(c("#0000FF", "#C8C8FF"))
+    rampa_pos <- grDevices::colorRampPalette(c("#FFC8C8", "#FF0000"))
+    rampa_so_positivos <- grDevices::colorRampPalette(c("#FF0000", "#FFC8C8"))
   } else {
-    negative <- grDevices::colorRampPalette(c("#FF0000", "#C8C8FF"))(qtt)
-    positive <- grDevices::colorRampPalette(c("#C8C8FF", "#0000FF"))(qtt)
+    rampa_neg <- grDevices::colorRampPalette(c("#FF0000", "#C8C8FF"))
+    rampa_pos <- grDevices::colorRampPalette(c("#C8C8FF", "#0000FF"))
+    rampa_so_positivos <- grDevices::colorRampPalette(c("#FFC8C8", "#FF0000"))
   }
-  onlypositive <- grDevices::colorRampPalette(c("#FFC8C8", "#FF0000"))(qtt)
 
+  # quantil: classes por posicao no ranking; sem valores distintos nao ha
+  # quebras, entao cai no modo "zero"
+  if (escala == "quantil" && length(unique(finitos)) > 1) {
+    return(leaflet::colorQuantile(rampa_so_positivos(5), domain = finitos,
+                                  n = 5, na.color = "transparent"))
+  }
+
+  if (escala == "minmax") {
+    dominio <- range(finitos)
+    if (dominio[1] == dominio[2]) {
+      margem <- max(abs(dominio[1]) * 1e-8, 1e-12)
+      dominio <- dominio + c(-margem, margem)
+    }
+    if (dominio[1] >= 0) {
+      cores <- rampa_so_positivos(2 * qtt)
+    } else if (dominio[2] <= 0) {
+      cores <- rampa_neg(2 * qtt)
+    } else {
+      # rampa divergente partida no valor 0, nao no meio mecanico do
+      # dominio: a fatia negativa recebe cores na proporcao da distancia
+      # do minimo ate o zero
+      frac0 <- (0 - dominio[1]) / (dominio[2] - dominio[1])
+      n_neg <- max(1, min(2 * qtt - 1, round(2 * qtt * frac0)))
+      cores <- c(rampa_neg(n_neg), rampa_pos(2 * qtt - n_neg))
+    }
+    return(leaflet::colorNumeric(cores, domain = dominio,
+                                 na.color = "transparent"))
+  }
+
+  negative <- rampa_neg(qtt)
+  positive <- rampa_pos(qtt)
+  onlypositive <- rampa_so_positivos(qtt)
   suppressWarnings({
     maximum <- max(values, na.rm = TRUE) * 1.1
     minimum <- min(values, na.rm = TRUE) * 1.1
@@ -1219,6 +1260,10 @@ painel_paleta <- function(values, invertida = FALSE) {
       minimum == 0 && maximum == 0) {
     minimum <- -1e-12
     maximum <- 1e-12
+  }
+
+  if (is.infinite(maximum) || is.infinite(minimum)) {
+    return(function(value) rep("transparent", length(value)))
   }
 
   if (minimum < 0 && maximum > 0) {
@@ -1236,11 +1281,7 @@ painel_paleta <- function(values, invertida = FALSE) {
     cores <- onlypositive
   }
 
-  if (is.infinite(maximum) || is.infinite(minimum)) {
-    function(value) rep("transparent", length(value))
-  } else {
-    leaflet::colorNumeric(cores, domain = dominio, na.color = "transparent")
-  }
+  leaflet::colorNumeric(cores, domain = dominio, na.color = "transparent")
 }
 
 #' Numeros no padrao pt-BR para rotulos de mapa e legenda

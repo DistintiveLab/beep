@@ -4,13 +4,27 @@
 \alias{painel_paleta}
 \title{Paleta de cores do mapa (port fiel do mypallet do labourvaluesdatapanel):
 divergente centrada em 0 quando ha negativos, com rampas invertidas
-conforme o argumento (checkbox "Inverter cores da escala")}
+conforme o argumento (checkbox "Inverter cores da escala"; a inversao
+tambem vale para dados so positivos). O argumento escala controla o
+dominio das cores (seletor "Escala" da toolbar do mapa): "zero" ancora
+em 0 (historico, comparavel entre datas), "minmax" usa a faixa observada
+no refdate (contraste maximo em faixas estreitas, como taxas de 16 a
+23\%) e "quantil" classifica por posicao no ranking (colorQuantile).}
 \usage{
-painel_paleta(values, invertida = FALSE)
+painel_paleta(
+  values,
+  invertida = FALSE,
+  escala = c("zero", "minmax", "quantil")
+)
 }
 \description{
 Paleta de cores do mapa (port fiel do mypallet do labourvaluesdatapanel):
 divergente centrada em 0 quando ha negativos, com rampas invertidas
-conforme o argumento (checkbox "Inverter cores da escala")
+conforme o argumento (checkbox "Inverter cores da escala"; a inversao
+tambem vale para dados so positivos). O argumento escala controla o
+dominio das cores (seletor "Escala" da toolbar do mapa): "zero" ancora
+em 0 (historico, comparavel entre datas), "minmax" usa a faixa observada
+no refdate (contraste maximo em faixas estreitas, como taxas de 16 a
+23\%) e "quantil" classifica por posicao no ranking (colorQuantile).
 }
 \keyword{internal}

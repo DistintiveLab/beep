@@ -5,8 +5,9 @@
 #'   indicadores municipais mantem a malha historica; indicadores de outros
 #'   niveis (UF, regiao, submunicipais) recebem a malha do nivel ou, quando
 #'   ela excede o limite de feicoes, o contorno dos municipios com dados
-#'   (degradacao honesta). Slider de ano animado, paleta divergente centrada
-#'   em 0 (invertivel) e atualizacao incremental (port do
+#'   (degradacao honesta). Slider de ano animado, paleta com seletor de
+#'   escala de cores (do zero, min-max ou quantil, invertivel) e
+#'   atualizacao incremental (port do
 #'   labourvaluesdatapanel): a geometria e enviada uma unica vez e apenas
 #'   cores/tooltips atravessam a conexao; trocar de nivel troca a malha no
 #'   proxy, sem reconstruir o widget.
@@ -39,7 +40,11 @@ mod_panel_map_ui <- function(id) {
                                                              loop = FALSE),
                            width = "100%")),
       tags$div(class = "form-group painel-mapa-inverter",
-        tags$label(`for` = ns("inverter"), "Escala"),
+        tags$label(`for` = ns("escala"), "Escala"),
+        shiny::selectInput(ns("escala"), NULL,
+          choices = c("Do zero" = "zero", "Mín-máx" = "minmax",
+                      "Quantil" = "quantil"),
+          selected = "zero", width = "140px"),
         shiny::checkboxInput(ns("inverter"), "Inverter cores"))),
     tags$p(class = "painel-mapa-status",
            shiny::textOutput(ns("status"), inline = TRUE)),
@@ -184,7 +189,9 @@ mod_panel_map_server <- function(id) {
 
     paleta <- shiny::reactive({
       d <- if (is.null(mapa_dados())) NA_real_ else mapa_dados()$value
-      painel_paleta(d, invertida = isTRUE(input$inverter))
+      escala <- if (is.null(input$escala)) "zero" else input$escala
+      painel_paleta(d, invertida = isTRUE(input$inverter),
+                    escala = escala)
     })
 
     output$status <- shiny::renderText({
@@ -298,25 +305,39 @@ mod_panel_map_server <- function(id) {
       chave <- list(instance = pronto, indicador = input$indicador,
                     data = format(refdate_sel(), "%Y-%m-%d"),
                     inverter = isTRUE(input$inverter),
+                    escala = input$escala,
                     faixa = range(dados, finite = TRUE))
       if (identical(chave, legenda_chave)) return()
       legenda_chave <<- chave
       proxy <- leaflet::leafletProxy("mapa", session = session)
       proxy |> leaflet::removeControl("painel-legenda")
+      quantil_ativo <- identical(input$escala, "quantil") &&
+        length(unique(dados[is.finite(dados)])) > 1
       if (any(is.finite(dados))) {
-        limite <- range(dados, finite = TRUE)
-        if (limite[1] == limite[2]) {
-          margem <- max(abs(limite[1]) * 1e-8, 1e-12)
-          limite <- limite + c(-margem, margem)
-        }
         titulo <- md$data_name[md$mdata_id == input$indicador]
         if (is.na(titulo)) titulo <- md$orig_name[md$mdata_id == input$indicador]
-        proxy |> leaflet::addLegend(
-          "bottomright", layerId = "painel-legenda",
-          # valores como intervalo para contornar o bug do valor unico
-          values = c(limite[1] * 0.99999999, limite[2] * 1.00000001),
-          pal = paleta(), opacity = 0.8, title = titulo,
-          labFormat = function(type, cuts, ...) painel_num(cuts))
+        if (quantil_ativo) {
+          # legenda de classes por quebras de quantil calculadas sobre os
+          # proprios valores do refdate (as duas bordas do intervalo nao
+          # bastam para o colorQuantile)
+          proxy |> leaflet::addLegend(
+            "bottomright", layerId = "painel-legenda",
+            values = dados[is.finite(dados)], pal = paleta(), opacity = 0.8,
+            title = titulo,
+            labFormat = function(type, cuts, ...) painel_num(cuts))
+        } else {
+          limite <- range(dados, finite = TRUE)
+          if (limite[1] == limite[2]) {
+            margem <- max(abs(limite[1]) * 1e-8, 1e-12)
+            limite <- limite + c(-margem, margem)
+          }
+          proxy |> leaflet::addLegend(
+            "bottomright", layerId = "painel-legenda",
+            # valores como intervalo para contornar o bug do valor unico
+            values = c(limite[1] * 0.99999999, limite[2] * 1.00000001),
+            pal = paleta(), opacity = 0.8, title = titulo,
+            labFormat = function(type, cuts, ...) painel_num(cuts))
+        }
       }
     })
 
