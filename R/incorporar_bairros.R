@@ -3,7 +3,9 @@
 # O bairro nao tem malha oficial nacional: a codificacao preferida e a
 # DERIVADA DO CENSO (atributo de bairro nos setores/CNEFE, quando presente),
 # com geometria obtida por dissolve dos setores e codigo estavel
-# municipio(7d) + sequencial(4-5d). O codigo TSE de bairro, quando existir,
+# municipio(7d) + sequencial(4-5d); o Censo 2022 publica 10 digitos
+# (mun7 + sequencial de 3), completado para 4 no resolve. O codigo TSE de
+# bairro, quando existir,
 # chega por tabela de correspondencia (municipio, normalizacao de nome) —
 # ver R/tse_auxiliares.R. O dissolve e local (sf em memoria, sem geobr);
 # a gravacao no DW reusa [ampliar_nivel_territarial()] e a proveniencia vai
@@ -12,8 +14,11 @@
 #' Constroi o codigo completo de bairro a partir do atributo bruto dos
 #' setores: codigo ja completo (11-12 digitos) passa direto; sufixo curto
 #' (1-5 digitos) e zerado a esquerda para 4 e prefixado com o municipio
-#' (prefixo 7d do codigo do setor). Valores nao numericos/vazios viram NA
-#' (o setor fica fora do dissolve — nunca inferir bairro).
+#' (prefixo 7d do codigo do setor). O Censo 2022 publica bairro com 10
+#' digitos (municipio 7d + sequencial de 3): o sequencial e zerado a
+#' esquerda para 4 para chegar na mesma convencao (mun7 + 4d). Valores
+#' nao numericos/vazios viram NA (o setor fica fora do dissolve — nunca
+#' inferir bairro).
 #' @keywords internal
 .resolver_codigo_bairro <- function(bruto, mun7) {
   bruto <- normalizar_codigo_geoloc(bruto)
@@ -35,7 +40,14 @@
     bruto[sufixo] <- paste0(mun7[sufixo], suf)
   }
 
-  meio <- !is.na(bruto) & larg >= 6 & larg <= 10
+  censo10 <- !is.na(bruto) & larg == 10L
+  if (any(censo10)) {
+    bruto[censo10] <- paste0(substr(bruto[censo10], 1, 7),
+                             sprintf("%04d",
+                                     as.integer(substr(bruto[censo10], 8, 10))))
+  }
+
+  meio <- !is.na(bruto) & larg >= 6 & larg <= 9
   if (any(meio)) {
     stop("incorporar_bairros: valores de bairro com ",
          paste(sort(unique(larg[meio])), collapse = "/"),

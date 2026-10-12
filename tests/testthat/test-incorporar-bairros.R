@@ -28,6 +28,13 @@ test_that(".resolver_codigo_bairro rejeita larguras intermediarias", {
                "nem codigo completo")
 })
 
+test_that(".resolver_codigo_bairro converte 10 digitos do Censo 2022", {
+  expect_identical(
+    beep:::.resolver_codigo_bairro(c("4101002001", "1100015006", "-", NA),
+                                   rep("4101002", 4)),
+    c("41010020001", "11000150006", NA_character_, NA_character_))
+})
+
 test_that("dissolve agrupa setores por bairro e deriva o codigo", {
   setores <- sf::st_sf(
     code_tract = c("310620305001001", "310620305001002",

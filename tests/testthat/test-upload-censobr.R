@@ -28,6 +28,15 @@ test_that("call string tracts com recorte", {
   expect_match(chamada, 'corte\\s*=\\s*"V0001 > 0"')
 })
 
+test_that("call string tracts com nivel bairro/subdistrito passa verbatim", {
+  chamada <- gerar_call_censo("tracts", "Basico", 2022, "V0001", "bairro")
+  expect_match(chamada, "^# censo-origem: tracts; censoagg::agregar_setores")
+  expect_match(chamada, "nivel='bairro'")
+  chamada <- gerar_call_censo("tracts", "Basico", 2022, "V0001",
+                              "subdistrito")
+  expect_match(chamada, "nivel='subdistrito'")
+})
+
 test_that("rotulo de selectize antigo e reduzido ao codigo", {
   chamada <- gerar_call_censo(
     "tracts", "Pessoas", 2022,
@@ -69,6 +78,15 @@ test_that("UI do submodulo censo renderiza com parent_session real", {
   expect_s3_class(ui, "shiny.tag.list")
   html <- paste(capture.output(print(ui)), collapse = " ")
   expect_match(html, "data:upload_file", fixed = TRUE)
+  # niveis submunicipais novos no select e nos paineis condicionais
+  # (conditionalPanel escapa aspas simples como &#39; no atributo
+  # data-display-if — normaliza antes de comparar)
+  expect_match(html, 'value="bairro"', fixed = TRUE)
+  expect_match(html, 'value="subdistrito"', fixed = TRUE)
+  cond <- gsub("&#39;", "'", html)
+  expect_match(cond, "['setor','bairro','subdistrito'].includes",
+               fixed = TRUE)
+  expect_match(cond, "['bairro','subdistrito'].includes", fixed = TRUE)
   # bases fixas da UI existem no dicionario 2022 (fallback antes do
   # update dinamico; nomes antigos como "Instrucao" nao existem)
   skip_if_not_installed("censoagg")
