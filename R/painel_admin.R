@@ -154,6 +154,9 @@ aquecer_painel <- function(diretorio = NULL, valores = TRUE, limpar = TRUE) {
     t0 <- proc.time()
     for (id in md$mdata_id) painel_valores_por_ano_cache(id)
     tempos[["valores_por_ano"]] <- (proc.time() - t0)[["elapsed"]]
+    t0 <- proc.time()
+    for (id in md$mdata_id) painel_valores_por_data_cache(id)
+    tempos[["valores_por_data"]] <- (proc.time() - t0)[["elapsed"]]
   }
   res <- data.frame(etapa = names(tempos),
                     segundos = round(unlist(tempos, use.names = FALSE), 3))

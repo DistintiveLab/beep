@@ -95,7 +95,7 @@ painel_rotulo_tempo <- function(freq_name) {
                quinzenal = "Quinzena", mensal = "Mês", bimestral = "Bimestre",
                trimestral = "Trimestre", quadrimestral = "Quadrimestre",
                semestral = "Semestre", anual = "Ano", bienal = "Ano",
-               irregular = "Ano")
+               irregular = "Data")
   if (is.na(f) || !f %in% names(rotulos)) return("Ano")
   unname(rotulos[[f]])
 }
@@ -239,6 +239,20 @@ painel_rotulo_data <- function(datas) {
                       format(datas, "%d/%m/%Y"), anos))
 }
 
+#' Rotulo de aba das planilhas do painel: mesmo criterio de
+#' [painel_rotulo_data()] (ano sozinho quando ele e o unico ponto do ano
+#' na serie), mas com data completa ISO AAAA-MM-DD nos anos de varios
+#' pontos: "/" e proibido em nome de aba de planilha e o ISO ordena
+#' lexicograficamente correto mesmo misturado com "2022"
+#' @keywords internal
+painel_rotulo_aba <- function(datas) {
+  datas <- as.Date(datas)
+  anos <- format(datas, "%Y")
+  contagens <- table(anos)
+  as.character(ifelse(anos %in% names(contagens)[contagens > 1],
+                      format(datas, "%Y-%m-%d"), anos))
+}
+
 #' Serie completa do indicador ja reduzida a 1 observacao por localidade x
 #' ano (ultimo refdate finito do ano): UMA query por indicador em vez de uma
 #' por (indicador, ano), que o mapa animado e a aba Baixar pagariam a cada
@@ -257,6 +271,26 @@ painel_valores_por_ano <- function(con, mdata_id) {
     "FROM data_values",
     "WHERE mdata_id = %d AND value <> 'NaN'::float8",
     "ORDER BY local_id, ano, refdate DESC"),
+    mdata_id))
+}
+
+#' Serie completa do indicador com TODAS as observacoes (uma linha por
+#' localidade x refdate, sem reducao ao ultimo ponto do ano): base do
+#' explorar e do recorte por data da aba Baixar, consistente com o slider
+#' por data do mapa (eleicoes com 2 turnos aparecem nos dois refdates)
+#' @keywords internal
+painel_valores_por_data <- function(con, mdata_id) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  if (is.na(mdata_id)) {
+    return(data.frame(local_id = integer(0), refdate = as.Date(character(0)),
+                      value = numeric(0), ano = integer(0)))
+  }
+  DBI::dbGetQuery(con, sprintf(paste(
+    "SELECT local_id, refdate, value,",
+    "date_part('year', refdate)::int AS ano",
+    "FROM data_values",
+    "WHERE mdata_id = %d AND value <> 'NaN'::float8",
+    "ORDER BY local_id, refdate"),
     mdata_id))
 }
 
@@ -280,27 +314,37 @@ painel_ranking_vazio <- function() {
              rank_br = NA_integer_, n_br = NA_integer_)
 }
 
-#' Posicao de uma localidade num indicador e ano: quantos municipios do
-#' pais e da propria UF tem valor MAIOR naquele ano
+#' Posicao de uma localidade num indicador e data: quantos municipios do
+#' pais e da propria UF tem valor MAIOR naquela data
 #'
 #' Os dois universos sao municipais (largura 7 do geoloc_id): o pais inteiro
 #' e a UF de origem, pelo prefixo de 2 digitos do geoloc_id. A posicao conta
 #' os valores estritamente maiores, entao empates dividem a mesma posicao; o
-#' total (`n_uf`, `n_br`) e quantos municipios tem dado no ano para o
-#' indicador. Vale a regra de ano de [painel_valores_ano()] (ultimo refdate
-#' de cada localidade dentro do ano, `DISTINCT ON` + faixa `make_date`), e o
-#' valor da propria localidade e o do mesmo ano.
+#' total (`n_uf`, `n_br`) e quantos municipios tem dado na data para o
+#' indicador. Com `refdate` valido a comparacao e no dia exato (slider por
+#' data do mapa); sem `refdate`, vale a regra de ano de [painel_valores_ano()]
+#' (ultimo refdate de cada localidade dentro do ano, `DISTINCT ON` + faixa
+#' `make_date`), e o valor da propria localidade e do mesmo ano.
 #'
 #' Contar de cima para baixo assume "maior e melhor", o sentido dos
 #' indicadores compostos do catalogo do painel: o resumo nao guarda direcao
 #' do indicador (a tabela mdata nao tem essa coluna).
 #' @keywords internal
-painel_ranking_local <- function(con, mdata_id, local_id, ano) {
+painel_ranking_local <- function(con, mdata_id, local_id, ano,
+                                 refdate = NULL) {
   mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
   local_id <- suppressWarnings(as.integer(local_id))[1]
   ano <- suppressWarnings(as.integer(ano))[1]
+  refdate <- as.Date(refdate)[1]
   if (is.na(mdata_id) || is.na(local_id) || is.na(ano)) {
     return(painel_ranking_vazio())
+  }
+  corte <- if (!is.na(refdate)) {
+    sprintf("AND v.refdate = date '%s'", format(refdate, "%Y-%m-%d"))
+  } else {
+    sprintf(paste("AND v.refdate >= make_date(%d, 1, 1)",
+                  "AND v.refdate < make_date(%d, 1, 1)"),
+            ano, ano + 1L)
   }
   q <- DBI::dbGetQuery(con, sprintf(paste(
     "WITH alvo AS (",
@@ -310,7 +354,7 @@ painel_ranking_local <- function(con, mdata_id, local_id, ano) {
     "  JOIN data_values v ON v.local_id = l.local_id",
     "  WHERE l.local_id = %d AND length(g.geoloc_id::text) = 7",
     "  AND v.mdata_id = %d",
-    "  AND v.refdate >= make_date(%d, 1, 1) AND v.refdate < make_date(%d, 1, 1)",
+    "  %s",
     "  AND v.value <> 'NaN'::float8",
     "  ORDER BY v.refdate DESC LIMIT 1",
     "), vals AS (",
@@ -319,7 +363,7 @@ painel_ranking_local <- function(con, mdata_id, local_id, ano) {
     "  JOIN local l USING (local_id)",
     "  JOIN geoloc g USING (geoloc_id)",
     "  WHERE v.mdata_id = %d",
-    "  AND v.refdate >= make_date(%d, 1, 1) AND v.refdate < make_date(%d, 1, 1)",
+    "  %s",
     "  AND v.value <> 'NaN'::float8",
     "  AND length(g.geoloc_id::text) = 7",
     "  ORDER BY v.local_id, v.refdate DESC",
@@ -331,8 +375,8 @@ painel_ranking_local <- function(con, mdata_id, local_id, ano) {
     "  AS rank_br,",
     "  (SELECT count(*) FROM vals, alvo)::int AS n_br",
     "FROM vals v, alvo a WHERE v.uf = a.uf"),
-    local_id, mdata_id, ano, ano + 1L,
-    mdata_id, ano, ano + 1L))
+    local_id, mdata_id, corte,
+    mdata_id, corte))
   if (!NROW(q)) return(painel_ranking_vazio())
   r <- vapply(q, function(x) suppressWarnings(as.numeric(x))[1], numeric(1))
   # alvo vazio (localidade nao municipal ou sem dado no ano) devolve a
@@ -1024,15 +1068,17 @@ painel_compostos <- function(con) {
 }
 
 #' Resumo por grupo do catalogo: um cartao por indicador composto com o
-#' valor mais recente na localidade (rotulo, valor e ano) — conteudo do
-#' "Resumo da regiao" na aba Regiao
+#' valor mais recente na localidade ate a data de corte (rotulo, valor e
+#' data) — conteudo do "Resumo da regiao" na aba Regiao
 #'
 #' @param hierarquia tabela de [painel_hierarquia()]
 #' @param compostos tabela de [painel_compostos()]
 #' @param valores tabela de [painel_valores_local_todos()]
+#' @param refdate data de corte: sem ela, a observacao mais recente; com ela,
+#'   a ultima observacao em ou antes da data (slider por data do resumo)
 #' @keywords internal
 painel_resumo_grupos <- function(hierarquia, compostos, valores,
-                               ano = NULL) {
+                               refdate = NULL) {
   vazio <- data.frame(grupo = character(0), raiz = character(0),
                       mdata_id = integer(0), rotulo = character(0),
                       valor = numeric(0), refdate = as.Date(character(0)),
@@ -1041,13 +1087,13 @@ painel_resumo_grupos <- function(hierarquia, compostos, valores,
   if (!NROW(hierarquia) || !NROW(compostos) || !NROW(valores)) return(vazio)
   h <- hierarquia[hierarquia$mdata_id %in% compostos$mdata_id, ]
   if (!nrow(h)) return(vazio)
-  ano <- suppressWarnings(as.integer(ano)[1])
+  refdate <- as.Date(refdate)[1]
   linhas <- lapply(seq_len(nrow(h)), function(i) {
     v <- valores[valores$mdata_id == h$mdata_id[i] &
                    is.finite(valores$value), ]
     if (!nrow(v)) return(NULL)
-    if (!is.na(ano))
-      v <- v[as.integer(format(v$refdate, "%Y")) <= ano, , drop = FALSE]
+    if (!is.na(refdate))
+      v <- v[v$refdate <= refdate, , drop = FALSE]
     if (!nrow(v)) return(NULL)
     ultimo <- which.max(v$refdate)
     anterior <- if (ultimo > 1L) ultimo - 1L else 0L
@@ -1649,6 +1695,23 @@ painel_valores_por_ano_cache <- function(mdata_id) {
       painel_valores_por_ano(con, mdata_id)))
 }
 
+#' Serie completa com todas as observacoes (localidade x refdate),
+#' cacheada: uma chave por indicador, base do explorar e do recorte por
+#' data da aba Baixar
+#' @keywords internal
+painel_valores_por_data_cache <- function(mdata_id) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  if (is.na(mdata_id)) {
+    return(data.frame(local_id = integer(0), refdate = as.Date(character(0)),
+                      value = numeric(0), ano = integer(0)))
+  }
+  painel_cache_get(
+    painel_cache_chave(sprintf("valores_por_data_%d", mdata_id)),
+    painel_cache_ttl[["valores"]],
+    function() painel_com_con(function(con)
+      painel_valores_por_data(con, mdata_id)))
+}
+
 #' Valores do ultimo refdate por localidade num ano: fatia do cache
 #' achatado [painel_valores_por_ano_cache()] com a assinatura historica
 #' (mapa, baixar e ranking seguem sem mudanca de chamada)
@@ -1663,18 +1726,24 @@ painel_valores_ano_cache <- function(mdata_id, ano) {
   painel_filtrar_ano(painel_valores_por_ano_cache(mdata_id), ano)
 }
 
-#' Ranking de uma localidade num indicador e ano, cacheado
+#' Ranking de uma localidade num indicador e data, cacheado: com `refdate`
+#' valido, ranking no dia exato; sem `refdate`, no ultimo refdate do ano
+#' (contrato historico)
 #' @keywords internal
-painel_ranking_local_cache <- function(mdata_id, local_id, ano) {
+painel_ranking_local_cache <- function(mdata_id, local_id, ano,
+                                       refdate = NULL) {
   mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
   local_id <- suppressWarnings(as.integer(local_id))[1]
   ano <- suppressWarnings(as.integer(ano))[1]
+  refdate <- as.Date(refdate)[1]
   if (is.na(mdata_id) || is.na(local_id) || is.na(ano)) {
     return(painel_ranking_vazio())
   }
   painel_cache_get(
-    painel_cache_chave(sprintf("ranking_%d_%d_%d", mdata_id, local_id, ano)),
+    painel_cache_chave(sprintf("ranking_%d_%d_%d_%s", mdata_id, local_id,
+                               ano, if (!is.na(refdate))
+                                 format(refdate, "%Y%m%d") else "ano")),
     painel_cache_ttl[["valores"]],
     function() painel_com_con(function(con)
-      painel_ranking_local(con, mdata_id, local_id, ano)))
+      painel_ranking_local(con, mdata_id, local_id, ano, refdate)))
 }

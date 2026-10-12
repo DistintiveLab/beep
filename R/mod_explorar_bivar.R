@@ -33,9 +33,9 @@ mod_explorar_bivar_ui <- function(id) {
       plotly::plotlyOutput(ns("scatter"))))
 }
 
-#' Server da correlacao: pares completos alinhados por (localidade, ano)
-#' com NAs removidos por pares; Pearson e Spearman com n de pares sempre
-#' visível (badge quando insuficiente), leitura pooled/between/within e
+#' Server da correlacao: pares completos alinhados por (localidade, data
+#' de referencia) com NAs removidos por pares; Pearson e Spearman com n de
+#' pares sempre visível (badge quando insuficiente), leitura pooled/between/within e
 #' janela com preset sugerido de últimos 10 anos. `par_inicial` é um
 #' reactive que recebe list(x = mdata_id, y = mdata_id) vindo da matriz
 #' ou do ranking de preditores
@@ -73,7 +73,7 @@ mod_explorar_bivar_server <- function(id, par_inicial = NULL) {
       con <- explorar_con()
       if (is.null(con)) return(NULL)
       on.exit(DBI::dbDisconnect(con), add = TRUE)
-      tryCatch(painel_valores_por_ano(con, as.integer(selecao)),
+      tryCatch(painel_valores_por_data(con, as.integer(selecao)),
                error = function(e) NULL)
     }
     serie_x <- shiny::reactive(pega_serie(input$x))
@@ -181,12 +181,16 @@ mod_explorar_bivar_server <- function(id, par_inicial = NULL) {
       nm <- nomes()
       p$local <- if (!is.null(nm))
         unname(nm[as.character(p$local_id)]) else as.character(p$local_id)
-      p$txt <- if (all(is.na(p$ano))) p$local else
-        paste0(p$local, "\n", p$ano)
+      com_data <- !is.na(p$refdate)
+      p$txt <- p$local
+      if (any(com_data)) {
+        rot_data <- painel_rotulo_data(p$refdate[com_data])
+        p$txt[com_data] <- paste0(p$local[com_data], "\n", rot_data)
+      }
       titulo <- switch(input$leitura,
         between = "Between: médias por localidade",
         within = "Within: desvios da localidade",
-        "Pares completos por (localidade, ano)")
+        "Pares completos por (localidade, data)")
       g <- ggplot2::ggplot(p, ggplot2::aes(.data$x, .data$y,
                                           text = .data$txt)) +
         ggplot2::geom_point(alpha = 0.45, color = "#1351B4", na.rm = TRUE) +

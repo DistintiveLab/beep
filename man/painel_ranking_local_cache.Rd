@@ -2,11 +2,15 @@
 % Please edit documentation in R/painel_dw.R
 \name{painel_ranking_local_cache}
 \alias{painel_ranking_local_cache}
-\title{Ranking de uma localidade num indicador e ano, cacheado}
+\title{Ranking de uma localidade num indicador e data, cacheado: com \code{refdate}
+valido, ranking no dia exato; sem \code{refdate}, no ultimo refdate do ano
+(contrato historico)}
 \usage{
-painel_ranking_local_cache(mdata_id, local_id, ano)
+painel_ranking_local_cache(mdata_id, local_id, ano, refdate = NULL)
 }
 \description{
-Ranking de uma localidade num indicador e ano, cacheado
+Ranking de uma localidade num indicador e data, cacheado: com \code{refdate}
+valido, ranking no dia exato; sem \code{refdate}, no ultimo refdate do ano
+(contrato historico)
 }
 \keyword{internal}

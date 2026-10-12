@@ -1,17 +1,20 @@
-# Exploracao de indicadores: pares alinhados, correlacao e ficha por ano
-# (backend puro, sem banco; ver pndr_coord/roadmap_exploracao_indicadores.md) ---
+# Exploracao de indicadores: pares alinhados por data de referencia,
+# correlacao e ficha por data (backend puro, sem banco; ver
+# pndr_coord/roadmap_exploracao_indicadores.md) ---
 
-test_that("explorar_pares faz inner join por (local_id, ano) só com pares finitos", {
+test_that("explorar_pares faz inner join por (local_id, refdate) só com pares finitos", {
   sx <- data.frame(
     local_id = c(1L, 1L, 2L),
+    refdate = as.Date(c("2019-12-31", "2020-12-31", "2019-12-31")),
     ano = c(2019L, 2020L, 2019L),
     value = c(1, 2, NA_real_))
   sy <- data.frame(
     local_id = c(1L, 1L, 3L),
-    ano = c(2019L, 2020L, 2019L),
+    refdate = as.Date(c("2019-12-31", "2020-12-31", "2019-12-31")),
     value = c(10, 20, 30))
   p <- beep:::explorar_pares(sx, sy)
   expect_identical(nrow(p), 2L)
+  expect_identical(p$refdate, as.Date(c("2019-12-31", "2020-12-31")))
   expect_identical(p$ano, c(2019L, 2020L))
   expect_identical(p$local_id, c(1L, 1L))
   expect_equal(p$x, c(1, 2))
@@ -19,9 +22,10 @@ test_that("explorar_pares faz inner join por (local_id, ano) só com pares finit
 })
 
 test_that("explorar_pares devolve vazio tipado", {
-  sx <- data.frame(local_id = 1L, ano = 2019L, value = 1)
+  sx <- data.frame(local_id = 1L, refdate = as.Date("2019-12-31"),
+                   ano = 2019L, value = 1)
   v <- beep:::explorar_pares(sx[0, ], sx)
-  expect_identical(names(v), c("local_id", "ano", "x", "y"))
+  expect_identical(names(v), c("local_id", "refdate", "ano", "x", "y"))
   expect_identical(nrow(v), 0L)
   expect_type(v$local_id, "integer")
   expect_type(v$x, "double")
@@ -52,15 +56,19 @@ test_that("explorar_cor exige no mínimo 3 pares completos", {
   expect_true(grepl("3 pares", r$aviso))
 })
 
-test_that("explorar_ficha resume por ano ignorando NA e sem bandeiras", {
+test_that("explorar_ficha resume por data ignorando NA e sem bandeiras", {
   s <- data.frame(
     local_id = c(1L, 1L, 2L, 2L),
-    ano = c(2019L, 2020L, 2019L, 2020L),
+    refdate = as.Date(c("2019-12-31", "2020-12-31",
+                        "2019-12-31", "2020-12-31")),
     value = c(1, 2, NA_real_, 4))
   f <- beep:::explorar_ficha(s)
-  expect_identical(nrow(f$por_ano), 2L)
-  expect_equal(f$por_ano$n, c(1L, 2L))
-  expect_identical(f$ultimo_ano, 2020L)
+  expect_identical(nrow(f$por_data), 2L)
+  expect_equal(f$por_data$n, c(1L, 2L))
+  expect_identical(f$por_data$rotulo, c("2019", "2020"))
+  expect_identical(f$ultima_data, as.Date("2020-12-31"))
+  expect_identical(f$ultimo_rotulo, "2020")
+  expect_identical(f$datas, as.Date(c("2019-12-31", "2020-12-31")))
   expect_equal(f$n_locais, 2L)
   expect_false(f$degenerada)
   expect_false(f$cauda_pesada)
@@ -69,16 +77,17 @@ test_that("explorar_ficha resume por ano ignorando NA e sem bandeiras", {
 test_that("explorar_ficha marca série constante como degenerada", {
   s <- data.frame(
     local_id = c(1L, 1L, 2L),
-    ano = c(2019L, 2020L, 2020L),
+    refdate = as.Date(c("2019-12-31", "2020-12-31", "2020-12-31")),
     value = c(5, 5, 5))
   f <- beep:::explorar_ficha(s)
   expect_true(f$degenerada)
-  expect_true(is.na(f$por_ano$cv[1]))
+  expect_true(is.na(f$por_data$cv[1]))
 })
 
 test_that("explorar_ficha devolve NULL para série vazia", {
   expect_null(beep:::explorar_ficha(data.frame()))
-  s <- data.frame(local_id = 1L, ano = 2019L, value = NA_real_)
+  s <- data.frame(local_id = 1L, refdate = as.Date("2019-12-31"),
+                  value = NA_real_)
   expect_null(beep:::explorar_ficha(s))
 })
 
@@ -91,6 +100,8 @@ test_that("explorar_dicionario cruza o catálogo com classe e fonte", {
 test_that("explorar_leituras projeta between e within por localidade", {
   p <- data.frame(
     local_id = c(1L, 1L, 2L, 3L),
+    refdate = as.Date(c("2019-12-31", "2020-12-31",
+                        "2019-12-31", "2020-12-31")),
     ano = c(2019L, 2020L, 2019L, 2020L),
     x = c(1, 3, 10, 7),
     y = c(2, 6, 20, 14))
@@ -101,25 +112,30 @@ test_that("explorar_leituras projeta between e within por localidade", {
   expect_equal(b$x[b$local_id == 1L], 2)
   expect_equal(b$y[b$local_id == 2L], 20)
   expect_true(all(is.na(b$ano)))
+  expect_true(all(is.na(b$refdate)))
   w <- beep:::explorar_leituras(p, "within")
   expect_identical(nrow(w), 2L)
   expect_equal(w$x[w$local_id == 1L & w$ano == 2019L], -1)
   expect_equal(w$y[w$local_id == 1L & w$ano == 2020L], 2)
+  expect_false(any(is.na(w$refdate)))
 })
 
 test_that("explorar_wide empilha por full outer join (nunca listwise)", {
-  s1 <- data.frame(local_id = 1L, ano = c(2019L, 2020L), value = c(1, 2))
-  s2 <- data.frame(local_id = c(1L, 2L), ano = c(2020L, 2020L),
+  s1 <- data.frame(local_id = 1L,
+                   refdate = as.Date(c("2019-12-31", "2020-12-31")),
+                   value = c(1, 2))
+  s2 <- data.frame(local_id = c(1L, 2L),
+                   refdate = as.Date(c("2020-12-31", "2020-12-31")),
                    value = c(3, 4))
   w <- beep:::explorar_wide(list("11" = s1, "22" = s2))
   expect_identical(nrow(w), 3L)
-  expect_setequal(names(w), c("local_id", "ano", "11", "22"))
+  expect_setequal(names(w), c("local_id", "refdate", "11", "22"))
   expect_true(is.na(w[["11"]][w$local_id == 2L]))
   expect_null(beep:::explorar_wide(list()))
 })
 
 test_that("explorar_degeneradas marca colunas de dispersão nula", {
-  w <- data.frame(local_id = 1L, ano = 2019L,
+  w <- data.frame(local_id = 1L, refdate = as.Date("2019-12-31"),
                   a = c(1, 1), b = c(1, 2))
   d <- beep:::explorar_degeneradas(w)
   expect_true(d[["a"]])
@@ -129,7 +145,8 @@ test_that("explorar_degeneradas marca colunas de dispersão nula", {
 test_that("explorar_matriz calcula r e n pairwise por leitura", {
   w <- data.frame(
     local_id = c(1L, 1L, 2L, 2L),
-    ano = c(2019L, 2020L, 2019L, 2020L),
+    refdate = as.Date(c("2019-12-31", "2020-12-31",
+                        "2019-12-31", "2020-12-31")),
     a = c(1, 2, 3, 4),
     b = c(2, 4, 6, 8),
     c = c(10, 10, 10, 10))
@@ -147,7 +164,8 @@ test_that("explorar_matriz calcula r e n pairwise por leitura", {
 
 test_that("explorar_matriz conta pares completos com NA no wide", {
   w <- data.frame(local_id = c(1L, 1L, 2L),
-                  ano = c(2019L, 2020L, 2019L),
+                  refdate = as.Date(c("2019-12-31", "2020-12-31",
+                                      "2019-12-31")),
                   a = c(1, 2, NA), b = c(2, NA, 5))
   m <- beep:::explorar_matriz(w)
   expect_equal(m$n["a", "b"], 1)

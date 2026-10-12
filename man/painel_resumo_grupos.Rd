@@ -3,10 +3,10 @@
 \name{painel_resumo_grupos}
 \alias{painel_resumo_grupos}
 \title{Resumo por grupo do catalogo: um cartao por indicador composto com o
-valor mais recente na localidade (rotulo, valor e ano) — conteudo do
-"Resumo da regiao" na aba Regiao}
+valor mais recente na localidade ate a data de corte (rotulo, valor e
+data) — conteudo do "Resumo da regiao" na aba Regiao}
 \usage{
-painel_resumo_grupos(hierarquia, compostos, valores, ano = NULL)
+painel_resumo_grupos(hierarquia, compostos, valores, refdate = NULL)
 }
 \arguments{
 \item{hierarquia}{tabela de \code{\link[=painel_hierarquia]{painel_hierarquia()}}}
@@ -14,10 +14,13 @@ painel_resumo_grupos(hierarquia, compostos, valores, ano = NULL)
 \item{compostos}{tabela de \code{\link[=painel_compostos]{painel_compostos()}}}
 
 \item{valores}{tabela de \code{\link[=painel_valores_local_todos]{painel_valores_local_todos()}}}
+
+\item{refdate}{data de corte: sem ela, a observacao mais recente; com ela,
+a ultima observacao em ou antes da data (slider por data do resumo)}
 }
 \description{
 Resumo por grupo do catalogo: um cartao por indicador composto com o
-valor mais recente na localidade (rotulo, valor e ano) — conteudo do
-"Resumo da regiao" na aba Regiao
+valor mais recente na localidade ate a data de corte (rotulo, valor e
+data) — conteudo do "Resumo da regiao" na aba Regiao
 }
 \keyword{internal}

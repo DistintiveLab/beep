@@ -34,18 +34,19 @@ explorar_nomes_locais <- function(con) {
   setNames(loc$local_name, loc$local_id)
 }
 
-#' Ficha do indicador a partir da serie achatada (contrato de
-#' `painel_valores_por_ano`): cobertura e dispersao por ano, com as
-#' bandeiras da heuristica do roadmap (degenerada dp~0, cauda pesada
-#' |CV| > 1,5). Serie vazia devolve NULL
+#' Ficha do indicador a partir da serie completa (contrato de
+#' `painel_valores_por_data`): cobertura e dispersao por data de
+#' referencia, com as bandeiras da heuristica do roadmap (degenerada dp~0,
+#' cauda pesada |CV| > 1,5). Serie vazia devolve NULL
 #' @keywords internal
 explorar_ficha <- function(serie) {
-  if (!NROW(serie) || !all(c("local_id", "ano", "value") %in% names(serie)))
+  if (!NROW(serie) ||
+      !all(c("local_id", "refdate", "value") %in% names(serie)))
     return(NULL)
   finitos <- serie[is.finite(serie$value), ]
   if (!NROW(finitos)) return(NULL)
-  por_ano <- finitos |>
-    dplyr::group_by(.data$ano) |>
+  por_data <- finitos |>
+    dplyr::group_by(.data$refdate) |>
     dplyr::summarise(
       n = dplyr::n(),
       min = min(.data$value),
@@ -55,35 +56,38 @@ explorar_ficha <- function(serie) {
       mediana = stats::median(.data$value),
       iqr = stats::IQR(.data$value),
       .groups = "drop") |>
-    dplyr::arrange(.data$ano) |>
+    dplyr::arrange(.data$refdate) |>
     as.data.frame()
-  por_ano$cv <- ifelse(por_ano$media != 0, por_ano$dp / por_ano$media,
+  por_data$cv <- ifelse(por_data$media != 0, por_data$dp / por_data$media,
                        NA_real_)
-  ultimo <- por_ano[nrow(por_ano), ]
+  por_data$rotulo <- painel_rotulo_data(por_data$refdate)
+  ultimo <- por_data[nrow(por_data), ]
   list(
-    por_ano = por_ano,
-    ultimo_ano = ultimo$ano,
+    por_data = por_data,
+    ultima_data = ultimo$refdate,
+    ultimo_rotulo = ultimo$rotulo,
     degenerada = isTRUE(ultimo$dp < 1e-12),
     cauda_pesada = !is.na(ultimo$cv) && abs(ultimo$cv) > 1.5,
-    anos = range(finitos$ano),
+    datas = range(finitos$refdate),
     n_locais = dplyr::n_distinct(finitos$local_id))
 }
 
-#' Pares completos de dois indicadores alinhados por (local_id, ano):
-#' inner join das series achatadas mantendo apenas pares finitos
-#' (remocao de NAs por pares, nao listwise)
+#' Pares completos de dois indicadores alinhados por (local_id, refdate):
+#' inner join das series completas (o ano vem so da serie x, evitando
+#' ano.x/ano.y no resultado) mantendo apenas pares finitos (remocao de
+#' NAs por pares, nao listwise)
 #' @keywords internal
 explorar_pares <- function(serie_x, serie_y) {
-  vazio <- data.frame(local_id = integer(0), ano = integer(0),
-                      x = numeric(0), y = numeric(0))
+  vazio <- data.frame(local_id = integer(0), refdate = as.Date(character(0)),
+                      ano = integer(0), x = numeric(0), y = numeric(0))
   if (!NROW(serie_x) || !NROW(serie_y)) return(vazio)
-  x <- serie_x[, c("local_id", "ano", "value")]
-  y <- serie_y[, c("local_id", "ano", "value")]
-  names(x)[3] <- "x"
+  x <- serie_x[, c("local_id", "refdate", "ano", "value")]
+  y <- serie_y[, c("local_id", "refdate", "value")]
+  names(x)[4] <- "x"
   names(y)[3] <- "y"
-  p <- dplyr::inner_join(x, y, by = c("local_id", "ano"))
+  p <- dplyr::inner_join(x, y, by = c("local_id", "refdate"))
   p <- p[is.finite(p$x) & is.finite(p$y),
-         c("local_id", "ano", "x", "y")]
+         c("local_id", "refdate", "ano", "x", "y")]
   if (!NROW(p)) vazio else p
 }
 
@@ -126,9 +130,9 @@ explorar_badge_n <- function(n, minimo = explorar_n_min) {
 }
 
 #' Reprojeção dos pares completos conforme a leitura de painel: pooled
-#' (todas as observações), between (média por localidade) ou within
-#' (desvio da média da própria localidade; localidade com um único par
-#' sai, desvio indefinido)
+#' (todas as observações), between (média por localidade; sem data, média
+#' de varios pontos) ou within (desvio da média da própria localidade;
+#' localidade com um único par sai, desvio indefinido)
 #' @keywords internal
 explorar_leituras <- function(pares, leitura = "pooled") {
   if (is.null(pares) || !NROW(pares)) return(pares)
@@ -138,23 +142,26 @@ explorar_leituras <- function(pares, leitura = "pooled") {
   saida <- do.call(rbind, lapply(split(seq_len(nrow(pares)), pares$local_id),
     function(i) {
       if (identical(leitura, "between"))
-        data.frame(local_id = pares$local_id[i[1L]], ano = NA_integer_,
+        data.frame(local_id = pares$local_id[i[1L]],
+                   refdate = as.Date(NA), ano = NA_integer_,
                    x = mean(pares$x[i]), y = mean(pares$y[i]))
       else if (length(i) >= 2L)
-        data.frame(local_id = pares$local_id[i[1L]], ano = pares$ano[i],
+        data.frame(local_id = pares$local_id[i[1L]], refdate = pares$refdate[i],
+                   ano = pares$ano[i],
                    x = pares$x[i] - mean(pares$x[i]),
                    y = pares$y[i] - mean(pares$y[i]))
       else NULL
     }))
   if (is.null(saida))
-    return(data.frame(local_id = integer(0), ano = integer(0),
+    return(data.frame(local_id = integer(0),
+                      refdate = as.Date(character(0)), ano = integer(0),
                       x = numeric(0), y = numeric(0)))
   rownames(saida) <- NULL
-  saida[order(saida$local_id, saida$ano), , drop = FALSE]
+  saida[order(saida$local_id, saida$refdate), , drop = FALSE]
 }
 
-#' Empilha séries achatadas (lista nomeada por mdata_id) numa matriz wide
-#' por (local_id, ano): full outer join das colunas, nunca listwise — cada
+#' Empilha séries completas (lista nomeada por mdata_id) numa matriz wide
+#' por (local_id, refdate): full outer join das colunas, nunca listwise — cada
 #' par de indicadores usa as observações que ambos têm
 #' @keywords internal
 explorar_wide <- function(series) {
@@ -164,12 +171,12 @@ explorar_wide <- function(series) {
   }
   if (!length(series)) return(NULL)
   colunas <- lapply(seq_along(series), function(i) {
-    d <- series[[i]][, c("local_id", "ano", "value")]
+    d <- series[[i]][, c("local_id", "refdate", "value")]
     names(d)[3L] <- names(series)[[i]]
     d
   })
-  Reduce(function(a, b) merge(a, b, by = c("local_id", "ano"), all = TRUE),
-         colunas)
+  Reduce(function(a, b) merge(a, b, by = c("local_id", "refdate"),
+                              all = TRUE), colunas)
 }
 
 #' Colunas do wide com dispersão nula (dp ~ 0): correlação indefinida, a
@@ -200,7 +207,7 @@ explorar_matriz <- function(wide, leitura = "pooled") {
   if (is.null(wide) || ncol(wide) <= 2L) return(vazio())
   leitura <- if (identical(leitura, "between") || identical(leitura, "within"))
     leitura else "pooled"
-  cols <- setdiff(names(wide), c("local_id", "ano"))
+  cols <- setdiff(names(wide), c("local_id", "refdate"))
   m <- as.matrix(wide[, cols, drop = FALSE])
   storage.mode(m) <- "double"
   if (identical(leitura, "between")) {

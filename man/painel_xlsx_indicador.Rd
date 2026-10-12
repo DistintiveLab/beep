@@ -2,13 +2,14 @@
 % Please edit documentation in R/painel_xlsx.R
 \name{painel_xlsx_indicador}
 \alias{painel_xlsx_indicador}
-\title{Planilha "um indicador por ano": uma aba por ano, cada uma com todas as
-localidades do nivel territorial com dados naquele ano (codigo, nome e
-valor da ultima observacao do ano), mais aba "metadados" com o contexto}
+\title{Planilha "um indicador por data": uma aba por data de referencia, cada
+uma com todas as localidades do nivel territorial com dados naquela data
+(codigo, nome e valor do refdate exato), mais aba "metadados" com o
+contexto}
 \usage{
 painel_xlsx_indicador(
   arquivo,
-  por_ano,
+  por_data,
   locais,
   rotulo_indicador,
   nivel_rotulo,
@@ -19,9 +20,11 @@ painel_xlsx_indicador(
 \arguments{
 \item{arquivo}{caminho do .xlsx a gravar}
 
-\item{por_ano}{lista nomeada (ano em texto) de data.frames
-local_id/refdate/value JA restritos ao nivel territorial escolhido e JA
-na regua de ultima observacao do ano (\code{\link[=painel_valores_ano]{painel_valores_ano()}})}
+\item{por_data}{lista nomeada (rotulo de data de
+\code{\link[=painel_rotulo_aba]{painel_rotulo_aba()}}) de data.frames local_id/refdate/value JA
+restritos ao nivel territorial escolhido e JA no refdate exato
+(\code{\link[=painel_valores_refdate]{painel_valores_refdate()}}); as abas seguem a ordem fornecida
+(refdates ascendentes no caller, rótulos ISO ordenam lexicograficamente)}
 
 \item{locais}{vetor nomeado local_id -> rotulo do nivel
 (\code{\link[=painel_locais_nivel]{painel_locais_nivel()}})}
@@ -37,8 +40,9 @@ localidade (ex.: codigo IBGE dos municipios,
 local_id, e a coluna inteira vira texto}
 }
 \description{
-Planilha "um indicador por ano": uma aba por ano, cada uma com todas as
-localidades do nivel territorial com dados naquele ano (codigo, nome e
-valor da ultima observacao do ano), mais aba "metadados" com o contexto
+Planilha "um indicador por data": uma aba por data de referencia, cada
+uma com todas as localidades do nivel territorial com dados naquela data
+(codigo, nome e valor do refdate exato), mais aba "metadados" com o
+contexto
 }
 \keyword{internal}

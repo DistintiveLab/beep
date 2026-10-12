@@ -2,19 +2,20 @@
 % Please edit documentation in R/painel_dw.R
 \name{painel_ranking_local}
 \alias{painel_ranking_local}
-\title{Posicao de uma localidade num indicador e ano: quantos municipios do
-pais e da propria UF tem valor MAIOR naquele ano}
+\title{Posicao de uma localidade num indicador e data: quantos municipios do
+pais e da propria UF tem valor MAIOR naquela data}
 \usage{
-painel_ranking_local(con, mdata_id, local_id, ano)
+painel_ranking_local(con, mdata_id, local_id, ano, refdate = NULL)
 }
 \description{
 Os dois universos sao municipais (largura 7 do geoloc_id): o pais inteiro
 e a UF de origem, pelo prefixo de 2 digitos do geoloc_id. A posicao conta
 os valores estritamente maiores, entao empates dividem a mesma posicao; o
-total (\code{n_uf}, \code{n_br}) e quantos municipios tem dado no ano para o
-indicador. Vale a regra de ano de \code{\link[=painel_valores_ano]{painel_valores_ano()}} (ultimo refdate
-de cada localidade dentro do ano, \verb{DISTINCT ON} + faixa \code{make_date}), e o
-valor da propria localidade e o do mesmo ano.
+total (\code{n_uf}, \code{n_br}) e quantos municipios tem dado na data para o
+indicador. Com \code{refdate} valido a comparacao e no dia exato (slider por
+data do mapa); sem \code{refdate}, vale a regra de ano de \code{\link[=painel_valores_ano]{painel_valores_ano()}}
+(ultimo refdate de cada localidade dentro do ano, \verb{DISTINCT ON} + faixa
+\code{make_date}), e o valor da propria localidade e do mesmo ano.
 }
 \details{
 Contar de cima para baixo assume "maior e melhor", o sentido dos

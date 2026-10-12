@@ -2,15 +2,15 @@
 % Please edit documentation in R/explorar_indicadores.R
 \name{explorar_wide}
 \alias{explorar_wide}
-\title{Empilha séries achatadas (lista nomeada por mdata_id) numa matriz wide
-por (local_id, ano): full outer join das colunas, nunca listwise — cada
+\title{Empilha séries completas (lista nomeada por mdata_id) numa matriz wide
+por (local_id, refdate): full outer join das colunas, nunca listwise — cada
 par de indicadores usa as observações que ambos têm}
 \usage{
 explorar_wide(series)
 }
 \description{
-Empilha séries achatadas (lista nomeada por mdata_id) numa matriz wide
-por (local_id, ano): full outer join das colunas, nunca listwise — cada
+Empilha séries completas (lista nomeada por mdata_id) numa matriz wide
+por (local_id, refdate): full outer join das colunas, nunca listwise — cada
 par de indicadores usa as observações que ambos têm
 }
 \keyword{internal}

@@ -1,4 +1,4 @@
-# Melhorias do painel: rotulos de tempo, visibilidade, ano do resumo,
+# Melhorias do painel: rotulos de tempo, visibilidade, data do resumo,
 # tipos de grafico (roadmap_painel_melhorias.md, P1-P4) ---------------
 
 test_that("painel_rotulo_tempo mapeia periodicidades e cai no Ano", {
@@ -12,7 +12,7 @@ test_that("painel_rotulo_tempo mapeia periodicidades e cai no Ano", {
   expect_identical(r(NA_character_), "Ano")
   expect_identical(r(NULL), "Ano")
   expect_identical(r("quinzenal"), "Quinzena")
-  expect_identical(r("irregular"), "Ano")
+  expect_identical(r("irregular"), "Data")
 })
 
 test_that("painel_rotulo_data mostra o ano so quando ele e o unico ponto", {
@@ -61,7 +61,7 @@ hierarquia_resumo <- function() {
     data_name = c("Indicador bruto", "Composto do Eixo 1"))
 }
 
-test_that("painel_resumo_grupos respeita o ano e traz o par anterior", {
+test_that("painel_resumo_grupos respeita a data e traz o par anterior", {
   compostos <- data.frame(mdata_id = 11L, orig_name = "comp_educ",
                           data_name = "Composto do Eixo 1")
   valores <- data.frame(
@@ -69,21 +69,21 @@ test_that("painel_resumo_grupos respeita o ano e traz o par anterior", {
     refdate = as.Date(c("2019-01-01", "2020-01-01",
                         "2021-01-01", "2022-01-01")),
     value = c(2, 3, 5, 7))
-  # sem ano: ultima observacao + anterior imediata
+  # sem data de corte: ultima observacao + anterior imediata
   r <- beep:::painel_resumo_grupos(hierarquia_resumo(), compostos, valores)
   expect_identical(r$refdate, as.Date("2022-01-01"))
   expect_equal(r$valor, 7)
   expect_equal(r$valor_ant, 5)
   expect_identical(r$refdate_ant, as.Date("2021-01-01"))
-  # ano de referencia no meio da serie
+  # data de referencia no meio da serie (régua do slider por data)
   r20 <- beep:::painel_resumo_grupos(hierarquia_resumo(), compostos,
-                                     valores, ano = 2020)
+                                     valores, refdate = as.Date("2020-06-30"))
   expect_identical(r20$refdate, as.Date("2020-01-01"))
   expect_equal(r20$valor, 3)
   expect_equal(r20$valor_ant, 2)
-  # ano atras da primeira observacao: composto sai do resumo
+  # data atras da primeira observacao: composto sai do resumo
   r10 <- beep:::painel_resumo_grupos(hierarquia_resumo(), compostos,
-                                     valores, ano = 2010)
+                                     valores, refdate = as.Date("2010-01-01"))
   expect_identical(nrow(r10), 0L)
   # observacao unica: sem anterior
   unico <- valores[valores$refdate <= as.Date("2019-01-01"), ]

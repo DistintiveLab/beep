@@ -3,16 +3,16 @@
 \name{explorar_leituras}
 \alias{explorar_leituras}
 \title{Reprojeção dos pares completos conforme a leitura de painel: pooled
-(todas as observações), between (média por localidade) ou within
-(desvio da média da própria localidade; localidade com um único par
-sai, desvio indefinido)}
+(todas as observações), between (média por localidade; sem data, média
+de varios pontos) ou within (desvio da média da própria localidade;
+localidade com um único par sai, desvio indefinido)}
 \usage{
 explorar_leituras(pares, leitura = "pooled")
 }
 \description{
 Reprojeção dos pares completos conforme a leitura de painel: pooled
-(todas as observações), between (média por localidade) ou within
-(desvio da média da própria localidade; localidade com um único par
-sai, desvio indefinido)
+(todas as observações), between (média por localidade; sem data, média
+de varios pontos) ou within (desvio da média da própria localidade;
+localidade com um único par sai, desvio indefinido)
 }
 \keyword{internal}

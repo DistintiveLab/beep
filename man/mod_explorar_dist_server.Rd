@@ -2,13 +2,15 @@
 % Please edit documentation in R/mod_explorar_dist.R
 \name{mod_explorar_dist_server}
 \alias{mod_explorar_dist_server}
-\title{Server das distribuicoes: histograma do ano escolhido e boxplot da
-serie toda por ano, sobre a serie achatada}
+\title{Server das distribuicoes: histograma da data escolhida e boxplot da
+serie toda por data de referencia (rotulo curto do slider por data),
+sobre a serie completa}
 \usage{
 mod_explorar_dist_server(id)
 }
 \description{
-Server das distribuicoes: histograma do ano escolhido e boxplot da
-serie toda por ano, sobre a serie achatada
+Server das distribuicoes: histograma da data escolhida e boxplot da
+serie toda por data de referencia (rotulo curto do slider por data),
+sobre a serie completa
 }
 \keyword{internal}

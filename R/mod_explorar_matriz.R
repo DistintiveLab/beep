@@ -77,7 +77,7 @@ mod_explorar_matriz_server <- function(id) {
           for (i in ids) {
             shiny::incProgress(1 / length(ids),
                                detail = origens[as.character(i)])
-            s <- tryCatch(painel_valores_por_ano(con, i),
+            s <- tryCatch(painel_valores_por_data(con, i),
                           error = function(e) NULL)
             if (!is.null(s) && NROW(s)) series[[as.character(i)]] <- s
           }
@@ -92,7 +92,7 @@ mod_explorar_matriz_server <- function(id) {
         deg <- explorar_degeneradas(w)
         mantem <- names(deg)[!deg]
         if (!length(mantem)) return(NULL)
-        w <- w[, c("local_id", "ano", mantem), drop = FALSE]
+        w <- w[, c("local_id", "refdate", mantem), drop = FALSE]
       }
       w
     })

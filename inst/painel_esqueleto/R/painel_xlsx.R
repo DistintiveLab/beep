@@ -146,14 +146,17 @@ painel_xlsx_regiao <- function(arquivo, valores, mdata, local_rotulo,
   invisible(arquivo)
 }
 
-#' Planilha "um indicador por ano": uma aba por ano, cada uma com todas as
-#' localidades do nivel territorial com dados naquele ano (codigo, nome e
-#' valor da ultima observacao do ano), mais aba "metadados" com o contexto
+#' Planilha "um indicador por data": uma aba por data de referencia, cada
+#' uma com todas as localidades do nivel territorial com dados naquela data
+#' (codigo, nome e valor do refdate exato), mais aba "metadados" com o
+#' contexto
 #'
 #' @param arquivo caminho do .xlsx a gravar
-#' @param por_ano lista nomeada (ano em texto) de data.frames
-#'   local_id/refdate/value JA restritos ao nivel territorial escolhido e JA
-#'   na regua de ultima observacao do ano ([painel_valores_ano()])
+#' @param por_data lista nomeada (rotulo de data de
+#'   [painel_rotulo_aba()]) de data.frames local_id/refdate/value JA
+#'   restritos ao nivel territorial escolhido e JA no refdate exato
+#'   ([painel_valores_refdate()]); as abas seguem a ordem fornecida
+#'   (refdates ascendentes no caller, rótulos ISO ordenam lexicograficamente)
 #' @param locais vetor nomeado local_id -> rotulo do nivel
 #'   ([painel_locais_nivel()])
 #' @param rotulo_indicador,nivel_rotulo rotulos do indicador e do nivel
@@ -164,13 +167,13 @@ painel_xlsx_regiao <- function(arquivo, valores, mdata, local_rotulo,
 #'   [painel_codigo_mun_cache()]); localidades fora do vetor mantem o
 #'   local_id, e a coluna inteira vira texto
 #' @keywords internal
-painel_xlsx_indicador <- function(arquivo, por_ano, locais,
+painel_xlsx_indicador <- function(arquivo, por_data, locais,
                                   rotulo_indicador, nivel_rotulo,
                                   titulo = "Painel de Indicadores",
                                   codigos = NULL) {
   wb <- openxlsx::createWorkbook()
-  anos <- names(por_ano)[vapply(por_ano, nrow, integer(1)) > 0]
-  if (!length(anos)) {
+  abas <- names(por_data)[vapply(por_data, nrow, integer(1)) > 0]
+  if (!length(abas)) {
     .painel_xlsx_aba_vazia(wb, paste0(
       "Sem observacoes deste indicador no nivel territorial escolhido ",
       "no banco de dados do painel."))
@@ -182,16 +185,14 @@ painel_xlsx_indicador <- function(arquivo, por_ano, locais,
     "Painel" = titulo,
     "Indicador" = rotulo_indicador,
     "Nível territorial" = nivel_rotulo,
-    "Anos" = paste(range(as.integer(anos)), collapse = " a "),
+    "Datas" = paste(range(abas), collapse = " a "),
     "Gerado em" = format(Sys.time(), "%Y-%m-%d %H:%M")))
-  abas <- character(0)
-  for (ano in sort(as.integer(anos))) {
-    v <- por_ano[[as.character(ano)]]
+  for (aba in abas) {
+    v <- por_data[[aba]]
     v <- v[order(v$local_id), , drop = FALSE]
     rotulo <- names(locais)[match(v$local_id, unlist(locais, use.names = FALSE))]
     sem_rotulo <- is.na(rotulo)
     if (any(sem_rotulo)) rotulo[sem_rotulo] <- paste0("local ", v$local_id[sem_rotulo])
-    aba <- as.character(ano)
     codigo <- if (is.null(codigos)) v$local_id else {
       traduz <- unname(codigos[as.character(v$local_id)])
       ifelse(is.na(traduz), as.character(v$local_id), traduz)
@@ -201,7 +202,6 @@ painel_xlsx_indicador <- function(arquivo, por_ano, locais,
       Código = codigo, Localidade = rotulo, Valor = v$value,
       check.names = FALSE))
     .painel_xlsx_estilo_tabela(wb, aba, 3L, 1L, congelar_col = 0L)
-    abas <- c(abas, aba)
   }
   openxlsx::saveWorkbook(wb, arquivo, overwrite = TRUE)
   invisible(arquivo)

@@ -94,36 +94,40 @@ test_that("painel_xlsx_regiao sem dados gera aba de aviso", {
   expect_true(grepl("Sem observacoes", aviso[[1]][1]))
 })
 
-test_that("painel_xlsx_indicador gera uma aba por ano ordenada", {
-  por_ano <- list(
-    "2022" = data.frame(
-      local_id = c(12L, 11L, 99L),
-      refdate = as.Date(rep("2022-12-31", 3)),
-      value = c(2.5, 1.5, 9)),
+test_that("painel_xlsx_indicador gera uma aba por data na ordem do caller", {
+  por_data <- list(
     "2021" = data.frame(
       local_id = 11L, refdate = as.Date("2021-12-31"), value = 1),
-    "2020" = data.frame(local_id = integer(0),
-                        refdate = as.Date(character(0)), value = numeric(0)))
+    "2022-10-02" = data.frame(
+      local_id = c(12L, 11L, 99L),
+      refdate = as.Date(rep("2022-10-02", 3)),
+      value = c(2.5, 1.5, 9)),
+    "2022-10-30" = data.frame(local_id = integer(0),
+                              refdate = as.Date(character(0)),
+                              value = numeric(0)))
   locais <- c("Alfa" = 11, "Beta" = 12)
   arq <- tempfile(fileext = ".xlsx")
   on.exit(unlink(arq), add = TRUE)
-  beep:::painel_xlsx_indicador(arq, por_ano, locais, "Indicador X", "Município",
-                               "Painel Teste")
-  # 2020 sem dados fica fora; abas em ordem numerica (2021 < 2022)
-  expect_identical(openxlsx::getSheetNames(arq), c("metadados", "2021", "2022"))
+  beep:::painel_xlsx_indicador(arq, por_data, locais, "Indicador X",
+                               "Município", "Painel Teste")
+  # aba sem dados fica fora; a ordem segue o caller (refdates
+  # ascendentes; rotulos ISO ordenam lexicograficamente)
+  expect_identical(openxlsx::getSheetNames(arq),
+                   c("metadados", "2021", "2022-10-02"))
   # contexto na aba metadados
   ctx <- openxlsx::read.xlsx(arq, sheet = "metadados", colNames = FALSE,
                              rows = 1:5)
   expect_equal(ctx[[1]][1:5], c("Painel", "Indicador", "Nível territorial",
-                                "Anos", "Gerado em"))
+                                "Datas", "Gerado em"))
   expect_equal(ctx[[2]][2], "Indicador X")
-  # aba de 2022: ordenada por local_id, rotulos do vetor nomeado,
+  expect_equal(ctx[[2]][4], "2021 a 2022-10-02")
+  # aba da data: ordenada por local_id, rotulos do vetor nomeado,
   # fallback "local N" para id fora do nivel
-  tab22 <- openxlsx::read.xlsx(arq, sheet = "2022")
-  expect_identical(names(tab22), c("Código", "Localidade", "Valor"))
-  expect_equal(tab22$Código, c(11, 12, 99))
-  expect_equal(tab22$Localidade, c("Alfa", "Beta", "local 99"))
-  expect_equal(tab22$Valor, c(1.5, 2.5, 9))
+  tab <- openxlsx::read.xlsx(arq, sheet = "2022-10-02")
+  expect_identical(names(tab), c("Código", "Localidade", "Valor"))
+  expect_equal(tab$Código, c(11, 12, 99))
+  expect_equal(tab$Localidade, c("Alfa", "Beta", "local 99"))
+  expect_equal(tab$Valor, c(1.5, 2.5, 9))
 })
 
 test_that("painel_xlsx_indicador sem dados gera aba de aviso", {
@@ -131,7 +135,7 @@ test_that("painel_xlsx_indicador sem dados gera aba de aviso", {
                       refdate = as.Date(character(0)), value = numeric(0))
   arq <- tempfile(fileext = ".xlsx")
   on.exit(unlink(arq), add = TRUE)
-  beep:::painel_xlsx_indicador(arq, list("2022" = vazio),
+  beep:::painel_xlsx_indicador(arq, list("2022-10-02" = vazio),
                                c("Alfa" = 11), "Indicador X", "UF")
   expect_identical(openxlsx::getSheetNames(arq), "dados")
   aviso <- openxlsx::read.xlsx(arq, sheet = "dados", colNames = FALSE)
@@ -139,14 +143,14 @@ test_that("painel_xlsx_indicador sem dados gera aba de aviso", {
 })
 
 test_that("painel_xlsx_indicador traduz o codigo para o IBGE quando mapeado", {
-  por_ano <- list("2022" = data.frame(
+  por_data <- list("2022" = data.frame(
     local_id = c(11L, 12L, 99L),
     refdate = as.Date(rep("2022-12-31", 3)),
     value = c(1.5, 2.5, 9)))
   codigos <- c("11" = "1100023", "12" = "1100031")
   arq <- tempfile(fileext = ".xlsx")
   on.exit(unlink(arq), add = TRUE)
-  beep:::painel_xlsx_indicador(arq, por_ano, c("Alfa" = 11, "Beta" = 12),
+  beep:::painel_xlsx_indicador(arq, por_data, c("Alfa" = 11, "Beta" = 12),
                                "Indicador X", "Município",
                                codigos = codigos)
   tab <- openxlsx::read.xlsx(arq, sheet = "2022")

@@ -2,13 +2,13 @@
 % Please edit documentation in R/mod_explorar_univar.R
 \name{mod_explorar_univar_server}
 \alias{mod_explorar_univar_server}
-\title{Server da ficha: cobertura e dispersao por ano (numeros da heuristica
-de banda/lolly do roadmap) lidas da serie achatada}
+\title{Server da ficha: cobertura e dispersao por data de referencia (numeros
+da heuristica de banda/lolly do roadmap) lidas da serie completa}
 \usage{
 mod_explorar_univar_server(id)
 }
 \description{
-Server da ficha: cobertura e dispersao por ano (numeros da heuristica
-de banda/lolly do roadmap) lidas da serie achatada
+Server da ficha: cobertura e dispersao por data de referencia (numeros
+da heuristica de banda/lolly do roadmap) lidas da serie completa
 }
 \keyword{internal}

@@ -10,11 +10,11 @@ mod_explorar_univar_ui <- function(id) {
         options = list(placeholder = "Selecione um indicador",
                        maxOptions = 200)),
       shiny::verbatimTextOutput(ns("resumo")),
-      DT::DTOutput(ns("por_ano"))))
+      DT::DTOutput(ns("por_data"))))
 }
 
-#' Server da ficha: cobertura e dispersao por ano (numeros da heuristica
-#' de banda/lolly do roadmap) lidas da serie achatada
+#' Server da ficha: cobertura e dispersao por data de referencia (numeros
+#' da heuristica de banda/lolly do roadmap) lidas da serie completa
 #' @keywords internal
 mod_explorar_univar_server <- function(id) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -36,7 +36,7 @@ mod_explorar_univar_server <- function(id) {
       con <- explorar_con()
       if (is.null(con)) return(NULL)
       on.exit(DBI::dbDisconnect(con), add = TRUE)
-      tryCatch(painel_valores_por_ano(con, as.integer(input$indicador)),
+      tryCatch(painel_valores_por_data(con, as.integer(input$indicador)),
                error = function(e) NULL)
     })
     ficha <- shiny::reactive({
@@ -47,11 +47,11 @@ mod_explorar_univar_server <- function(id) {
     output$resumo <- shiny::renderText({
       f <- ficha()
       if (is.null(f)) return("Sem dados (banco fora do ar ou indicador sem série).")
-      u <- f$por_ano[nrow(f$por_ano), ]
-      sprintf(paste0("anos: %d-%d | localidades com dado: %d\n",
-                     "último ano (%d): n = %d, média = %.4g, dp = %.4g, ",
+      u <- f$por_data[nrow(f$por_data), ]
+      sprintf(paste0("período: %s a %s | localidades com dado: %d\n",
+                     "última data (%s): n = %d, média = %.4g, dp = %.4g, ",
                      "CV = %.4g, mediana = %.4g, IQR = %.4g\n%s"),
-              f$anos[1], f$anos[2], f$n_locais, u$ano, u$n,
+              f$por_data$rotulo[1], u$rotulo, f$n_locais, u$n,
               u$media, u$dp, u$cv, u$mediana, u$iqr,
               if (f$degenerada)
                 "série degenerada (dp \u2248 0): sem banda/contexto seccional"
@@ -59,11 +59,12 @@ mod_explorar_univar_server <- function(id) {
                 "cauda pesada (|CV| > 1,5): banda mín-máx degenera; prefira percentis, log ou lolly"
               else "dispersão compatível com banda mín-máx")
     })
-    output$por_ano <- DT::renderDT({
+    output$por_data <- DT::renderDT({
       f <- ficha()
       if (is.null(f)) return(DT::datatable(
         data.frame(Aviso = "Selecione um indicador."), rownames = FALSE))
-      d <- f$por_ano
+      d <- f$por_data
+      d$refdate <- format(d$refdate, "%Y-%m-%d")
       nums <- c("min", "max", "media", "dp", "mediana", "iqr", "cv")
       d[nums] <- lapply(d[nums], function(v) signif(v, 5))
       DT::datatable(
