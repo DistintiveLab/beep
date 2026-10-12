@@ -85,7 +85,10 @@ mod_panel_globe_server <- function(id,
         modo = md$modo,
         nivel = as.character(nivel()),
         locais = locais(),
-        disponiveis = disponiveis(),
+        # I() preserva o vetor como array JSON: o toJSON do Shiny usa
+        # auto_unbox e um vetor de tamanho 1 viraria string solta, que o
+        # cliente descartaria (disponibilidade vazia com uma unica UF)
+        disponiveis = I(disponiveis()),
         selected = if (identical(md$modo, "nivel") && length(atual) &&
                        !is.na(atual)) as.character(atual) else "",
         destaque = "",

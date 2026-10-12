@@ -138,19 +138,32 @@ mod_panel_regiao_server <- function(id,
 
     # Ao trocar de nivel territorial: recarrega localidades e seleciona a
     # com maior cobertura do indicador corrente naquele nivel — ou a UF
-    # clicada no globo, quando a troca de nivel veio de la
+    # clicada no globo, quando a troca de nivel veio de la. Indicador sem
+    # dados no novo nivel troca para o primeiro com dados, mantendo a
+    # tela util em vez de um globo "sem dados"
     shiny::observeEvent(input$nivel, {
       escolhas <- locais()
       shiny::req(length(escolhas))
       pendente <- uf_pendente()
       uf_pendente(NULL)
+      indicador <- suppressWarnings(as.integer(input$indicador))[1]
+      if (is.na(indicador)) indicador <- painel_indicador_default(md)
+      if (!painel_ind_tem_dados(indicador, input$nivel)) {
+        com_dados <- painel_indicador_com_dados(md, input$nivel)
+        if (!is.na(com_dados)) {
+          indicador <- com_dados
+          # server=TRUE exige choices na atualizacao: sem elas o Shiny
+          # registra um dataobj vazio e o cliente falha ao buscar o rotulo
+          shiny::updateSelectizeInput(session, "indicador",
+                                      choices = painel_opcoes_indicador(md),
+                                      selected = indicador, server = TRUE)
+        }
+      }
       destino <- NULL
       if (length(pendente) && identical(input$nivel, "2") &&
           pendente %in% unlist(escolhas, use.names = FALSE)) {
         destino <- as.integer(pendente)
       } else {
-        indicador <- suppressWarnings(as.integer(input$indicador))[1]
-        if (is.na(indicador)) indicador <- painel_indicador_default(md)
         topo <- painel_local_top_cache(indicador, input$nivel)
         destino <- if (is.null(topo)) as.integer(escolhas[[1]]) else topo
       }
@@ -238,6 +251,7 @@ mod_panel_regiao_server <- function(id,
         painel_plot_indicador(v, titulo = titulo(), cor = cor(),
                               tipo = tipo, rotulo_x = rotulo_x)
       }
+      p <- painel_sem_camadas_vazias(p)
       p <- plotly::ggplotly(p, tooltip = c("x", "y"))
       if (identical(tipo, "banda")) {
         # silencia o hover da banda/mediana (contexto): o destaque e a

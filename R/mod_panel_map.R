@@ -1,10 +1,15 @@
 #' panel_map UI Function
 #'
-#' @description A shiny Module. Mapa coropletico municipal de um indicador
-#'   do DW (beepdb) no ano escolhido (ultimo refdate do ano), com slider
-#'   de ano animado, paleta divergente centrada em 0 (invertivel) e
-#'   atualizacao incremental (port do labourvaluesdatapanel): a geometria
-#'   e enviada uma unica vez e apenas cores/tooltips atravessam a conexao.
+#' @description A shiny Module. Mapa coropletico do nivel territorial do
+#'   indicador do DW (beepdb) no ano escolhido (ultimo refdate do ano):
+#'   indicadores municipais mantem a malha historica; indicadores de outros
+#'   niveis (UF, regiao, submunicipais) recebem a malha do nivel ou, quando
+#'   ela excede o limite de feicoes, o contorno dos municipios com dados
+#'   (degradacao honesta). Slider de ano animado, paleta divergente centrada
+#'   em 0 (invertivel) e atualizacao incremental (port do
+#'   labourvaluesdatapanel): a geometria e enviada uma unica vez e apenas
+#'   cores/tooltips atravessam a conexao; trocar de nivel troca a malha no
+#'   proxy, sem reconstruir o widget.
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
@@ -50,8 +55,17 @@ mod_panel_map_server <- function(id) {
   moduleServer(id, function(input, output, session) {
 
     md <- painel_mdata_cache()
-    geo <- painel_geo_mun_cache()
-    geo$layer_id <- as.character(geo$local_id)
+    malha_municipal <- local({
+      g <- painel_geo_mun_cache()
+      g$layer_id <- as.character(g$local_id)
+      g[, c("layer_id", "local_name", "geometry")]
+    })
+    normaliza_malha <- function(g) {
+      if (!nrow(g)) return(g)
+      g$layer_id <- as.character(if ("code" %in% names(g)) g$code else g$local_id)
+      if (!"local_name" %in% names(g)) g$local_name <- g$label
+      g[, c("layer_id", "local_name", "geometry")]
+    }
     shiny::updateSelectizeInput(session, "indicador",
                                 choices = painel_opcoes_indicador(md),
                                 selected = if (nrow(md))
@@ -67,6 +81,60 @@ mod_panel_map_server <- function(id) {
       painel_anos_cache(input$indicador)$ano
     })
 
+    # Malha do nivel territorial do indicador: municipal mantem o
+    # comportamento historico; niveis leves (UF, regiao, 7p) carregam a
+    # malha do nivel inteiro; niveis pesados (submunicipais) carregam malhas
+    # por municipio com dados e degradam para o contorno do municipio quando
+    # a malha local tambem excede o limite de feicoes
+    mapa_malha <- shiny::reactive({
+      ind <- suppressWarnings(as.integer(input$indicador))[1]
+      ch <- if (is.na(ind)) NA_character_ else painel_ind_nivel_cache(ind)
+      if (is.na(ch) || identical(ch, "7")) {
+        return(list(geo = malha_municipal, nivel = "7",
+                    degradados = character(0), aviso = ""))
+      }
+      rotulo <- unname(painel_niveis_rotulo[ch])
+      if (is.na(rotulo)) rotulo <- sprintf("Nível %s", ch)
+      g <- normaliza_malha(painel_geo_nivel_cache(ch))
+      if (nrow(g)) {
+        return(list(geo = g, nivel = ch, degradados = character(0), aviso = ""))
+      }
+      p <- painel_nivel_parse(ch)
+      muns <- painel_muns_nivel_dados_cache(ind, ch)
+      pecas <- list()
+      degradados <- character(0)
+      for (i in seq_len(nrow(muns))) {
+        peca <- normaliza_malha(painel_geo_irmaos_nivel_cache(
+          muns$municipio[i], p$tipo, larg = p$nivel))
+        if (nrow(peca)) {
+          pecas <- c(pecas, list(peca))
+          next
+        }
+        contorno <- normaliza_malha(
+          painel_geo_municipio_codigo_cache(muns$municipio[i]))
+        if (nrow(contorno)) {
+          pecas <- c(pecas, list(contorno))
+          degradados[contorno$layer_id[1]] <- sprintf(
+            "malha do nível %s indisponível (%s feições com dados)",
+            rotulo, painel_num(muns$n_locais[i]))
+        }
+      }
+      if (!length(pecas)) {
+        return(list(geo = malha_municipal, nivel = "7",
+                    degradados = character(0),
+                    aviso = sprintf(paste0("Nível %s sem malha disponível ",
+                                           "para o mapa; exibindo a malha ",
+                                           "municipal."), rotulo)))
+      }
+      geo <- if (length(pecas) == 1L) pecas[[1]] else do.call(rbind, pecas)
+      aviso <- if (length(degradados)) sprintf(
+        paste0("Nível %s: malha acima do limite de feições do mapa em %d ",
+               "município(s); exibindo o contorno deles. Use a aba Região ",
+               "para navegar o nível."),
+        rotulo, length(degradados)) else ""
+      list(geo = geo, nivel = ch, degradados = degradados, aviso = aviso)
+    })
+
     # Envia apenas os limites: o navegador conserva a selecao de ano mais
     # recente e a ajusta a cobertura recebida (snap direcional sobre lacunas).
     shiny::observe({
@@ -75,7 +143,8 @@ mod_panel_map_server <- function(id) {
         sliderId = session$ns("ano"),
         indicatorId = session$ns("indicador"),
         indicator = input$indicador,
-        years = as.integer(anos)))
+        # I(): sem auto_unbox um array de 1 elemento vira escalar no JS
+        years = I(as.integer(anos))))
     })
 
     # ultimo refdate dentro do ano escolhido (valor mais recente do ano),
@@ -94,28 +163,40 @@ mod_panel_map_server <- function(id) {
     })
 
     output$status <- shiny::renderText({
+      aviso <- mapa_malha()$aviso
+      if (nzchar(aviso)) return(aviso)
       if (!is.null(mapa_dados()) && nrow(mapa_dados())) return("")
       paste0("Ano ", input$ano, ": sem observações. ",
              "Escolha outro ano ou indicador.")
     })
 
-    # Rotulos e cores de TODOS os municipios (NA onde sem dados): o delta e
-    # computado sobre o conjunto integral, como no labourvaluesdatapanel.
+    # Rotulos e cores de TODAS as feicoes da malha do nivel (NA onde sem
+    # dados): o delta e computado sobre o conjunto integral, como no
+    # labourvaluesdatapanel.
     camadas <- shiny::reactive({
       pal <- paleta()
       dados <- mapa_dados()
-      valor <- if (is.null(dados)) rep(NA_real_, nrow(geo)) else
-        dados$value[match(geo$local_id, dados$local_id)]
+      malha <- mapa_malha()
+      g <- malha$geo
+      valor <- if (is.null(dados)) rep(NA_real_, nrow(g)) else
+        dados$value[match(g$layer_id, as.character(dados$local_id))]
       cores <- pal(valor)
       texto <- ifelse(is.na(valor), "Sem dados", painel_num(valor))
-      lapply(seq_len(nrow(geo)), function(i) list(
-        id = geo$layer_id[i],
+      if (length(malha$degradados)) {
+        i <- match(g$layer_id, names(malha$degradados))
+        hit <- !is.na(i)
+        texto[hit] <- malha$degradados[i[hit]]
+      }
+      lapply(seq_len(nrow(g)), function(i) list(
+        id = g$layer_id[i],
         color = cores[[i]],
-        label = sprintf("<b>%s</b><br>%s", geo$local_name[i], texto[i])))
+        label = sprintf("<b>%s</b><br>%s", g$local_name[i], texto[i])))
     })
 
     output$mapa <- leaflet::renderLeaflet({
-      leaflet::leaflet(geo) |>
+      # widget estatico na malha municipal: a troca de nivel acontece no
+      # proxy do observe abaixo, sem rebuild nem corrida de proxies
+      leaflet::leaflet(malha_municipal) |>
         leaflet::setView(lng = -53.633308, lat = -13.550520, zoom = 4) |>
         leaflet::setMaxBounds(-77, -38, -27, 10) |>
         # tiles Carto com CARTO_API_KEY ou fundo neutro vetorial sem tiles
@@ -126,34 +207,58 @@ mod_panel_map_server <- function(id) {
 
     # Geometria persistente e atualizacao incremental: cada widget novo (por
     # exemplo, apos reconexao) recebe a geometria; ao mudar indicador, ano ou
-    # paleta, somente cores e textos atravessam a conexao.
+    # paleta, somente cores e textos atravessam a conexao. Trocar de nivel
+    # troca a malha no proxy (removeShape + addPolygons + enquadramento)
     mapa_instancia <- NULL
+    geo_chave <- NULL
     geometria_enviada <- FALSE
+    geometria_ids <- character(0)
     entregues <- list()
     shiny::observe({
       pronto <- input$mapa_painel_map_ready
       shiny::req(pronto)
+      malha <- mapa_malha()
       camadas <- camadas()
+      ids <- malha$geo$layer_id
+      chave <- paste(malha$nivel, length(ids),
+                     if (length(ids)) paste(ids[1], ids[length(ids)]) else "")
       reset <- !identical(mapa_instancia, pronto)
-      if (reset) {
-        geometria_enviada <<- FALSE
+      trocou <- !identical(geo_chave, chave)
+      if (reset || trocou) {
         entregues <<- list()
-        mapa_instancia <<- pronto
+        geometria_enviada <<- FALSE
       }
-      proxy <- leaflet::leafletProxy("mapa", session = session, data = geo)
+      if (reset) mapa_instancia <<- pronto
+      if (trocou) geo_chave <<- chave
+      proxy <- leaflet::leafletProxy("mapa", session = session, data = malha$geo)
       if (!isTRUE(geometria_enviada)) {
-        proxy |> leaflet::addPolygons(
+        if (length(geometria_ids))
+          proxy <- proxy |> leaflet::removeShape(geometria_ids)
+        proxy <- proxy |> leaflet::addPolygons(
           layerId = ~layer_id,
           fillColor = "transparent", fillOpacity = 0.85,
           weight = 0.4, color = "#666666", opacity = 0.6,
           highlight = leaflet::highlightOptions(weight = 2, color = "white",
                                                 bringToFront = TRUE))
+        geometria_ids <<- ids
         geometria_enviada <<- TRUE
       }
+      # enquadra apenas quando a malha muda ou o widget e novo, para nao
+      # roubar o pan/zoom do usuario a cada troca de ano
+      if ((reset || trocou) && nrow(malha$geo) &&
+          !identical(malha$nivel, "7")) {
+        bb <- sf::st_bbox(sf::st_geometry(malha$geo))
+        proxy <- proxy |> leaflet::fitBounds(
+          bb[["xmin"]], bb[["ymin"]], bb[["xmax"]], bb[["ymax"]])
+      } else if (trocou) {
+        proxy <- proxy |>
+          leaflet::setView(lng = -53.633308, lat = -13.550520, zoom = 4)
+      }
       delta <- painel_delta_camadas(entregues, camadas)
-      if (length(delta) || reset) {
+      if (length(delta) || reset || trocou) {
         session$sendCustomMessage("painel-map-delta", list(
-          id = session$ns("mapa"), instance = pronto, reset = reset,
+          id = session$ns("mapa"), instance = pronto,
+          reset = reset || trocou,
           layers = delta))
         for (camada in delta) entregues[[camada$id]] <<- camada
       }

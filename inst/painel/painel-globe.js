@@ -622,7 +622,11 @@
         Array.isArray(message.ufs) ? message.ufs : [];
       state.ufs = new Map(entries.filter(uf => uf && uf.code != null)
         .map(uf => [String(uf.code), String(uf.label || uf.code)]));
-      state.disponiveis = new Set((Array.isArray(message.disponiveis) ? message.disponiveis : [])
+      // Vetores de tamanho 1 chegam como string solta (auto_unbox do
+      // toJSON do Shiny): aceita as duas formas como lista de codigos.
+      const dispEntrada = Array.isArray(message.disponiveis) ? message.disponiveis :
+        message.disponiveis != null ? [message.disponiveis] : [];
+      state.disponiveis = new Set(dispEntrada
         .filter(code => code != null).map(String));
       // Destaque (localidade fora das feicoes) e contexto (UF que a
       // contem): a geometria viaja quando muda; o cliente guarda a ultima.

@@ -722,6 +722,25 @@ painel_geo_irmaos_mun <- function(con, mun, tipo = NULL, larg = NULL,
   geo[, c("code", "label", "geometry")]
 }
 
+#' Contorno simplificado do municipio dono de um codigo submunicipal
+#' (geoloc de 7 digitos): degradacao do mapa quando a malha do nivel
+#' excede o limite de feicoes dentro do municipio
+#' @keywords internal
+painel_geo_municipio_codigo <- function(con, codigo) {
+  codigo <- trimws(as.character(codigo)[1])
+  if (is.na(codigo) || !grepl("^[0-9]{7}$", codigo)) return(painel_geo_vazio())
+  geo <- sf::st_read(con, query = sprintf(paste(
+    "SELECT l.local_id, l.local_name,",
+    "ST_SimplifyPreserveTopology(g.geometry, 0.005) AS geometry",
+    "FROM local l JOIN geoloc g USING (geoloc_id)",
+    "WHERE g.geoloc_id::text = '%s'",
+    "AND length(g.geoloc_id::text) = 7"),
+    codigo), quiet = TRUE)
+  geo$code <- as.character(geo$local_id)
+  geo$label <- geo$local_name
+  geo[, c("code", "label", "geometry")]
+}
+
 #' UFs que contem localidades de um nivel com dados de um indicador —
 #' pintura do globo quando a base e a das UFs (nivel municipal)
 #' @keywords internal
@@ -778,6 +797,55 @@ painel_locais_com_dados <- function(con, mdata_id, nivel_id) {
     "WHERE v.mdata_id = %d AND %s"),
     mdata_id, p$filtro))
   as.character(q$local_id)
+}
+
+#' Nivel territorial onde um indicador vive: a chave de nivel (mesma
+#' convencao de [painel_niveis()]) com mais localidades com dados dele —
+#' municipais dao "7", submunicipais dao o proprio nivel_tipo. Indicador
+#' sem dados devolve NA
+#' @keywords internal
+painel_ind_nivel <- function(con, mdata_id) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  if (is.na(mdata_id)) return(NA_character_)
+  painel_pnad_bloco_fim_resolver(con)
+  q <- DBI::dbGetQuery(con, sprintf(paste(
+    "SELECT CASE WHEN l.local_id >=", painel_submunicipal_inicio,
+    "THEN coalesce(l.nivel_tipo, length(g.geoloc_id::text)::text)",
+    sprintf("WHEN length(g.geoloc_id::text) = 7 AND l.local_id >= %d AND l.local_id <= %d THEN '7p'",
+            painel_municipio_limite_id, painel_pnad_bloco_fim_resolver(con)),
+    "ELSE length(g.geoloc_id::text)::text END AS nivel_id,",
+    "count(DISTINCT v.local_id)::int AS n_locais",
+    "FROM data_values v",
+    "JOIN local l USING (local_id)",
+    "JOIN geoloc g USING (geoloc_id)",
+    "WHERE v.mdata_id = %d",
+    "GROUP BY 1",
+    "ORDER BY n_locais DESC, nivel_id"),
+    mdata_id))
+  if (nrow(q)) as.character(q$nivel_id[1]) else NA_character_
+}
+
+#' Municipios (geoloc de 7 digitos) que contem feicoes de um nivel
+#' submunicipal com dados de um indicador, com a contagem de feicoes —
+#' decide quais malhas locais o mapa carrega quando a do nivel inteiro e
+#' pesada demais (acima do limite de feicoes)
+#' @keywords internal
+painel_muns_nivel_dados <- function(con, mdata_id, nivel_id) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  p <- painel_nivel_parse(nivel_id)
+  vazio <- data.frame(municipio = character(0), n_locais = integer(0))
+  if (is.na(mdata_id) || is.na(p$nivel)) return(vazio)
+  if (is.na(p$tipo) && p$nivel <= 10L) return(vazio)
+  DBI::dbGetQuery(con, sprintf(paste(
+    "SELECT left(g.geoloc_id::text, 7) AS municipio,",
+    "count(DISTINCT v.local_id)::int AS n_locais",
+    "FROM data_values v",
+    "JOIN local l USING (local_id)",
+    "JOIN geoloc g USING (geoloc_id)",
+    "WHERE v.mdata_id = %d AND %s",
+    "AND length(g.geoloc_id::text) > 10",
+    "GROUP BY 1 ORDER BY n_locais DESC, municipio"),
+    mdata_id, p$filtro))
 }
 
 # Familia de indicadores de cada eixo do catalogo: o prefixo de orig_name
@@ -1041,6 +1109,21 @@ painel_num <- function(x) {
          trim = TRUE, digits = 6)
 }
 
+#' Remove camadas sem dados antes da conversao plotly: o ggplotly crasha
+#' em to_basic (order/list) com camadas de zero linhas — caso real da
+#' localidade escolhida ausente da serie por ano do ramo banda
+#' @keywords internal
+painel_sem_camadas_vazias <- function(p) {
+  base <- p$data
+  mantem <- vapply(p$layers, function(camada) {
+    d <- camada$data
+    if (is.null(d) || inherits(d, "waiver")) d <- base
+    NROW(d) > 0
+  }, logical(1))
+  p$layers <- p$layers[mantem]
+  p
+}
+
 #' Grafico em destaque da serie da aba Regiao, despachando o tipo por
 #' indicador ("linha" default, "barras" ou "lollipop") e renomeando as
 #' colunas para legendas amigaveis no hover do plotly ("Ano"/"valor"
@@ -1287,6 +1370,37 @@ painel_geo_malha_foco_cache <- function(local_id) {
   painel_geo_mun_uf_cache(local_id)
 }
 
+#' Malha completa de um nivel submunicipal dentro de um municipio
+#' (geoloc de 7 digitos), cacheada por municipio — mesmo formato de chave
+#' de [painel_geo_malha_foco_cache()], que guarda a malha cheia e exclui o
+#' destaque fora do cache
+#' @keywords internal
+painel_geo_irmaos_nivel_cache <- function(mun, tipo = NULL, larg = NULL) {
+  mun <- trimws(as.character(mun)[1])
+  if (is.na(mun) || !grepl("^[0-9]{7}$", mun)) return(painel_geo_vazio())
+  tipo <- if (length(tipo) == 1 && !is.na(tipo) && nzchar(tipo)) tipo else NULL
+  chave_nivel <- if (!is.null(tipo)) tipo else
+    suppressWarnings(as.character(as.integer(larg)[1]))
+  if (is.na(chave_nivel)) return(painel_geo_vazio())
+  painel_cache_get(
+    painel_cache_chave(sprintf("geo_irmaos_%s_%s", chave_nivel, mun)),
+    painel_cache_ttl[["geo"]],
+    function() painel_com_con(function(con)
+      painel_geo_irmaos_mun(con, mun = mun, tipo = tipo, larg = larg)))
+}
+
+#' Contorno do municipio dono de um codigo submunicipal, cacheado
+#' @keywords internal
+painel_geo_municipio_codigo_cache <- function(codigo) {
+  codigo <- trimws(as.character(codigo))[1]
+  if (is.na(codigo) || !grepl("^[0-9]{7}$", codigo)) return(painel_geo_vazio())
+  painel_cache_get(
+    painel_cache_chave(sprintf("geo_municipio_%s", codigo)),
+    painel_cache_ttl[["geo"]],
+    function() painel_com_con(function(con)
+      painel_geo_municipio_codigo(con, codigo)))
+}
+
 #' UFs com dados num nivel, cacheado
 #' @keywords internal
 painel_ufs_com_dados_cache <- function(mdata_id, nivel_id) {
@@ -1350,6 +1464,60 @@ painel_locais_com_dados_cache <- function(mdata_id, nivel_id) {
     painel_cache_ttl[["catalogo"]],
     function() painel_com_con(function(con)
       painel_locais_com_dados(con, mdata_id, nivel_id)))
+}
+
+#' Nivel territorial de um indicador, cacheado
+#' @keywords internal
+painel_ind_nivel_cache <- function(mdata_id) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  if (is.na(mdata_id)) return(NA_character_)
+  painel_cache_get(
+    painel_cache_chave(sprintf("ind_nivel_%d", mdata_id)),
+    painel_cache_ttl[["catalogo"]],
+    function() painel_com_con(function(con) painel_ind_nivel(con, mdata_id)))
+}
+
+#' Municipios com feicoes de um nivel submunicipal de um indicador,
+#' cacheado
+#' @keywords internal
+painel_muns_nivel_dados_cache <- function(mdata_id, nivel_id) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  p <- painel_nivel_parse(nivel_id)
+  if (is.na(mdata_id) || is.na(p$nivel))
+    return(data.frame(municipio = character(0), n_locais = integer(0)))
+  painel_cache_get(
+    painel_cache_chave(sprintf("muns_nivel_dados_%d_%s", mdata_id, p$chave)),
+    painel_cache_ttl[["catalogo"]],
+    function() painel_com_con(function(con)
+      painel_muns_nivel_dados(con, mdata_id, nivel_id)))
+}
+
+#' Indicador tem dados no nivel territorial? Niveis pesados (malha acima
+#' do limite do globo) consultam por UF; leves, por localidade — mesma
+#' regra de disponibilidade do globo de localidades
+#' @keywords internal
+painel_ind_tem_dados <- function(mdata_id, nivel_id) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  if (is.na(mdata_id)) return(FALSE)
+  if (nrow(painel_geo_nivel_cache(nivel_id))) {
+    length(painel_locais_com_dados_cache(mdata_id, nivel_id)) > 0
+  } else {
+    length(painel_ufs_com_dados_cache(mdata_id, nivel_id)) > 0
+  }
+}
+
+#' Primeiro indicador visivel do catalogo com dados no nivel territorial:
+#' destino da troca automatica quando o indicador corrente fica sem dados
+#' ao mudar de nivel
+#' @keywords internal
+painel_indicador_com_dados <- function(md, nivel_id) {
+  if (is.null(md) || !NROW(md) || !"mdata_id" %in% names(md)) return(NA_integer_)
+  cand <- md$mdata_id
+  if ("visivel" %in% names(md))
+    cand <- cand[is.na(md$visivel) | md$visivel]
+  for (id in cand) if (painel_ind_tem_dados(id, nivel_id))
+    return(as.integer(id))
+  NA_integer_
 }
 
 #' Serie de um indicador em uma localidade, cacheado
