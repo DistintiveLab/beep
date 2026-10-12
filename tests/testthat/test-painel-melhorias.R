@@ -12,6 +12,21 @@ test_that("painel_rotulo_tempo mapeia periodicidades e cai no Ano", {
   expect_identical(r(NA_character_), "Ano")
   expect_identical(r(NULL), "Ano")
   expect_identical(r("quinzenal"), "Quinzena")
+  expect_identical(r("irregular"), "Ano")
+})
+
+test_that("painel_rotulo_data mostra o ano so quando ele e o unico ponto", {
+  r <- beep:::painel_rotulo_data
+  # serie anual: uma posicao por ano, rotulo seco
+  expect_identical(
+    r(as.Date(c("2021-12-31", "2022-12-31", "2023-12-31"))),
+    c("2021", "2022", "2023"))
+  # dois turnos num ano: as datas do ano ficam com d/m/AAAA, as outras
+  # mantem so o ano
+  expect_identical(
+    r(as.Date(c("2022-10-02", "2022-10-30", "2026-10-04"))),
+    c("02/10/2022", "30/10/2022", "2026"))
+  expect_identical(r(as.Date(character(0))), character(0))
 })
 
 test_that("painel_opcoes_indicador esconde indicadores invisiveis", {

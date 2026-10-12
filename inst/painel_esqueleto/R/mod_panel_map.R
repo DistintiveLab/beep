@@ -32,9 +32,9 @@ mod_panel_map_ui <- function(id) {
             class = "painel-info-btn",
             `aria-label` = "Sobre o indicador"))),
       tags$div(class = "form-group painel-mapa-ano",
-        tags$label(`for` = ns("ano"), "Ano"),
-        shiny::sliderInput(ns("ano"), NULL, min = 2000, max = 2025,
-                           value = 2025, step = 1, sep = "", ticks = FALSE,
+        tags$label(`for` = ns("data"), "Data"),
+        shiny::sliderInput(ns("data"), NULL, min = 1, max = 1,
+                           value = 1, step = 1, sep = "", ticks = FALSE,
                            animate = shiny::animationOptions(interval = 7000,
                                                              loop = FALSE),
                            width = "100%")),
@@ -72,13 +72,36 @@ mod_panel_map_server <- function(id) {
                                   painel_indicador_default(md) else NULL,
                                 server = TRUE)
 
-    # Anos disponiveis do indicador direto do DW (agregacao cacheada), sem
-    # puxar a serie completa para descobri-los
-    anos_ind <- shiny::reactive({
+    # Datas disponiveis do indicador direto do DW (agregacao cacheada),
+    # sem puxar a serie completa para descobri-las: o slider caminha por
+    # refdates exatos (series com mais de um ponto no ano, como turnos
+    # de eleicao, ganham uma posicao por data)
+    datas_ind <- shiny::reactive({
       shiny::validate(shiny::need(nrow(md) > 0,
         "Banco de dados do painel sem indicadores (tabela mdata vazia): confira as variáveis user, password, host e dbname e reinicie a sessão R antes de relançar o app."))
       shiny::req(input$indicador)
-      painel_anos_cache(input$indicador)$ano
+      painel_refdates_cache(input$indicador)$refdate
+    })
+
+    # Rotulo curto de cada posicao do slider: so o ano quando ele e o
+    # unico refdate daquele ano, d/m/AAAA quando o ano tem mais de um
+    rotulos_ind <- shiny::reactive(painel_rotulo_data(datas_ind()))
+
+    # Posicao do slider -> refdate exato (clamp nas bordas; sem selecao
+    # ainda, cai na ultima data)
+    refdate_sel <- shiny::reactive({
+      datas <- datas_ind()
+      shiny::req(length(datas) > 0)
+      i <- suppressWarnings(as.integer(input$data)[1])
+      if (is.na(i)) i <- length(datas)
+      i <- max(1L, min(i, length(datas)))
+      datas[i]
+    })
+
+    rotulo_sel <- shiny::reactive({
+      r <- rotulos_ind()
+      i <- match(refdate_sel(), datas_ind())
+      if (is.na(i) || !length(r) || i > length(r)) "" else r[i]
     })
 
     # Malha do nivel territorial do indicador: municipal mantem o
@@ -135,24 +158,26 @@ mod_panel_map_server <- function(id) {
       list(geo = geo, nivel = ch, degradados = degradados, aviso = aviso)
     })
 
-    # Envia apenas os limites: o navegador conserva a selecao de ano mais
-    # recente e a ajusta a cobertura recebida (snap direcional sobre lacunas).
+    # Envia apenas as posicoes (1..N) e os rotulos de data: o navegador
+    # conserva a selecao mais recente e a ajusta a cobertura recebida
+    # (snap direcional sobre lacunas).
     shiny::observe({
-      anos <- anos_ind()
+      datas <- datas_ind()
       session$sendCustomMessage("painel-map-years", list(
-        sliderId = session$ns("ano"),
+        sliderId = session$ns("data"),
         indicatorId = session$ns("indicador"),
         indicator = input$indicador,
         # I(): sem auto_unbox um array de 1 elemento vira escalar no JS
-        years = I(as.integer(anos))))
+        years = I(as.integer(seq_along(datas))),
+        labels = I(as.character(rotulos_ind()))))
     })
 
-    # ultimo refdate dentro do ano escolhido (valor mais recente do ano),
-    # agregado no proprio SQL e cacheado; NULL quando vazio e o contrato
-    # assumido por paleta, status, camadas e legenda abaixo
+    # valores do refdate exato escolhido no slider, agregado no proprio
+    # SQL e cacheado; NULL quando vazio e o contrato assumido por paleta,
+    # status, camadas e legenda abaixo
     mapa_dados <- shiny::reactive({
-      shiny::req(input$indicador, input$ano)
-      v <- painel_valores_ano_cache(input$indicador, input$ano)
+      shiny::req(input$indicador, refdate_sel())
+      v <- painel_valores_refdate_cache(input$indicador, refdate_sel())
       if (!nrow(v)) return(NULL)
       v
     })
@@ -166,8 +191,8 @@ mod_panel_map_server <- function(id) {
       aviso <- mapa_malha()$aviso
       if (nzchar(aviso)) return(aviso)
       if (!is.null(mapa_dados()) && nrow(mapa_dados())) return("")
-      paste0("Ano ", input$ano, ": sem observações. ",
-             "Escolha outro ano ou indicador.")
+      paste0("Data ", rotulo_sel(), ": sem observações. ",
+             "Escolha outra data ou indicador.")
     })
 
     # Rotulos e cores de TODAS as feicoes da malha do nivel (NA onde sem
@@ -271,7 +296,8 @@ mod_panel_map_server <- function(id) {
       shiny::req(pronto, mapa_dados())
       dados <- mapa_dados()$value
       chave <- list(instance = pronto, indicador = input$indicador,
-                    ano = input$ano, inverter = isTRUE(input$inverter),
+                    data = format(refdate_sel(), "%Y-%m-%d"),
+                    inverter = isTRUE(input$inverter),
                     faixa = range(dados, finite = TRUE))
       if (identical(chave, legenda_chave)) return()
       legenda_chave <<- chave

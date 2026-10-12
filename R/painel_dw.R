@@ -199,6 +199,46 @@ painel_valores_ano <- function(con, mdata_id, ano) {
     mdata_id, ano, ano + 1L))
 }
 
+#' Refdates distintos de um indicador (limites do slider por data do mapa)
+#' @keywords internal
+painel_refdates <- function(con, mdata_id) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  if (is.na(mdata_id)) {
+    return(data.frame(refdate = as.Date(character(0))))
+  }
+  DBI::dbGetQuery(con, sprintf(
+    "SELECT DISTINCT refdate FROM data_values WHERE mdata_id = %d ORDER BY 1",
+    mdata_id))
+}
+
+#' Valores das localidades num refdate exato (slider por data do mapa)
+#' @keywords internal
+painel_valores_refdate <- function(con, mdata_id, refdate) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  refdate <- as.Date(refdate)[1]
+  if (is.na(mdata_id) || is.na(refdate)) {
+    return(data.frame(local_id = integer(0), refdate = as.Date(character(0)),
+                      value = numeric(0)))
+  }
+  DBI::dbGetQuery(con, sprintf(paste(
+    "SELECT local_id, refdate, value FROM data_values",
+    "WHERE mdata_id = %d AND refdate = date '%s'",
+    "AND value <> 'NaN'::float8"),
+    mdata_id, format(refdate, "%Y-%m-%d")))
+}
+
+#' Rotulo curto de cada refdate para o slider: so o ano quando ele e o
+#' unico ponto daquele ano na serie (series anuais seguem \"2022\"), ou
+#' d/m/AAAA quando o ano tem mais de um ponto (turnos de eleicao)
+#' @keywords internal
+painel_rotulo_data <- function(datas) {
+  datas <- as.Date(datas)
+  anos <- format(datas, "%Y")
+  contagens <- table(anos)
+  as.character(ifelse(anos %in% names(contagens)[contagens > 1],
+                      format(datas, "%d/%m/%Y"), anos))
+}
+
 #' Serie completa do indicador ja reduzida a 1 observacao por localidade x
 #' ano (ultimo refdate finito do ano): UMA query por indicador em vez de uma
 #' por (indicador, ano), que o mapa animado e a aba Baixar pagariam a cada
@@ -1560,6 +1600,36 @@ painel_anos_cache <- function(mdata_id) {
     painel_cache_chave(sprintf("anos_%d", mdata_id)),
     painel_cache_ttl[["valores"]],
     function() painel_com_con(function(con) painel_anos(con, mdata_id)))
+}
+
+#' Refdates distintos de um indicador, cacheados
+#' @keywords internal
+painel_refdates_cache <- function(mdata_id) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  if (is.na(mdata_id)) {
+    return(data.frame(refdate = as.Date(character(0))))
+  }
+  painel_cache_get(
+    painel_cache_chave(sprintf("refdates_%d", mdata_id)),
+    painel_cache_ttl[["valores"]],
+    function() painel_com_con(function(con) painel_refdates(con, mdata_id)))
+}
+
+#' Valores por refdate exato, cacheados (slider por data do mapa)
+#' @keywords internal
+painel_valores_refdate_cache <- function(mdata_id, refdate) {
+  mdata_id <- suppressWarnings(as.integer(mdata_id))[1]
+  refdate <- as.Date(refdate)[1]
+  if (is.na(mdata_id) || is.na(refdate)) {
+    return(data.frame(local_id = integer(0), refdate = as.Date(character(0)),
+                      value = numeric(0)))
+  }
+  painel_cache_get(
+    painel_cache_chave(sprintf("valores_refdate_%d_%s", mdata_id,
+                               format(refdate, "%Y%m%d"))),
+    painel_cache_ttl[["valores"]],
+    function() painel_com_con(function(con)
+      painel_valores_refdate(con, mdata_id, refdate)))
 }
 
 #' Serie completa reduzida a 1 observacao por localidade x ano, cacheada
