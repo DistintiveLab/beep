@@ -2,11 +2,15 @@
 % Please edit documentation in R/painel_dw.R
 \name{painel_geojson}
 \alias{painel_geojson}
-\title{GeoJSON (string) de um objeto sf para mensagens Shiny ao cliente}
+\title{GeoJSON (string) de um objeto sf para mensagens Shiny ao cliente,
+com aneis reorientados para o d3-geo do globo (ver
+\code{\link[=painel_geojson_orientar]{painel_geojson_orientar()}})}
 \usage{
 painel_geojson(x)
 }
 \description{
-GeoJSON (string) de um objeto sf para mensagens Shiny ao cliente
+GeoJSON (string) de um objeto sf para mensagens Shiny ao cliente,
+com aneis reorientados para o d3-geo do globo (ver
+\code{\link[=painel_geojson_orientar]{painel_geojson_orientar()}})
 }
 \keyword{internal}

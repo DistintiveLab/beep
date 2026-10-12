@@ -1129,13 +1129,67 @@ painel_valores_local_todos <- function(con, local_id) {
     local_id))
 }
 
-#' GeoJSON (string) de um objeto sf para mensagens Shiny ao cliente
+#' Reorienta os aneis de um GeoJSON para o cliente do globo (d3-geo)
+#'
+#' O d3-geo decide o interior de um poligono esferico pela orientacao dos
+#' aneis, na convencao oposta ao RFC 7946: exterior no sentido horario
+#' (area com sinal negativa em graus) e furos no anti-horario. As malhas
+#' do IBGE (UFs, municipios) ja vem assim, mas as geometrias derivadas do
+#' Censo 2022 (bairros, subdistritos, setores, areas de ponderacao,
+#' gravadas pelos incorporar_*) chegam invertidas; sem normalizacao o
+#' globo desenha o complemento de cada feicao (o disco inteiro pintado) e
+#' a tela fica em branco com o azulado translucido da selecao por cima.
+#' O ajuste e local ao GeoJSON enviado ao navegador (globo: nivel,
+#' destaque, contexto e malha); as geometrias do banco nao mudam e o
+#' driver GeoJSON do GDAL nao tem opcao equivalente (RFC7946=YES nao e
+#' suportado na escrita).
+#' @keywords internal
+painel_geojson_orientar <- function(texto) {
+  area_anel <- function(anel) {
+    m <- matrix(unlist(anel), ncol = 2, byrow = TRUE)
+    n <- nrow(m)
+    if (n < 4) return(0)
+    sum(m[seq_len(n - 1), 1] * m[2:n, 2] -
+          m[2:n, 1] * m[seq_len(n - 1), 2]) / 2
+  }
+  orientar_anel <- function(anel, exterior) {
+    area <- area_anel(anel)
+    if (is.na(area) || area == 0) return(anel)
+    # exterior quer sentido horario (area negativa); furo, anti-horario
+    if (identical(area < 0, exterior)) anel else rev(anel)
+  }
+  orientar_poligono <- function(pol) {
+    lapply(seq_along(pol), function(i) orientar_anel(pol[[i]], i == 1))
+  }
+  gj <- jsonlite::fromJSON(texto, simplifyVector = FALSE)
+  if (!is.list(gj) || !is.list(gj$features)) return(texto)
+  gj$features <- lapply(gj$features, function(f) {
+    geom <- f$geometry
+    if (is.list(geom) && !is.null(geom$type) &&
+        !is.null(geom$coordinates)) {
+      if (identical(geom$type, "Polygon")) {
+        geom$coordinates <- orientar_poligono(geom$coordinates)
+      } else if (identical(geom$type, "MultiPolygon")) {
+        geom$coordinates <- lapply(geom$coordinates, orientar_poligono)
+      }
+      f$geometry <- geom
+    }
+    f
+  })
+  jsonlite::toJSON(gj, auto_unbox = TRUE, digits = 7)
+}
+
+#' GeoJSON (string) de um objeto sf para mensagens Shiny ao cliente,
+#' com aneis reorientados para o d3-geo do globo (ver
+#' [painel_geojson_orientar()])
 #' @keywords internal
 painel_geojson <- function(x) {
   arquivo <- tempfile(fileext = ".geojson")
   on.exit(unlink(arquivo), add = TRUE)
   sf::st_write(x, arquivo, quiet = TRUE)
-  paste(readLines(arquivo, warn = FALSE, encoding = "UTF-8"), collapse = "")
+  texto <- paste(readLines(arquivo, warn = FALSE, encoding = "UTF-8"),
+                 collapse = "")
+  painel_geojson_orientar(texto)
 }
 
 #' Paleta de cores do mapa (port fiel do mypallet do labourvaluesdatapanel):
