@@ -3,10 +3,13 @@
 
 test_that("choices de palavras-chave cobrem o sidrameta inteiro", {
   skip_if_not_installed("sidra")
-  # data.frame (value, label) com TODAS as linhas: sidrameta virou
-  # data.table no pacote sidra e sidrameta[1:2] devolvia 2 LINHAS
-  # (2 opcoes no selectize) em vez das 2 colunas
-  choices <- sidrameta[, c("value", "label")]
+  # O modulo muta o sidrameta do pacote sidra em .onLoad da fonte (id ganha
+  # prefixo de agregacao e colunas 1:2 viram value/label); o teste precisa do
+  # binding do NAMESPACE porque o lazy-data data/sidrameta.rda (cru, id/
+  # literal/agregacao) sombreia o nome simples dentro do testthat. Historico:
+  # sidrameta virou data.table no pacote sidra e sidrameta[1:2] devolvia 2
+  # LINHAS (2 opcoes no selectize) em vez das 2 colunas.
+  choices <- beep:::sidrameta[, c("value", "label")]
   expect_s3_class(choices, "data.frame")
   expect_named(choices, c("value", "label"))
   expect_gt(nrow(choices), 1000)

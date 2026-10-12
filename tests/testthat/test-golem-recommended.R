@@ -1,8 +1,13 @@
 context("golem tests")
 
-library(golem)
+# golem e Suggests: em maquina sem o pacote (CI leve, dev offline) o suite
+# segue sem crash — mesmo efeito do skip automatico do testthat
+if (requireNamespace("golem", quietly = TRUE)) {
+  library(golem)
+}
 
 test_that("app ui", {
+  skip_if_not_installed("golem")
   ui <- app_ui()
   expect_shinytaglist(ui)
 })
