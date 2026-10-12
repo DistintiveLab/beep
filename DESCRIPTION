@@ -1,6 +1,6 @@
 Package: beep
 Title: Pacote de inclusão de fontes de dados, indicadores, e filtros de variáveis
-Version: 0.9.3.9014
+Version: 0.9.3.9015
 Date: 2026-10-02
 Authors@R: 
     c(person(given = "Rodrigo",
@@ -112,6 +112,7 @@ Collate:
     'incorporar_bairros.R'
     'incorporar_municipio_ibge.R'
     'incorporar_setores_censitarios.R'
+    'incorporar_subdistritos.R'
     'mod_atualizacao.R'
     'mod_explorar_bivar.R'
     'mod_explorar_dicionario.R'
@@ -140,6 +141,7 @@ Collate:
     'server_app.R'
     'sidra_prepare.R'
     'tse_auxiliares.R'
+    'tse_ponte_secao.R'
     'ui_app.R'
     'ui_body.R'
     'ui_header.R'
