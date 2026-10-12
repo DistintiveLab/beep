@@ -236,9 +236,9 @@ verde; lista de arquivos-a-tocar revisada.
   `>7087` em `gravar_serie_dw.R`, `dbdatawriter.R`, `painel_dw.R` e
   `create_extend_geogroup_view.R`) — centralizar num arquivo só (p. ex.
   `R/niveis_territoriais.R`) com a tabela canônica de blocos e helpers
-  `eh_municipio_id()` / `eh_municipio_geoloc()`, de modo que a
-  contiguidade (ou não) dos blocos deixe de importar para quem escreve
-  filtro.
+  [`eh_municipio_id()`](https://distintivelab.github.io/beep/dev/reference/eh_municipio_id.md)
+  / `eh_municipio_geoloc()`, de modo que a contiguidade (ou não) dos
+  blocos deixe de importar para quem escreve filtro.
 - Testes de regressão do
   [`montar_lookup_locais()`](https://distintivelab.github.io/beep/dev/reference/montar_lookup_locais.md)
   com setores presentes: o prefixo 6d do setor **não** pode sombrear o
@@ -353,3 +353,110 @@ painel, com proveniência e nota metodológica sobre a correspondência.
   `R/create_extend_geogroup_view.R` — `recortes_geograficos` (1 linha
   por município, blocos 5570/7087 em :32-35).
 - Modelo de incorporação: `R/incorporar_municipio_ibge.R`.
+
+## 8. Auditoria do DW `painel_eleicoes` (2026-10-11) — o que existe de fato
+
+Motivação: carregar o indicador “abstenções por seção de votação (TSE)”
+no painel, começando pelo DF. Verificação empírica direta no banco
+(queries em `local`, `niveis_carga`, `data_values`, `mdata_exts` ) e nos
+pacotes instalados (tsebr, tsesqlr, censoagg, geobr):
+
+| Verificação | Resultado |
+|----|----|
+| `local` nível setor | **5418** (todos UF 53 = DF; `niveis_carga`: geobr/setores_censitarios, escopo 53, 2026-10-11; larguras 15d) |
+| `local` nível bairro | **0 linhas, nenhuma carga registrada** em `niveis_carga`. E não é acidente: a malha de setores 2022 do geobr traz `code_neighborhood` **vazio para 5418/5418 setores do DF**, e o layer `neighborhoods_2022` não tem a UF 53 — não há bairro oficial IBGE para o DF |
+| `local` nível AP | 83 (escopo 53, geobr/areas_ponderacao, 2026-10-08) |
+| `data_values` | 15989 linhas, **todas casadas com `local` (0 órfãos), zero em níveis submunicipais** |
+| mdata 1 (`n_homens_demografia_V01007`) | call string é `censoagg::agregar_setores(..., nivel='municipio')` — o Censo **foi agregado a município na origem**; dado por setor nunca foi gravado. Recarregar com `nivel='setor'` basta (a escrita já resolve códigos 15-16d) |
+| mdata 2 (abstenções TSE) | municipal (tsesqlr detalhe município, 2022+2026, 5510 locais) |
+| beepdb | sem mdata, sem dado submunicipal — o dado por seção **não está em banco nenhum** acessível |
+| DF na malha de setores | 1 distrito (Brasília) + **33 subdistritos = Regiões Administrativas** (`code_subdistrict`); atributo de bairro ausente |
+| tsebr instalado | `detalhe_votacao_secao`: **`abstencoes`** (QT_ABSTENCOES) por (município TSE, turno, zona, seção); `eleitorado_local_votacao` (`tse_locais_votacao()`): **`NM_BAIRRO` + lat/lon por seção** — a ponte da F4 é implementável hoje com esse arquivo. tsesqlr: sem nível seção |
+| Painel (código) | já pronto para exibir: rótulos 10/11/12/15/16, níveis auto-descobertos por [`painel_niveis()`](https://distintivelab.github.io/beep/dev/reference/painel_niveis.md) (só listam quem tem dados), [`painel_geo_irmaos_mun()`](https://distintivelab.github.io/beep/dev/reference/painel_geo_irmaos_mun.md) tesselando o município em foco (teto 2000 feições — DF tem 5418 setores: degrada a destaque+UF), aba Baixar com tradução de código |
+
+Estado das fases originais após a auditoria: **F0/F1 prontas** (BIGINT +
+`nivel_tipo` + blocos + helpers em `R/niveis_territoriais.R`); **F2
+pronta** para setores e AP (carga DF idempotente em produção); **F3
+essencialmente pronta** (escrita por código longo em
+`montar_lookup_locais`, painel auto-descobre níveis); **F4: helpers
+prontos, sem consumidor real** — nunca rodaram numa carga. O que falta é
+**dado** (e uma decisão de nível para o DF), não infraestrutura.
+
+## 9. Piloto DF — abstenções por seção no painel (plano)
+
+### P1 — Censo por setor no painel (só carga, sem código novo)
+
+- Recarregar o indicador com
+  `censoagg::agregar_setores(dataset='Pessoas', ano=2022, variaveis='demografia_V01007', nivel='setor', corte=53)`
+  — conferir a semântica de `corte` (filtro por UF) na doc do censoagg;
+  emitir pela inserção do beep (marcador `# censo-origem:`) ou script
+  com
+  [`gravar_serie_dw()`](https://distintivelab.github.io/beep/dev/reference/gravar_serie_dw.md).
+- Validação: soma dos setores do DF ≈ valor municipal já gravado; painel
+  passa a listar “Setor censitário” sozinho; globo mostra o município em
+  foco (5418 feições \> teto 2000 → sem tesselado, só destaque —
+  aceitável no piloto; avaliar teto configurável por nível depois).
+
+### P2 — Nível subdistrito/Região Administrativa do DF
+
+- O DF **não tem bairro oficial na malha do Censo**; o recorte
+  submunicipal com geometria disponível é o **subdistrito (33 RAs)**,
+  dissolvível dos setores carregados por `code_subdistrict` (mesmo
+  padrão de
+  [`incorporar_bairros()`](https://distintivelab.github.io/beep/dev/reference/incorporar_bairros.md),
+  novo
+  [`incorporar_subdistritos()`](https://distintivelab.github.io/beep/dev/reference/incorporar_subdistritos.md)
+  ou generalização).
+- **Colisão de largura**: código de subdistrito tem 11 dígitos
+  (UF2+mun5+ dist2+subdist2), a mesma largura do bairro composto. A
+  chave de nível do painel é a largura — ajustar
+  [`painel_niveis()`](https://distintivelab.github.io/beep/dev/reference/painel_niveis.md)/[`painel_nivel_parse()`](https://distintivelab.github.io/beep/dev/reference/painel_nivel_parse.md)
+  (nas duas cópias, pacote e esqueleto) para agrupar por `nivel_tipo`
+  nos submunicipais (a coluna já existe), rotulando “Subdistrito (RA)”.
+- Bloco de `local_id`: novo (p. ex. 3000000+, após o fim das APs).
+
+### P3 — Ponte seção de votação → território (auditável, nunca inferida)
+
+Duas pontes independentes, ambas com o que já está instalado:
+
+- **B1 (nome, F4):** `tse_locais_votacao(ano, uf)` →
+  [`tse_mapa_secao_bairro()`](https://distintivelab.github.io/beep/dev/reference/tse_mapa_secao_bairro.md)
+  (uma linha por seção, NM_BAIRRO) → casar com o nível por
+  [`tse_casar_bairros()`](https://distintivelab.github.io/beep/dev/reference/tse_casar_bairros.md)
+  (no DF, casar nome TSE ↔︎ nome de RA; verificar empiricamente o que o
+  TSE declara como “bairro” no DF).
+- **B2 (ponto):** lat/lon do local de votação (mesmo arquivo de B1) →
+  `ST_Contains` nos polígonos do nível (RA/setor) no DW —
+  determinístico, reproducível, com relatório de pontos sem
+  coordenada/fora do polígono.
+- Validação cruzada no DF: taxa de casamento de cada ponta, concordância
+  B1×B2, soma por RA vs total municipal, relatório de não-casados
+  visível na carga. A ponte escolhida fica declarada na nota
+  metodológica do mdata (o `data_url`/`mdata_obs` já carregam a
+  proveniência).
+
+### P4 — Opção de agregação na inserção (pedido do usuário)
+
+- Nova família TSE no upload (`upload_tsebr.R`): baixar
+  `detalhe_votacao_secao`
+  (turno/aptos/comparecimento/**abstenções**/nulos/ brancos por seção) e
+  oferecer **“agregar por: município (padrão atual) / subdistrito-RA /
+  bairro (apenas UFs com bairro no Censo)”** — a agregação usa
+  [`tse_agregar_votacao()`](https://distintivelab.github.io/beep/dev/reference/tse_agregar_votacao.md)
+  (bairro + zona como fallback) com a ponte da P3; seção **nunca** vira
+  nível do DW; o que não casa entra no relatório e fica de fora (ou cai
+  na agregação municipal, a decidir).
+- O call string emitido carrega a escolha (marcador de família +
+  parâmetro de nível), mantendo o contrato dos submódulos.
+
+### P5 — Fechamento do piloto
+
+- Verificação ponta a ponta no painel (Região, Mapa, Globo, Baixar) nos
+  níveis subdistrito/setor com dados DF; caches e TTLs; testes de sync
+  do esqueleto se `painel_dw.R` mudar; atualizar AGENTS.md e este
+  roadmap com o resultado (incl. números da validação P3).
+
+**Critério de pronto do piloto:** indicador “abstenções 2026 (1º turno)
+por RA do DF” visível de ponta a ponta no painel, com nota metodológica
+da ponte seção→RA e relatório de não-casados; Censo por setor como
+segundo indicador de fumaça.

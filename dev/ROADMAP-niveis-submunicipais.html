@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9011</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9015</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -145,7 +145,7 @@
 <li>Coluna explícita de tipo de nível em <code>local</code> (p. ex. <code>local.nivel_tipo</code>: <code>municipio|pnad|setor|bairro|ponderacao|...</code>), povuada por convenção de largura nos bancos existentes (backfill) e exigida nos carregadores novos. As regras “é município” (seção 2.3) passam a usar tipo/largura, não só faixa de id — matando a ambiguidade de vez.</li>
 <li>Reserva documentada dos blocos de <code>local_id</code> submunicipais (proposta: setores <code>100000+</code>, bairros <code>1000000+</code>, áreas de ponderação <code>2000000+</code> — todos int4, fora da zona de crescimento dos municípios incorporados), com alocação por <code>MAX(local_id) + 1</code> dentro do tipo (padrão <code>incorporar_municipio_ibge</code>).</li>
 <li>
-<strong>Fonte única das constantes de bloco</strong>: os limiares hoje vivem duplicados e divergentes como literais (<code>&lt;5571</code>, <code>&lt;6000</code>, <code>&lt;5800</code>, <code>&gt;7087</code> em <code>gravar_serie_dw.R</code>, <code>dbdatawriter.R</code>, <code>painel_dw.R</code> e <code>create_extend_geogroup_view.R</code>) — centralizar num arquivo só (p. ex. <code>R/niveis_territoriais.R</code>) com a tabela canônica de blocos e helpers <code>eh_municipio_id()</code> / <code>eh_municipio_geoloc()</code>, de modo que a contiguidade (ou não) dos blocos deixe de importar para quem escreve filtro.</li>
+<strong>Fonte única das constantes de bloco</strong>: os limiares hoje vivem duplicados e divergentes como literais (<code>&lt;5571</code>, <code>&lt;6000</code>, <code>&lt;5800</code>, <code>&gt;7087</code> em <code>gravar_serie_dw.R</code>, <code>dbdatawriter.R</code>, <code>painel_dw.R</code> e <code>create_extend_geogroup_view.R</code>) — centralizar num arquivo só (p. ex. <code>R/niveis_territoriais.R</code>) com a tabela canônica de blocos e helpers <code><a href="reference/eh_municipio_id.html">eh_municipio_id()</a></code> / <code>eh_municipio_geoloc()</code>, de modo que a contiguidade (ou não) dos blocos deixe de importar para quem escreve filtro.</li>
 <li>Testes de regressão do <code><a href="reference/montar_lookup_locais.html">montar_lookup_locais()</a></code> com setores presentes: o prefixo 6d do setor <strong>não</strong> pode sombrear o município; séries com códigos longos resolvem pelo geoloc completo.</li>
 </ul><p><strong>Critério de pronto:</strong> banco migrado passa em toda a suíte atual + testes novos de não-colisão.</p>
 </div>
@@ -211,6 +211,74 @@
 <li>Schema: <code>R/dbprepare.R</code> — tribbles <code>geoloc</code> (:37) e <code>local</code> (:59); <code>R/create_extend_geogroup_view.R</code> — <code>recortes_geograficos</code> (1 linha por município, blocos 5570/7087 em :32-35).</li>
 <li>Modelo de incorporação: <code>R/incorporar_municipio_ibge.R</code>.</li>
 </ul></div>
+<div class="section level2">
+<h2 id="id_8-auditoria-do-dw-painel_eleicoes-2026-10-11--o-que-existe-de-fato">8. Auditoria do DW <code>painel_eleicoes</code> (2026-10-11) — o que existe de fato<a class="anchor" aria-label="anchor" href="#id_8-auditoria-do-dw-painel_eleicoes-2026-10-11--o-que-existe-de-fato"></a></h2>
+<p>Motivação: carregar o indicador “abstenções por seção de votação (TSE)” no painel, começando pelo DF. Verificação empírica direta no banco (queries em <code>local</code>, <code>niveis_carga</code>, <code>data_values</code>, <code>mdata_exts</code> ) e nos pacotes instalados (tsebr, tsesqlr, censoagg, geobr):</p>
+<table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>Verificação</th>
+<th>Resultado</th>
+</tr></thead><tbody><tr><td>
+<code>local</code> nível setor</td>
+<td>
+<strong>5418</strong> (todos UF 53 = DF; <code>niveis_carga</code>: geobr/setores_censitarios, escopo 53, 2026-10-11; larguras 15d)</td>
+</tr><tr><td>
+<code>local</code> nível bairro</td>
+<td>
+<strong>0 linhas, nenhuma carga registrada</strong> em <code>niveis_carga</code>. E não é acidente: a malha de setores 2022 do geobr traz <code>code_neighborhood</code> <strong>vazio para 5418/5418 setores do DF</strong>, e o layer <code>neighborhoods_2022</code> não tem a UF 53 — não há bairro oficial IBGE para o DF</td>
+</tr><tr><td>
+<code>local</code> nível AP</td>
+<td>83 (escopo 53, geobr/areas_ponderacao, 2026-10-08)</td>
+</tr><tr><td><code>data_values</code></td>
+<td>15989 linhas, <strong>todas casadas com <code>local</code> (0 órfãos), zero em níveis submunicipais</strong>
+</td>
+</tr><tr><td>mdata 1 (<code>n_homens_demografia_V01007</code>)</td>
+<td>call string é <code>censoagg::agregar_setores(..., nivel='municipio')</code> — o Censo <strong>foi agregado a município na origem</strong>; dado por setor nunca foi gravado. Recarregar com <code>nivel='setor'</code> basta (a escrita já resolve códigos 15-16d)</td>
+</tr><tr><td>mdata 2 (abstenções TSE)</td>
+<td>municipal (tsesqlr detalhe município, 2022+2026, 5510 locais)</td>
+</tr><tr><td>beepdb</td>
+<td>sem mdata, sem dado submunicipal — o dado por seção <strong>não está em banco nenhum</strong> acessível</td>
+</tr><tr><td>DF na malha de setores</td>
+<td>1 distrito (Brasília) + <strong>33 subdistritos = Regiões Administrativas</strong> (<code>code_subdistrict</code>); atributo de bairro ausente</td>
+</tr><tr><td>tsebr instalado</td>
+<td>
+<code>detalhe_votacao_secao</code>: <strong><code>abstencoes</code></strong> (QT_ABSTENCOES) por (município TSE, turno, zona, seção); <code>eleitorado_local_votacao</code> (<code>tse_locais_votacao()</code>): <strong><code>NM_BAIRRO</code> + lat/lon por seção</strong> — a ponte da F4 é implementável hoje com esse arquivo. tsesqlr: sem nível seção</td>
+</tr><tr><td>Painel (código)</td>
+<td>já pronto para exibir: rótulos 10/11/12/15/16, níveis auto-descobertos por <code><a href="reference/painel_niveis.html">painel_niveis()</a></code> (só listam quem tem dados), <code><a href="reference/painel_geo_irmaos_mun.html">painel_geo_irmaos_mun()</a></code> tesselando o município em foco (teto 2000 feições — DF tem 5418 setores: degrada a destaque+UF), aba Baixar com tradução de código</td>
+</tr></tbody></table><p>Estado das fases originais após a auditoria: <strong>F0/F1 prontas</strong> (BIGINT + <code>nivel_tipo</code> + blocos + helpers em <code>R/niveis_territoriais.R</code>); <strong>F2 pronta</strong> para setores e AP (carga DF idempotente em produção); <strong>F3 essencialmente pronta</strong> (escrita por código longo em <code>montar_lookup_locais</code>, painel auto-descobre níveis); <strong>F4: helpers prontos, sem consumidor real</strong> — nunca rodaram numa carga. O que falta é <strong>dado</strong> (e uma decisão de nível para o DF), não infraestrutura.</p>
+</div>
+<div class="section level2">
+<h2 id="id_9-piloto-df--abstenções-por-seção-no-painel-plano">9. Piloto DF — abstenções por seção no painel (plano)<a class="anchor" aria-label="anchor" href="#id_9-piloto-df--absten%C3%A7%C3%B5es-por-se%C3%A7%C3%A3o-no-painel-plano"></a></h2>
+<div class="section level3">
+<h3 id="p1--censo-por-setor-no-painel-só-carga-sem-código-novo">P1 — Censo por setor no painel (só carga, sem código novo)<a class="anchor" aria-label="anchor" href="#p1--censo-por-setor-no-painel-s%C3%B3-carga-sem-c%C3%B3digo-novo"></a></h3>
+<ul><li>Recarregar o indicador com <code>censoagg::agregar_setores(dataset='Pessoas', ano=2022, variaveis='demografia_V01007', nivel='setor', corte=53)</code> — conferir a semântica de <code>corte</code> (filtro por UF) na doc do censoagg; emitir pela inserção do beep (marcador <code># censo-origem:</code>) ou script com <code><a href="reference/gravar_serie_dw.html">gravar_serie_dw()</a></code>.</li>
+<li>Validação: soma dos setores do DF ≈ valor municipal já gravado; painel passa a listar “Setor censitário” sozinho; globo mostra o município em foco (5418 feições &gt; teto 2000 → sem tesselado, só destaque — aceitável no piloto; avaliar teto configurável por nível depois).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="p2--nível-subdistritoregião-administrativa-do-df">P2 — Nível subdistrito/Região Administrativa do DF<a class="anchor" aria-label="anchor" href="#p2--n%C3%ADvel-subdistritoregi%C3%A3o-administrativa-do-df"></a></h3>
+<ul><li>O DF <strong>não tem bairro oficial na malha do Censo</strong>; o recorte submunicipal com geometria disponível é o <strong>subdistrito (33 RAs)</strong>, dissolvível dos setores carregados por <code>code_subdistrict</code> (mesmo padrão de <code><a href="reference/incorporar_bairros.html">incorporar_bairros()</a></code>, novo <code><a href="reference/incorporar_subdistritos.html">incorporar_subdistritos()</a></code> ou generalização).</li>
+<li>
+<strong>Colisão de largura</strong>: código de subdistrito tem 11 dígitos (UF2+mun5+ dist2+subdist2), a mesma largura do bairro composto. A chave de nível do painel é a largura — ajustar <code><a href="reference/painel_niveis.html">painel_niveis()</a></code>/<code><a href="reference/painel_nivel_parse.html">painel_nivel_parse()</a></code> (nas duas cópias, pacote e esqueleto) para agrupar por <code>nivel_tipo</code> nos submunicipais (a coluna já existe), rotulando “Subdistrito (RA)”.</li>
+<li>Bloco de <code>local_id</code>: novo (p. ex. 3000000+, após o fim das APs).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="p3--ponte-seção-de-votação--território-auditável-nunca-inferida">P3 — Ponte seção de votação → território (auditável, nunca inferida)<a class="anchor" aria-label="anchor" href="#p3--ponte-se%C3%A7%C3%A3o-de-vota%C3%A7%C3%A3o--territ%C3%B3rio-audit%C3%A1vel-nunca-inferida"></a></h3>
+<p>Duas pontes independentes, ambas com o que já está instalado:</p>
+<ul><li>
+<strong>B1 (nome, F4):</strong> <code>tse_locais_votacao(ano, uf)</code> → <code><a href="reference/tse_mapa_secao_bairro.html">tse_mapa_secao_bairro()</a></code> (uma linha por seção, NM_BAIRRO) → casar com o nível por <code><a href="reference/tse_casar_bairros.html">tse_casar_bairros()</a></code> (no DF, casar nome TSE ↔︎ nome de RA; verificar empiricamente o que o TSE declara como “bairro” no DF).</li>
+<li>
+<strong>B2 (ponto):</strong> lat/lon do local de votação (mesmo arquivo de B1) → <code>ST_Contains</code> nos polígonos do nível (RA/setor) no DW — determinístico, reproducível, com relatório de pontos sem coordenada/fora do polígono.</li>
+<li>Validação cruzada no DF: taxa de casamento de cada ponta, concordância B1×B2, soma por RA vs total municipal, relatório de não-casados visível na carga. A ponte escolhida fica declarada na nota metodológica do mdata (o <code>data_url</code>/<code>mdata_obs</code> já carregam a proveniência).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="p4--opção-de-agregação-na-inserção-pedido-do-usuário">P4 — Opção de agregação na inserção (pedido do usuário)<a class="anchor" aria-label="anchor" href="#p4--op%C3%A7%C3%A3o-de-agrega%C3%A7%C3%A3o-na-inser%C3%A7%C3%A3o-pedido-do-usu%C3%A1rio"></a></h3>
+<ul><li>Nova família TSE no upload (<code>upload_tsebr.R</code>): baixar <code>detalhe_votacao_secao</code> (turno/aptos/comparecimento/<strong>abstenções</strong>/nulos/ brancos por seção) e oferecer <strong>“agregar por: município (padrão atual) / subdistrito-RA / bairro (apenas UFs com bairro no Censo)”</strong> — a agregação usa <code><a href="reference/tse_agregar_votacao.html">tse_agregar_votacao()</a></code> (bairro + zona como fallback) com a ponte da P3; seção <strong>nunca</strong> vira nível do DW; o que não casa entra no relatório e fica de fora (ou cai na agregação municipal, a decidir).</li>
+<li>O call string emitido carrega a escolha (marcador de família + parâmetro de nível), mantendo o contrato dos submódulos.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="p5--fechamento-do-piloto">P5 — Fechamento do piloto<a class="anchor" aria-label="anchor" href="#p5--fechamento-do-piloto"></a></h3>
+<ul><li>Verificação ponta a ponta no painel (Região, Mapa, Globo, Baixar) nos níveis subdistrito/setor com dados DF; caches e TTLs; testes de sync do esqueleto se <code>painel_dw.R</code> mudar; atualizar AGENTS.md e este roadmap com o resultado (incl. números da validação P3).</li>
+</ul><p><strong>Critério de pronto do piloto:</strong> indicador “abstenções 2026 (1º turno) por RA do DF” visível de ponta a ponta no painel, com nota metodológica da ponte seção→RA e relatório de não-casados; Censo por setor como segundo indicador de fumaça.</p>
+</div>
+</div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -1,8 +1,9 @@
 # Incorpora um nivel territorial submunicipal a partir de um sf de feicoes
 
 O sf precisa trazer o codigo longo do nivel (digitos apenas; largura
-validada contra o registro de `niveis_territoriais_tipos`) e,
-opcionalmente, um nome. Feicoes cujo codigo ja existe em `geoloc` sao
+validada contra o registro de
+[niveis_territoriais_tipos](https://distintivelab.github.io/beep/dev/reference/niveis_territoriais_tipos.md))
+e, opcionalmente, um nome. Feicoes cujo codigo ja existe em `geoloc` sao
 puladas (idempotente por codigo). As novas ganham `local_id` sequencial
 dentro do bloco do tipo e `nivel_tipo` preenchido. A matview
 `recortes_geograficos` NAO e regenerada: ela e uma visao por municipio
@@ -32,7 +33,7 @@ ampliar_nivel_territorial(
 - tipo:
 
   um de `niveis_blocos_local_id$tipo`: "setor", "area_ponderacao",
-  "bairro"
+  "bairro", "subdistrito"
 
 - col_codigo, col_nome:
 

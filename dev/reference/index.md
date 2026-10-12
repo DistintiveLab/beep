@@ -115,7 +115,7 @@
   : Icon Text
 
 - [`incorporar_areas_ponderacao()`](https://distintivelab.github.io/beep/dev/reference/incorporar_areas_ponderacao.md)
-  : Incorpora a malha de areas de ponderacao do Censo
+  : Incorpora a malha de areas de ponderacao de UFs/municipios
 
 - [`incorporar_bairros()`](https://distintivelab.github.io/beep/dev/reference/incorporar_bairros.md)
   : Incorpora bairros derivados dos setores censitarios
@@ -125,6 +125,9 @@
 
 - [`incorporar_setores_censitarios()`](https://distintivelab.github.io/beep/dev/reference/incorporar_setores_censitarios.md)
   : Incorpora a malha de setores censitarios de UFs/municipios
+
+- [`incorporar_subdistritos()`](https://distintivelab.github.io/beep/dev/reference/incorporar_subdistritos.md)
+  : Incorpora subdistritos derivados dos setores censitarios
 
 - [`insert_logo()`](https://distintivelab.github.io/beep/dev/reference/insert_logo.md)
   : Insert Logo
@@ -146,6 +149,11 @@
 
   Fragmento SQL que seleciona apenas municipios (alias `l` no chamador)
 
+- [`painel_pnad_bloco_fim_resolver()`](https://distintivelab.github.io/beep/dev/reference/painel_pnad_bloco_fim_resolver.md)
+  : Fim do bloco PNAD: local_id da linha "Brasil" (dinamico; cai no
+  fallback estatico sem a linha). Cache de sessao em environment proprio
+  (namespace e travado apos o load).
+
 - [`panel_app()`](https://distintivelab.github.io/beep/dev/reference/panel_app.md)
   : App do painel de indicadores (objeto shinyApp)
 
@@ -153,7 +161,7 @@
   : populate_initialdb — seeder territorial do DW beep
 
 - [`preparar_niveis_submunicipais()`](https://distintivelab.github.io/beep/dev/reference/preparar_niveis_submunicipais.md)
-  : Migra o schema do DW para aceitar niveis territoriais submunicipais
+  : Prepara o DW para niveis territoriais submunicipais (idempotente)
 
 - [`prepare_db()`](https://distintivelab.github.io/beep/dev/reference/prepare_db.md)
   : Prepare app_db
@@ -172,6 +180,21 @@
 
 - [`sidebar_ui()`](https://distintivelab.github.io/beep/dev/reference/sidebar_ui.md)
   : Sidebar UI
+
+- [`tse_harmonizar_secoes()`](https://distintivelab.github.io/beep/dev/reference/tse_harmonizar_secoes.md)
+  :
+
+  Harmoniza secoes de votacao com um nivel submunicipal do DW e grava a
+  tabela `tse_secao_bairro`
+
+- [`tse_pontuar_locais_votacao()`](https://distintivelab.github.io/beep/dev/reference/tse_pontuar_locais_votacao.md)
+  : Converte os locais de votacao em pontos espaciais (sf POINT,
+  EPSG:4326)
+
+- [`tse_resumo_harmonizacao()`](https://distintivelab.github.io/beep/dev/reference/tse_resumo_harmonizacao.md)
+  :
+
+  Resumo da harmonizacao gravada em `tse_secao_bairro`
 
 - [`upload_data_ui()`](https://distintivelab.github.io/beep/dev/reference/upload_data_ui.md)
   : Upload Data Module - UI

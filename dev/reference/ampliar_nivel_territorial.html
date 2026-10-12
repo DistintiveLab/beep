@@ -19,7 +19,7 @@ submunicipais nao participam dos recortes."><meta property="og:image" content="h
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9011</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9015</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@ submunicipais nao participam dos recortes."><meta property="og:image" content="h
 
     <div class="ref-description section level2">
     <p>O sf precisa trazer o codigo longo do nivel (digitos apenas; largura
-validada contra o registro de <code>niveis_territoriais_tipos</code>) e, opcionalmente,
+validada contra o registro de <a href="niveis_territoriais_tipos.html">niveis_territoriais_tipos</a>) e, opcionalmente,
 um nome. Feicoes cujo codigo ja existe em <code>geoloc</code> sao puladas
 (idempotente por codigo). As novas ganham <code>local_id</code> sequencial dentro do
 bloco do tipo e <code>nivel_tipo</code> preenchido. A matview <code>recortes_geograficos</code>
@@ -84,7 +84,7 @@ nome (<code>col_nome</code>), geometria em EPSG:4326 ou reprojetavel</p></dd>
 
 <dt id="arg-tipo">tipo<a class="anchor" aria-label="anchor" href="#arg-tipo"></a></dt>
 <dd><p>um de <code>niveis_blocos_local_id$tipo</code>: "setor",
-"area_ponderacao", "bairro"</p></dd>
+"area_ponderacao", "bairro", "subdistrito"</p></dd>
 
 
 <dt id="arg-col-codigo-col-nome">col_codigo, col_nome<a class="anchor" aria-label="anchor" href="#arg-col-codigo-col-nome"></a></dt>

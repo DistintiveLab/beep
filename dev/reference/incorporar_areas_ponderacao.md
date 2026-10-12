@@ -1,10 +1,13 @@
-# Incorpora a malha de areas de ponderacao do Censo
+# Incorpora a malha de areas de ponderacao de UFs/municipios
 
-Baixa a malha via \[geobr::read_weighting_area()\] e insere cada area
-com ampliar_nivel_territorial() (tipo "area_ponderacao": geoloc_id de 13
-digitos, local_id no bloco 2000000-2999999; o municipio pai e o prefixo
-7d do codigo). Cargas repetidas sao idempotentes por codigo e ficam
-registradas em niveis_carga.
+Baixa via
+[`geobr::read_weighting_area()`](https://ipea.github.io/geobr/reference/read_weighting_area.html)
+(Censo 2010) e insere cada area com
+[`ampliar_nivel_territorial()`](https://distintivelab.github.io/beep/dev/reference/ampliar_nivel_territorial.md)
+(tipo "area_ponderacao": `geoloc_id` = codigo de 13 digitos, `local_id`
+no bloco 2000000-2999999). O municipio pai e o prefixo 7d do codigo; sem
+vinculo em `recortes_geograficos`. Cargas repetidas sao idempotentes por
+codigo e ficam registradas em `niveis_carga`.
 
 ## Usage
 
@@ -26,12 +29,12 @@ incorporar_areas_ponderacao(
 
 - ufs:
 
-  "all" ou vetor de codigos de UF (2 digitos) ou municipio IBGE (7
-  digitos)
+  `"all"` ou vetor de codigos de UF (2 digitos) ou municipio IBGE (7
+  digitos) para carga parcial
 
 - ano:
 
-  Censo de referencia (2010 e o publicado para areas de ponderacao)
+  Censo de referencia (2010 — unico com malha de AP publicada)
 
 - simplificar:
 
@@ -39,8 +42,7 @@ incorporar_areas_ponderacao(
 
 - refrescar:
 
-  atualizar as matviews named/geonamed_datavalues ao fim? Custa minutos
-  em DW grande; ETL em lote prefere refrescar uma unica vez
+  atualizar as matviews named/geonamed_datavalues ao fim?
 
 ## Value
 

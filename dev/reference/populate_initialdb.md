@@ -16,7 +16,9 @@ populate_initialdb(
   con = NULL,
   dbtype = "pgsql",
   dir_dadostat = NULL,
-  pndr_groups = FALSE
+  pndr_groups = FALSE,
+  pnadc_inicio = 5572L,
+  limpar = TRUE
 )
 ```
 
@@ -44,6 +46,16 @@ populate_initialdb(
   Fronteira, Amazonia Legal, Semiarido, SUDENE, regioes, UF/Regiao)
   sempre entram.
 
+- pnadc_inicio:
+
+  Primeiro `local_id` do bloco de estratos PNAD (default 5572:
+  municípios da malha 2024 ocupam 1..5571).
+
+- limpar:
+
+  Truncar `local_group`/`local`/`geoloc` antes de popular (default
+  TRUE - torna o seeder re-executavel).
+
 ## Details
 
 Carga: municipios, micror e mesorregioes (IBGE 1990), UFs,
@@ -56,5 +68,6 @@ NAO carrega indicadores (mdata/data_values/mdata_exts): esses vem dos
 pipelines de cada projeto.
 
 Uso: `data-raw/populate_initialdb.R | populate_initialdb()` (requer
-conexao ao Postgres do DW e os pacotes Suggests
-brazilmaps/geobr/readODS/rvest).
+conexao ao Postgres do DW e os pacotes Suggests geobr/readODS/rvest
+(brazilmaps não é mais usado: a v1.0.0 quebrou API e o geobr cobre todos
+os níveis).

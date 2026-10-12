@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9011</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9015</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -275,7 +275,7 @@
           <code><a href="incorporar_areas_ponderacao.html">incorporar_areas_ponderacao()</a></code>
 
         </dt>
-        <dd>Incorpora a malha de areas de ponderacao do Censo</dd>
+        <dd>Incorpora a malha de areas de ponderacao de UFs/municipios</dd>
 
         <dt>
 
@@ -297,6 +297,13 @@
 
         </dt>
         <dd>Incorpora a malha de setores censitarios de UFs/municipios</dd>
+
+        <dt>
+
+          <code><a href="incorporar_subdistritos.html">incorporar_subdistritos()</a></code>
+
+        </dt>
+        <dd>Incorpora subdistritos derivados dos setores censitarios</dd>
 
         <dt>
 
@@ -342,6 +349,13 @@
 
         <dt>
 
+          <code><a href="painel_pnad_bloco_fim_resolver.html">painel_pnad_bloco_fim_resolver()</a></code>
+
+        </dt>
+        <dd>Fim do bloco PNAD: local_id da linha "Brasil" (dinamico; cai no fallback estatico sem a linha). Cache de sessao em environment proprio (namespace e travado apos o load).</dd>
+
+        <dt>
+
           <code><a href="panel_app.html">panel_app()</a></code>
 
         </dt>
@@ -359,7 +373,7 @@
           <code><a href="preparar_niveis_submunicipais.html">preparar_niveis_submunicipais()</a></code>
 
         </dt>
-        <dd>Migra o schema do DW para aceitar niveis territoriais submunicipais</dd>
+        <dd>Prepara o DW para niveis territoriais submunicipais (idempotente)</dd>
 
         <dt>
 
@@ -402,6 +416,27 @@
 
         </dt>
         <dd>Sidebar UI</dd>
+
+        <dt>
+
+          <code><a href="tse_harmonizar_secoes.html">tse_harmonizar_secoes()</a></code>
+
+        </dt>
+        <dd>Harmoniza secoes de votacao com um nivel submunicipal do DW e grava a tabela <code>tse_secao_bairro</code></dd>
+
+        <dt>
+
+          <code><a href="tse_pontuar_locais_votacao.html">tse_pontuar_locais_votacao()</a></code>
+
+        </dt>
+        <dd>Converte os locais de votacao em pontos espaciais (sf POINT, EPSG:4326)</dd>
+
+        <dt>
+
+          <code><a href="tse_resumo_harmonizacao.html">tse_resumo_harmonizacao()</a></code>
+
+        </dt>
+        <dd>Resumo da harmonizacao gravada em <code>tse_secao_bairro</code></dd>
 
         <dt>
 

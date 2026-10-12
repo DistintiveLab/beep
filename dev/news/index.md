@@ -101,21 +101,26 @@ Implementação do ROADMAP-niveis-submunicipais.md (F1-F4):
   [`gravar_serie_dw()`](https://distintivelab.github.io/beep/dev/reference/gravar_serie_dw.md)
   resolve códigos longos (ex.: setor 15d) direto para o local_id.
 - **Auxiliares TSE** (internos `beep:::`, para a frente eleitoral) —
-  `tse_normalizar_nome()`, `tse_casar_bairros()` (casamento por
-  município + nome normalizado, com relatório de não-casados e homônimos
-  ambíguos), `tse_mapa_secao_bairro()` (perfil do eleitorado por seção;
-  seções com bairros múltiplos ficam sem bairro e listadas) e
-  `tse_agregar_votacao()` (votos por bairro, com a zona como fallback
-  auditável das seções sem bairro determinável). As premissas e limites
-  da correspondência seção↔︎bairro estão documentadas no cabeçalho de
-  `R/tse_auxiliares.R` — nenhuma inferência silenciosa.
+  [`tse_normalizar_nome()`](https://distintivelab.github.io/beep/dev/reference/tse_normalizar_nome.md),
+  [`tse_casar_bairros()`](https://distintivelab.github.io/beep/dev/reference/tse_casar_bairros.md)
+  (casamento por município + nome normalizado, com relatório de
+  não-casados e homônimos ambíguos),
+  [`tse_mapa_secao_bairro()`](https://distintivelab.github.io/beep/dev/reference/tse_mapa_secao_bairro.md)
+  (perfil do eleitorado por seção; seções com bairros múltiplos ficam
+  sem bairro e listadas) e
+  [`tse_agregar_votacao()`](https://distintivelab.github.io/beep/dev/reference/tse_agregar_votacao.md)
+  (votos por bairro, com a zona como fallback auditável das seções sem
+  bairro determinável). As premissas e limites da correspondência
+  seção↔︎bairro estão documentadas no cabeçalho de `R/tse_auxiliares.R` —
+  nenhuma inferência silenciosa.
 - **Painel** — a aba Baixar traduz códigos submunicipais
   (setor/bairro/AP) pelo geoloc_id; o globo passa a enviar como “malha”
   os vizinhos do mesmo nível dentro do município em foco
-  (`painel_geo_irmaos_mun()`, simplificação + teto de feições) e a
-  reenvia a cada troca de destaque (também corrige município que “sumia”
-  ao trocar de foco dentro da mesma UF). Níveis sem malha ou rótulo
-  degradam graciosamente (Sem dados).
+  ([`painel_geo_irmaos_mun()`](https://distintivelab.github.io/beep/dev/reference/painel_geo_irmaos_mun.md),
+  simplificação + teto de feições) e a reenvia a cada troca de destaque
+  (também corrige município que “sumia” ao trocar de foco dentro da
+  mesma UF). Níveis sem malha ou rótulo degradam graciosamente (Sem
+  dados).
 - **Correções de compatibilidade PostgreSQL** incluídas no caminho da
   migração: recriação de matviews dependentes entre SAVEPOINT/ROLLBACK
   TO (uma instrução que falha não aborta a transação inteira).
@@ -127,7 +132,10 @@ Implementação do ROADMAP-niveis-submunicipais.md (F1-F4):
   exclui os blocos submunicipais (`local_id >= 100000`).
 - **Fronteira municipal (malha 2024)**: municípios 1..5571, estratos
   PNAD a partir de 5572 e fronteira superior dinâmica pelo `local_id` da
-  linha “Brasil” — `eh_municipio_id()` e `eh_zona_carga_municipal()`
+  linha “Brasil” —
+  [`eh_municipio_id()`](https://distintivelab.github.io/beep/dev/reference/eh_municipio_id.md)
+  e
+  [`eh_zona_carga_municipal()`](https://distintivelab.github.io/beep/dev/reference/eh_zona_carga_municipal.md)
   ganham o argumento `bloco_fim` (fallback estático 7087). Os blocos
   submunicipais ficam fora de todos os filtros municipais, inclusive no
   painel.

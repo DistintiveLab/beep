@@ -8,5 +8,5 @@ uma única vez por app, junto aos recursos de cabeçalho.
 ## Usage
 
 ``` r
-beep_tema_recursos(paleta = c("govbr", "pb"))
+beep_tema_recursos(paleta = c("govbr", "pb", "brasil"))
 ```

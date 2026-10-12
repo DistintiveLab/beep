@@ -9,5 +9,5 @@ local-primeiro de
 ## Usage
 
 ``` r
-painel_recursos(assets_dir, paleta = c("govbr", "pb"))
+painel_recursos(assets_dir, paleta = c("govbr", "pb", "brasil"))
 ```
