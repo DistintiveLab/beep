@@ -15,7 +15,8 @@ painel_xlsx_indicador(
   rotulo_indicador,
   nivel_rotulo,
   titulo = "Painel de Indicadores",
-  codigos = NULL
+  codigos = NULL,
+  unidade = NULL
 )
 ```
 
@@ -56,3 +57,9 @@ painel_xlsx_indicador(
   [`painel_codigo_mun_cache()`](https://distintivelab.github.io/beep/dev/reference/painel_codigo_mun_cache.md));
   localidades fora do vetor mantem o local_id, e a coluna inteira vira
   texto
+
+- unidade:
+
+  unidade do numerador do indicador (dataunit_num do mdata_exts; "%"
+  estiliza a coluna Valor como percentual — os valores gravados
+  continuam crus, o Excel exibe x100)

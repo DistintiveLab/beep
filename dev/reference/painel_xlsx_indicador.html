@@ -13,7 +13,7 @@ contexto'><meta property="og:image" content="https://distintivelab.github.io/bee
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9034</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9035</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,8 @@ contexto</p>
 <span>  <span class="va">rotulo_indicador</span>,</span>
 <span>  <span class="va">nivel_rotulo</span>,</span>
 <span>  titulo <span class="op">=</span> <span class="st">"Painel de Indicadores"</span>,</span>
-<span>  codigos <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  codigos <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  unidade <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -99,6 +100,12 @@ territorial escolhidos (cabecalho e nome do arquivo)</p></dd>
 localidade (ex.: codigo IBGE dos municipios,
 <code><a href="painel_codigo_mun_cache.html">painel_codigo_mun_cache()</a></code>); localidades fora do vetor mantem o
 local_id, e a coluna inteira vira texto</p></dd>
+
+
+<dt id="arg-unidade">unidade<a class="anchor" aria-label="anchor" href="#arg-unidade"></a></dt>
+<dd><p>unidade do numerador do indicador (dataunit_num do
+mdata_exts; "%" estiliza a coluna Valor como percentual — os valores
+gravados continuam crus, o Excel exibe x100)</p></dd>
 
 </dl></div>
 

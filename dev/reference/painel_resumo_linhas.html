@@ -9,7 +9,7 @@ pedido na localidade, ate a data de corte"><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9034</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9035</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,9 @@ pedido na localidade, ate a data de corte</p>
 
 <dl><dt id="arg-indicadores">indicadores<a class="anchor" aria-label="anchor" href="#arg-indicadores"></a></dt>
 <dd><p>data.frame com <code>mdata_id</code>, <code>rotulo</code>, <code>grupo</code> e <code>raiz</code>
-(uma linha por cartao do resumo, na ordem desejada)</p></dd>
+(uma linha por cartao do resumo, na ordem desejada); a coluna opcional
+<code>unidade</code> (ex.: "%") acompanha cada linha — frames sem ela (caches
+antigos em disco, fixtures) seguem com unidade NA</p></dd>
 
 
 <dt id="arg-valores">valores<a class="anchor" aria-label="anchor" href="#arg-valores"></a></dt>

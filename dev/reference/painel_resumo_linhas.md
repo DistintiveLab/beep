@@ -14,7 +14,9 @@ painel_resumo_linhas(indicadores, valores, refdate = NULL)
 - indicadores:
 
   data.frame com `mdata_id`, `rotulo`, `grupo` e `raiz` (uma linha por
-  cartao do resumo, na ordem desejada)
+  cartao do resumo, na ordem desejada); a coluna opcional `unidade`
+  (ex.: "%") acompanha cada linha — frames sem ela (caches antigos em
+  disco, fixtures) seguem com unidade NA
 
 - valores:
 
