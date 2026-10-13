@@ -71,3 +71,24 @@ test_that("painel_geojson_orientar nao derruba entrada sem features", {
     beep:::painel_geojson_orientar("{\"type\":\"FeatureCollection\"}"),
     "{\"type\":\"FeatureCollection\"}")
 })
+
+test_that("geojson viaja como objeto JSON na mensagem do Shiny", {
+  # painel_geojson() retorna a classe "json" do jsonlite; o serializer de
+  # mensagens do Shiny usa json_verbatim=TRUE e embute o campo verbatim
+  # como OBJETO no JSON da mensagem (nao como string escapada). O cliente
+  # do globo (inst/painel/painel-globe.js) aceita objeto ou string; este
+  # teste fixa o contrato do transporte para nenhum lado mudar sozinho
+  # (regressao do globo em branco: JSON.parse de objeto lanca excecao).
+  pol <- sf::st_polygon(list(rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1), c(0, 0))))
+  x <- sf::st_sf(code = "1", label = "a",
+                 geometry = sf::st_sfc(pol, crs = 4326))
+  gj <- beep:::painel_geojson(x)
+  expect_s3_class(gj, "json")
+  # mesmo efeito do wrapper do Shiny com jsonlite puro
+  msg <- jsonlite::toJSON(list(geojson = gj), auto_unbox = TRUE,
+                          json_verbatim = TRUE)
+  expect_match(msg, '"geojson":\\{"type"', fixed = FALSE)
+  # o wrapper instalado do Shiny produz o mesmo objeto verbatim
+  skip_if_not_installed("shiny")
+  expect_match(shiny:::toJSON(list(geojson = gj)), '"geojson":\\{"type"')
+})

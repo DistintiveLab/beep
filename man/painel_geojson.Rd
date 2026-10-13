@@ -4,13 +4,21 @@
 \alias{painel_geojson}
 \title{GeoJSON (string) de um objeto sf para mensagens Shiny ao cliente,
 com aneis reorientados para o d3-geo do globo (ver
-\code{\link[=painel_geojson_orientar]{painel_geojson_orientar()}})}
+\code{\link[=painel_geojson_orientar]{painel_geojson_orientar()}}). O retorno carrega a classe "json" do
+jsonlite e o serializer de mensagens do Shiny (json_verbatim=TRUE)
+o embute como objeto JSON na mensagem: no navegador, o campo chega
+como objeto, nao como string, e o cliente do globo aceita as duas
+formas (ver tests/testthat/test-painel-geojson.R)}
 \usage{
 painel_geojson(x)
 }
 \description{
 GeoJSON (string) de um objeto sf para mensagens Shiny ao cliente,
 com aneis reorientados para o d3-geo do globo (ver
-\code{\link[=painel_geojson_orientar]{painel_geojson_orientar()}})
+\code{\link[=painel_geojson_orientar]{painel_geojson_orientar()}}). O retorno carrega a classe "json" do
+jsonlite e o serializer de mensagens do Shiny (json_verbatim=TRUE)
+o embute como objeto JSON na mensagem: no navegador, o campo chega
+como objeto, nao como string, e o cliente do globo aceita as duas
+formas (ver tests/testthat/test-painel-geojson.R)
 }
 \keyword{internal}
