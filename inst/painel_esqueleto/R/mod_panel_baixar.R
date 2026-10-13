@@ -168,10 +168,13 @@ mod_panel_baixar_server <- function(id) {
           })
           names(por_data) <- painel_rotulo_aba(refdates)
         }
+        unidade_ind <- if (is.null(md$unidade)) NULL else
+          md$unidade[match(indicador, md$mdata_id)]
         painel_xlsx_indicador(arquivo, por_data = por_data, locais = locais,
                               rotulo_indicador = rotulo_indicador(),
                               nivel_rotulo = rotulo_nivel_ano(),
-                              codigos = painel_codigo_mun_cache())
+                              codigos = painel_codigo_mun_cache(),
+                              unidade = unidade_ind)
       })
   })
 }

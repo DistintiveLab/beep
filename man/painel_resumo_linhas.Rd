@@ -9,7 +9,9 @@ painel_resumo_linhas(indicadores, valores, refdate = NULL)
 }
 \arguments{
 \item{indicadores}{data.frame com \code{mdata_id}, \code{rotulo}, \code{grupo} e \code{raiz}
-(uma linha por cartao do resumo, na ordem desejada)}
+(uma linha por cartao do resumo, na ordem desejada); a coluna opcional
+\code{unidade} (ex.: "\%") acompanha cada linha — frames sem ela (caches
+antigos em disco, fixtures) seguem com unidade NA}
 
 \item{valores}{tabela de \code{\link[=painel_valores_local_todos]{painel_valores_local_todos()}}}
 

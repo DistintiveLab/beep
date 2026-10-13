@@ -12,7 +12,7 @@ test_that("painel_resumo_linhas devolve tabela tipada vazia", {
   expect_identical(nrow(vazio), 0L)
   expect_identical(names(vazio),
                    c("grupo", "raiz", "mdata_id", "rotulo", "valor",
-                     "refdate", "valor_ant", "refdate_ant"))
+                     "refdate", "valor_ant", "refdate_ant", "unidade"))
   expect_s3_class(vazio$refdate, "Date")
 })
 

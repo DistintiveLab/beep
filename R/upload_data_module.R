@@ -122,6 +122,17 @@ upload_data_ui <- function(id) {
             value="nome_indicador"
           ))
       ),
+      fluidRow(
+        column(1),
+        column(5,
+          shiny::selectizeInput(
+            ns("unidade_indicador"),
+            "Unidade do indicador (percentual exibe x100 no painel)",
+            choices = c("sem unidade" = "", "por cento (%)" = "%",
+                        "habitantes", "pessoas", "eleitores", "votos"),
+            options = list(create = TRUE))),
+        column(6)
+      ),
       fluidRow(column(5,
         shinymath::mathInput(ns("equacao"),"Insira equação"),
         shiny::actionButton(ns("previaindicador"),"Rodar!"),
@@ -756,11 +767,15 @@ tipocarga <- reactive({
       data_desc = mensaj
     )
 
+    unidade_num <- input$unidade_indicador
+    if (is.null(unidade_num)) unidade_num <- ""
+    unidade_num <- trimws(unidade_num)
+
     mdataext_nind <- data.frame(
       data_class_id = 1, # TBD - DEFINE A FUNCTION FOR DEDUCTING,
       data_freq_id = 9, # TBD - GET SELECTED FREQ
-      dataunit_num = "", # TBD
-      dataunit_den = "", # TBD
+      dataunit_num = unidade_num,
+      dataunit_den = "", # TBD - base do indicador, ex.: eleitores aptos
       data_type_id = 1, # TBD,
       datasource_id = selfdatasource,
       data_url = "Este aplicativo",

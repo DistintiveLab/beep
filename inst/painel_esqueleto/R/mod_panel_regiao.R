@@ -460,11 +460,12 @@ mod_panel_regiao_server <- function(id,
           paste0("Var. ", rotulo_chip(r$mdata_id[i], r$refdate_ant[i]),
                  "-", rotulo_chip(r$mdata_id[i], r$refdate[i]), ": ",
                  if (r$valor[i] >= r$valor_ant[i]) "+" else "-",
-                 painel_num(abs(r$valor[i] - r$valor_ant[i]))) else NULL
+                 painel_num(abs(r$valor[i] - r$valor_ant[i]),
+                            r$unidade[i])) else NULL
         tags$div(class = "painel-resumo-chip",
           tags$div(class = "painel-resumo-chip-rotulo", r$rotulo[i]),
           tags$div(class = "painel-resumo-chip-valor",
-            painel_num(r$valor[i]),
+            painel_num(r$valor[i], r$unidade[i]),
             tags$small(paste0(" (",
               rotulo_chip(r$mdata_id[i], r$refdate[i]), ")"))),
           if (!is.null(delta))

@@ -76,10 +76,13 @@ test_that("painel_xlsx_regiao gera abas dados + metadados", {
   expect_equal(tab$Indicador, c("ind_a", "Indicador B"))
   expect_equal(tab[["2022"]], c(5, 11))
   expect_equal(tab[["2023"]], c(NA_real_, 21))
-  # metadados: id fora do recorte nao entra
+  # metadados: id fora do recorte nao entra; fixtures sem a coluna
+  # unidade provam a tolerancia do construtor (Unidade vem NA)
   md <- openxlsx::read.xlsx(arq, sheet = "metadados")
-  expect_identical(names(md), c("id", "Código", "Nome", "Descrição"))
+  expect_identical(names(md),
+                   c("id", "Código", "Nome", "Descrição", "Unidade"))
   expect_equal(md$id, c(2, 1))
+  expect_true(all(is.na(md$Unidade)))
 })
 
 test_that("painel_xlsx_regiao sem dados gera aba de aviso", {
@@ -114,11 +117,11 @@ test_that("painel_xlsx_indicador gera uma aba por data na ordem do caller", {
   # ascendentes; rotulos ISO ordenam lexicograficamente)
   expect_identical(openxlsx::getSheetNames(arq),
                    c("metadados", "2021", "2022-10-02"))
-  # contexto na aba metadados
+  # contexto na aba metadados: 6 pares, Unidade apos Datas
   ctx <- openxlsx::read.xlsx(arq, sheet = "metadados", colNames = FALSE,
-                             rows = 1:5)
-  expect_equal(ctx[[1]][1:5], c("Painel", "Indicador", "Nível territorial",
-                                "Datas", "Gerado em"))
+                             rows = 1:6)
+  expect_equal(ctx[[1]][1:6], c("Painel", "Indicador", "Nível territorial",
+                                "Datas", "Unidade", "Gerado em"))
   expect_equal(ctx[[2]][2], "Indicador X")
   expect_equal(ctx[[2]][4], "2021 a 2022-10-02")
   # aba da data: ordenada por local_id, rotulos do vetor nomeado,

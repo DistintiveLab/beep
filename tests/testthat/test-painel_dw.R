@@ -73,7 +73,7 @@ test_that("painel_resumo_grupos vazio devolve tabela tipada", {
   expect_identical(nrow(vazio), 0L)
   expect_identical(names(vazio),
                    c("grupo", "raiz", "mdata_id", "rotulo", "valor", "refdate",
-                     "valor_ant", "refdate_ant"))
+                     "valor_ant", "refdate_ant", "unidade"))
   expect_s3_class(vazio$refdate, "Date")
   expect_identical(nrow(beep:::painel_resumo_grupos(
     data.frame(), data.frame(), data.frame())), 0L)

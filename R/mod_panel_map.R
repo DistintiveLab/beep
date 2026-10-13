@@ -110,6 +110,16 @@ mod_panel_map_server <- function(id) {
       if (is.na(i) || !length(r) || i > length(r)) "" else r[i]
     })
 
+    # Unidade do indicador corrente (dataunit_num do mdata_exts; "%"
+    # exibe x100): a guarda NULL cobre cache de catalogo antigo sem a
+    # coluna unidade
+    unidade_ind <- shiny::reactive({
+      ind <- suppressWarnings(as.integer(input$indicador))[1]
+      u <- if (is.null(md$unidade)) NA_character_ else
+        md$unidade[match(ind, md$mdata_id)]
+      if (length(u) && !is.na(u[1])) u[1] else NA_character_
+    })
+
     # Malha do nivel territorial do indicador: municipal mantem o
     # comportamento historico; niveis leves (UF, regiao, 7p) carregam a
     # malha do nivel inteiro; niveis pesados (submunicipais) carregam malhas
@@ -215,7 +225,8 @@ mod_panel_map_server <- function(id) {
       valor <- if (is.null(dados)) rep(NA_real_, nrow(g)) else
         dados$value[match(g$layer_id, as.character(dados$local_id))]
       cores <- pal(valor)
-      texto <- ifelse(is.na(valor), "Sem dados", painel_num(valor))
+      texto <- ifelse(is.na(valor), "Sem dados",
+                      painel_num(valor, unidade_ind()))
       if (length(malha$degradados)) {
         i <- match(g$layer_id, names(malha$degradados))
         hit <- !is.na(i)
@@ -326,7 +337,8 @@ mod_panel_map_server <- function(id) {
             "bottomright", layerId = "painel-legenda",
             values = dados[is.finite(dados)], pal = paleta(), opacity = 0.8,
             title = titulo,
-            labFormat = function(type, cuts, ...) painel_num(cuts))
+            labFormat = function(type, cuts, ...)
+              painel_num(cuts, unidade_ind()))
         } else {
           limite <- range(dados, finite = TRUE)
           if (limite[1] == limite[2]) {
@@ -338,7 +350,8 @@ mod_panel_map_server <- function(id) {
             # valores como intervalo para contornar o bug do valor unico
             values = c(limite[1] * 0.99999999, limite[2] * 1.00000001),
             pal = paleta(), opacity = 0.8, title = titulo,
-            labFormat = function(type, cuts, ...) painel_num(cuts))
+            labFormat = function(type, cuts, ...)
+              painel_num(cuts, unidade_ind()))
         }
       }
     })

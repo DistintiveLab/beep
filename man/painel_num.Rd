@@ -2,11 +2,15 @@
 % Please edit documentation in R/painel_dw.R
 \name{painel_num}
 \alias{painel_num}
-\title{Numeros no padrao pt-BR para rotulos de mapa e legenda}
+\title{Numeros no padrao pt-BR para rotulos de mapa e legenda. Com unidade
+percentual ("\%" em dataunit_num) o valor 0..1 e exibido x100 com
+sufixo " \%" e menos casas significativas}
 \usage{
-painel_num(x)
+painel_num(x, unidade = NULL)
 }
 \description{
-Numeros no padrao pt-BR para rotulos de mapa e legenda
+Numeros no padrao pt-BR para rotulos de mapa e legenda. Com unidade
+percentual ("\%" em dataunit_num) o valor 0..1 e exibido x100 com
+sufixo " \%" e menos casas significativas
 }
 \keyword{internal}

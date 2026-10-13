@@ -49,14 +49,18 @@ painel_mdata_extras <- function(con, md) {
   md$data_class_id <- rep(NA_integer_, NROW(md))
   md$tipo_grafico <- rep(NA_character_, NROW(md))
   md$visivel <- rep(TRUE, NROW(md))
+  md$unidade <- rep(NA_character_, NROW(md))
   freq <- tryCatch(DBI::dbGetQuery(con, paste(
-    "SELECT e.mdata_id, f.freq_name, e.data_class_id FROM mdata_exts e",
+    "SELECT e.mdata_id, f.freq_name, e.data_class_id, e.dataunit_num",
+    "FROM mdata_exts e",
     "LEFT JOIN data_freq f ON f.data_freq_id = e.data_freq_id")),
     error = function(e) NULL)
   if (NROW(freq)) {
     md$freq_name <- freq$freq_name[match(md$mdata_id, freq$mdata_id)]
     md$data_class_id <- as.integer(
       freq$data_class_id[match(md$mdata_id, freq$mdata_id)])
+    md$unidade <- painel_unidade_normaliza(
+      freq$dataunit_num[match(md$mdata_id, freq$mdata_id)])
   }
   graf <- tryCatch(DBI::dbGetQuery(con,
     "SELECT mdata_id, tipo_grafico FROM mdata_grafico"),
@@ -1088,9 +1092,11 @@ painel_opcoes_indicador <- function(md) {
 #' @keywords internal
 painel_hierarquia <- function(con) {
   md <- DBI::dbGetQuery(con, paste(
-    "SELECT m.mdata_id, m.orig_name, m.data_name, e.data_class_id",
+    "SELECT m.mdata_id, m.orig_name, m.data_name, e.data_class_id,",
+    "e.dataunit_num AS unidade",
     "FROM mdata m LEFT JOIN mdata_exts e USING (mdata_id)",
     "ORDER BY m.mdata_id"))
+  md$unidade <- painel_unidade_normaliza(md$unidade)
   md$datagroup_name <- painel_grupo_indicador(md$orig_name)
   md <- md[!is.na(md$datagroup_name), ]
   grupos <- DBI::dbGetQuery(con,
@@ -1101,7 +1107,8 @@ painel_hierarquia <- function(con) {
   md$raiz_id <- grupos$datagroup_id[match(md$raiz_nome, grupos$datagroup_name)]
   md <- md[order(md$raiz_nome, md$datagroup_id, md$mdata_id),
            c("raiz_id", "raiz_nome", "datagroup_id", "datagroup_name",
-             "mdata_id", "data_class_id", "orig_name", "data_name")]
+             "mdata_id", "data_class_id", "orig_name", "data_name",
+             "unidade")]
   rownames(md) <- NULL
   md
 }
@@ -1133,6 +1140,7 @@ painel_resumo_sep <- " \u2014 "
 painel_fontes <- function(con) {
   DBI::dbGetQuery(con, paste(
     "SELECT m.mdata_id, m.orig_name, m.data_name, e.data_class_id,",
+    "nullif(trim(coalesce(e.dataunit_num, '')), '') AS unidade,",
     "coalesce(d.datasource_name, 'Sem fonte cadastrada') AS fonte",
     "FROM mdata m",
     "LEFT JOIN mdata_exts e ON e.mdata_id = m.mdata_id",
@@ -1147,6 +1155,7 @@ painel_fontes <- function(con) {
 painel_grupo_resumo <- function(con) {
   DBI::dbGetQuery(con, paste(
     "SELECT m.mdata_id, m.orig_name, m.data_name, e.data_class_id,",
+    "nullif(trim(coalesce(e.dataunit_num, '')), '') AS unidade,",
     "coalesce(d2.datasource_name, 'Sem fonte cadastrada') AS fonte",
     "FROM mdata m",
     "JOIN mdata_group g ON g.mdata_id = m.mdata_id",
@@ -1161,7 +1170,9 @@ painel_grupo_resumo <- function(con) {
 #' pedido na localidade, ate a data de corte
 #'
 #' @param indicadores data.frame com `mdata_id`, `rotulo`, `grupo` e `raiz`
-#'   (uma linha por cartao do resumo, na ordem desejada)
+#'   (uma linha por cartao do resumo, na ordem desejada); a coluna opcional
+#'   `unidade` (ex.: "%") acompanha cada linha — frames sem ela (caches
+#'   antigos em disco, fixtures) seguem com unidade NA
 #' @param valores tabela de [painel_valores_local_todos()]
 #' @param refdate data de corte: sem ela, a observacao mais recente; com ela,
 #'   a ultima observacao em ou antes da data (slider por data do resumo)
@@ -1171,8 +1182,12 @@ painel_resumo_linhas <- function(indicadores, valores, refdate = NULL) {
                       mdata_id = integer(0), rotulo = character(0),
                       valor = numeric(0), refdate = as.Date(character(0)),
                       valor_ant = numeric(0),
-                      refdate_ant = as.Date(character(0)))
+                      refdate_ant = as.Date(character(0)),
+                      unidade = character(0))
   if (!NROW(indicadores) || !NROW(valores)) return(vazio)
+  unid <- if (is.data.frame(indicadores) &&
+              "unidade" %in% names(indicadores))
+    indicadores$unidade else rep(NA_character_, nrow(indicadores))
   refdate <- as.Date(refdate)[1]
   linhas <- lapply(seq_len(nrow(indicadores)), function(i) {
     v <- valores[valores$mdata_id == indicadores$mdata_id[i] &
@@ -1190,7 +1205,8 @@ painel_resumo_linhas <- function(indicadores, valores, refdate = NULL) {
                valor = v$value[ultimo], refdate = v$refdate[ultimo],
                valor_ant = if (anterior) v$value[anterior] else NA_real_,
                refdate_ant = if (anterior) v$refdate[anterior]
-                            else as.Date(NA))
+                            else as.Date(NA),
+               unidade = unid[i])
   })
   linhas <- linhas[!vapply(linhas, is.null, logical(1))]
   if (!length(linhas)) return(vazio)
@@ -1228,7 +1244,9 @@ painel_resumo_grupos <- function(hierarquia, compostos, valores,
     mdata_id = h$mdata_id,
     rotulo = paste0(painel_resumo_nome(h$orig_name, h$data_name),
                     painel_resumo_sep, h$datagroup_name),
-    grupo = h$datagroup_name, raiz = h$raiz_nome)
+    grupo = h$datagroup_name, raiz = h$raiz_nome,
+    unidade = if ("unidade" %in% names(h)) h$unidade
+              else rep(NA_character_, nrow(h)))
   painel_resumo_linhas(ind, valores, refdate)
 }
 
@@ -1249,7 +1267,9 @@ painel_resumo_fontes <- function(fontes, valores, refdate = NULL) {
     rotulo = paste0(painel_resumo_nome(fontes$orig_name, fontes$data_name)[ordem],
                     painel_resumo_sep, fonte[ordem]),
     grupo = fonte[ordem],
-    raiz = rep("Por fonte", length(ordem)))
+    raiz = rep("Por fonte", length(ordem)),
+    unidade = if ("unidade" %in% names(fontes)) fontes$unidade[ordem]
+              else rep(NA_character_, length(ordem)))
   painel_resumo_linhas(ind, valores, refdate)
 }
 
@@ -1267,7 +1287,9 @@ painel_resumo_membros <- function(membros, valores, refdate = NULL) {
   ind <- data.frame(
     mdata_id = membros$mdata_id, rotulo = rotulo,
     grupo = rep(painel_grupo_resumo_nome, nrow(membros)),
-    raiz = rep(painel_grupo_resumo_nome, nrow(membros)))
+    raiz = rep(painel_grupo_resumo_nome, nrow(membros)),
+    unidade = if ("unidade" %in% names(membros)) membros$unidade
+              else rep(NA_character_, nrow(membros)))
   painel_resumo_linhas(ind, valores, refdate)
 }
 
@@ -1441,11 +1463,37 @@ painel_paleta <- function(values, invertida = FALSE,
   leaflet::colorNumeric(cores, domain = dominio, na.color = "transparent")
 }
 
-#' Numeros no padrao pt-BR para rotulos de mapa e legenda
+#' Normaliza a unidade do numerador vinda do mdata_exts (dataunit_num):
+#' trim, vazio/NA vira NA (colunas texte do DW costumam nascer TBD)
 #' @keywords internal
-painel_num <- function(x) {
-  format(x, big.mark = ".", decimal.mark = ",", scientific = FALSE,
-         trim = TRUE, digits = 6)
+painel_unidade_normaliza <- function(x) {
+  x <- trimws(as.character(x))
+  x[is.na(x) | !nzchar(x)] <- NA_character_
+  x
+}
+
+#' Unidade e percentual: so dataunit_num = "%" liga a exibicao x100 (Gini
+#' e indices entre 0 e 1 NAO sao percentual; a decisao vem do metadado,
+#' nunca da faixa de valores)
+#' @keywords internal
+painel_eh_percent <- function(unidade) {
+  if (length(unidade)) isTRUE(unname(painel_unidade_normaliza(
+    unidade[1])) == "%") else FALSE
+}
+
+#' Numeros no padrao pt-BR para rotulos de mapa e legenda. Com unidade
+#' percentual ("%" em dataunit_num) o valor 0..1 e exibido x100 com
+#' sufixo " %" e menos casas significativas
+#' @keywords internal
+painel_num <- function(x, unidade = NULL) {
+  if (painel_eh_percent(unidade)) {
+    txt <- format(x * 100, big.mark = ".", decimal.mark = ",",
+                  scientific = FALSE, trim = TRUE, digits = 4L)
+    paste0(txt, " %")
+  } else {
+    format(x, big.mark = ".", decimal.mark = ",", scientific = FALSE,
+           trim = TRUE, digits = 6)
+  }
 }
 
 #' Remove camadas sem dados antes da conversao plotly: o ggplotly crasha

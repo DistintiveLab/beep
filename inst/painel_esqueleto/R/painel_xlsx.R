@@ -107,6 +107,9 @@ painel_xlsx_regiao <- function(arquivo, valores, mdata, local_rotulo,
   wb <- openxlsx::createWorkbook()
   md <- mdata[mdata$mdata_id %in% unique(valores$mdata_id), , drop = FALSE]
   md <- md[order(md$orig_name), , drop = FALSE]
+  # tolerancia a mdata sem a coluna unidade (cache antigo em disco)
+  unid <- if ("unidade" %in% names(md)) painel_unidade_normaliza(md$unidade)
+    else rep(NA_character_, nrow(md))
   ultimo <- painel_ultimo_por_ano(valores, "mdata_id")
   if (!nrow(md) || !nrow(ultimo)) {
     .painel_xlsx_aba_vazia(wb, paste0(
@@ -135,13 +138,25 @@ painel_xlsx_regiao <- function(arquivo, valores, mdata, local_rotulo,
   openxlsx::writeData(wb, "dados", tabela, startRow = linha_header)
   .painel_xlsx_estilo_tabela(wb, "dados", ncol(tabela), linha_header,
                              congelar_col = 2L)
+  # linhas percentuais: valores crus + estilo 0.0% (o Excel exibe x100
+  # por conta propria, o dado gravado continua 0..1)
+  eh_pct <- !is.na(unid) & unid == "%"
+  if (any(eh_pct)) {
+    estilo_pct <- openxlsx::createStyle(numFmt = "0.0%")
+    colunas_ano <- 2L + seq_along(anos)
+    for (i in which(eh_pct))
+      openxlsx::addStyle(wb, "dados", style = estilo_pct,
+                         rows = linha_header + i, cols = colunas_ano,
+                         gridExpand = TRUE)
+  }
 
   openxlsx::addWorksheet(wb, "metadados")
   openxlsx::writeData(wb, "metadados", data.frame(
     id = md$mdata_id, Código = md$orig_name,
     Nome = painel_nome_indicador(md), Descrição = md$data_desc,
+    Unidade = unid,
     check.names = FALSE))
-  openxlsx::setColWidths(wb, "metadados", cols = seq_len(4), widths = "auto")
+  openxlsx::setColWidths(wb, "metadados", cols = seq_len(5), widths = "auto")
   openxlsx::saveWorkbook(wb, arquivo, overwrite = TRUE)
   invisible(arquivo)
 }
@@ -166,11 +181,14 @@ painel_xlsx_regiao <- function(arquivo, valores, mdata, local_rotulo,
 #'   localidade (ex.: codigo IBGE dos municipios,
 #'   [painel_codigo_mun_cache()]); localidades fora do vetor mantem o
 #'   local_id, e a coluna inteira vira texto
+#' @param unidade unidade do numerador do indicador (dataunit_num do
+#'   mdata_exts; "%" estiliza a coluna Valor como percentual — os valores
+#'   gravados continuam crus, o Excel exibe x100)
 #' @keywords internal
 painel_xlsx_indicador <- function(arquivo, por_data, locais,
                                   rotulo_indicador, nivel_rotulo,
                                   titulo = "Painel de Indicadores",
-                                  codigos = NULL) {
+                                  codigos = NULL, unidade = NULL) {
   wb <- openxlsx::createWorkbook()
   abas <- names(por_data)[vapply(por_data, nrow, integer(1)) > 0]
   if (!length(abas)) {
@@ -181,12 +199,16 @@ painel_xlsx_indicador <- function(arquivo, por_data, locais,
     return(invisible(arquivo))
   }
   openxlsx::addWorksheet(wb, "metadados")
+  u <- painel_unidade_normaliza(unidade)[1]
+  if (is.na(u)) u <- ""
   .painel_xlsx_cabecalho(wb, "metadados", c(
     "Painel" = titulo,
     "Indicador" = rotulo_indicador,
     "Nível territorial" = nivel_rotulo,
     "Datas" = paste(range(abas), collapse = " a "),
+    "Unidade" = u,
     "Gerado em" = format(Sys.time(), "%Y-%m-%d %H:%M")))
+  estilo_pct <- openxlsx::createStyle(numFmt = "0.0%")
   for (aba in abas) {
     v <- por_data[[aba]]
     v <- v[order(v$local_id), , drop = FALSE]
@@ -202,6 +224,9 @@ painel_xlsx_indicador <- function(arquivo, por_data, locais,
       Código = codigo, Localidade = rotulo, Valor = v$value,
       check.names = FALSE))
     .painel_xlsx_estilo_tabela(wb, aba, 3L, 1L, congelar_col = 0L)
+    if (painel_eh_percent(unidade))
+      openxlsx::addStyle(wb, aba, rows = seq_len(nrow(v)) + 1L, cols = 3L,
+                         style = estilo_pct, gridExpand = TRUE)
   }
   openxlsx::saveWorkbook(wb, arquivo, overwrite = TRUE)
   invisible(arquivo)

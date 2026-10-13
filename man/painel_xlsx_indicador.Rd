@@ -14,7 +14,8 @@ painel_xlsx_indicador(
   rotulo_indicador,
   nivel_rotulo,
   titulo = "Painel de Indicadores",
-  codigos = NULL
+  codigos = NULL,
+  unidade = NULL
 )
 }
 \arguments{
@@ -38,6 +39,10 @@ territorial escolhidos (cabecalho e nome do arquivo)}
 localidade (ex.: codigo IBGE dos municipios,
 \code{\link[=painel_codigo_mun_cache]{painel_codigo_mun_cache()}}); localidades fora do vetor mantem o
 local_id, e a coluna inteira vira texto}
+
+\item{unidade}{unidade do numerador do indicador (dataunit_num do
+mdata_exts; "\%" estiliza a coluna Valor como percentual — os valores
+gravados continuam crus, o Excel exibe x100)}
 }
 \description{
 Planilha "um indicador por data": uma aba por data de referencia, cada
