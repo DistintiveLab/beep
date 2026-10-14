@@ -41,22 +41,36 @@ upload_data_ui <- function(id) {
           shiny::selectInput(
             inputId = ns("sourcetype"),
             label = "Tipo de Fonte",
-            choices = c(
-              "url fixo"=1,
-              "arquivo local(upload)"=2,
-              "dados.gov.br"=3,
-              "ckan"=4,
-              "ibge_sidra"=5,
-              "ibge_ftp"=6,
-              "ipeadata"=7,
-              "bcb"=8,
-              "arquivo do servidor" = 9,
-              "url de pasta ou combinada" = 10,
-              "datasus" = 11,
-              "raispsql" = 12,
-              "inep" = 13,
-              "tse" = 14,
-              "censo" = 15),
+            # lista aninhada gera <optgroup>: uma linha cinza por
+            # instituicao (estilo em www/styles.css); os valores
+            # numericos continuam os mesmos
+            choices = list(
+              "Arquivo/URL" = list(
+                "url fixo"=1,
+                "arquivo local(upload)"=2,
+                "arquivo do servidor" = 9,
+                "url de pasta ou combinada" = 10),
+              "Dados abertos" = list(
+                "dados.gov.br"=3,
+                "ckan"=4),
+              "IBGE" = list(
+                "ibge_sidra"=5,
+                "ibge_ftp"=6,
+                "censo" = 15),
+              "IPEA" = list(
+                "ipeadata"=7),
+              "BCB" = list(
+                "bcb"=8),
+              "DATASUS" = list(
+                "datasus" = 11),
+              "RAIS" = list(
+                "raispsql" = 12),
+              "INEP" = list(
+                "inep" = 13),
+              "TSE" = list(
+                "tse" = 14),
+              "IPE/DF" = list(
+                "pdad" = 16)),
             selected=11),
           shiny::textInput(ns("nomefonte"),"Nome curto para fonte","nova_fonte",width="200px","Indique um nome para a fonte"),
           shiny::uiOutput(ns("cargatipo")),
@@ -493,13 +507,22 @@ tipocarga <- reactive({
                       "(remotes::install_github('DistintiveLab/censoagg')) ",
                       "e censobr para habilitar dados do Censo.")
     }
+  } else if (input$sourcetype == "16") {
+    if (requireNamespace("pdadr", quietly = TRUE)) {
+      upload_pdadr_server("pdadr",parent_session = session)
+      upload_pdadr_ui(shiny::NS(id,"pdadr"),parent_session=session)
+    } else {
+      shiny::helpText("Fonte desabilitada: instale o pacote pdadr ",
+                      "(remotes::install_github('DistintiveLab/pdadr')) ",
+                      "para habilitar dados da PDAD (IPE/DF).")
+    }
   } else {
     # dados.gov.br (3), ckan (4), ibge_ftp (6), ipeadata (7), bcb (8)
     # e url de pasta/combinada (10): placeholders da fase de
     # scaffolding, sem modulo de coleta implementado (nem no AEDi)
     shiny::helpText("Este tipo de fonte ainda não tem módulo de coleta ",
                     "no beep. Use as fontes com módulo (sidra, datasus, ",
-                    "rais, inep, tse, censo) ou um arquivo/URL.")
+                    "rais, inep, tse, censo, pdad) ou um arquivo/URL.")
   }
 
 })
@@ -1144,6 +1167,50 @@ tipocarga <- reactive({
                 datasource_id=dsnidc,
                 data_url=input$upload_file)
               db_datawrite(list(mdatac,mdata_extc),tt,input$upload_file)
+            }
+            }
+
+          } else if (input$sourcetype == 16 ) {
+            # pdadr: eval devolve lista nomeada variavel ->
+            # estimativa por localidade (sem marcador; o branch
+            # sabe que e PDAD, padrao sidra). reshape em
+            # pdad_series_long
+            if (!requireNamespace("pdadr", quietly = TRUE)) {
+              stop("Fonte pdad desabilitada: instale o pacote pdadr ",
+                   "(remotes::install_github('DistintiveLab/pdadr')) ",
+                   "antes de carregar dados da PDAD.")
+            } else {
+            tabela <- eval(parse(text = input$upload_file))
+            series <- pdad_series_long(tabela)
+            if (!length(series))
+              stop("pdad: nenhuma serie com local valido para gravar")
+            combinada <- data.table::rbindlist(
+              lapply(names(series), \(nm)
+                     transform(series[[nm]], variavel = nm)),
+              fill = TRUE)
+
+            ####DATAFILE WRITER
+
+            readr::write_csv(combinada,narq)
+
+            ###DB DATA WRITER (uma serie por variavel; orig_name
+            # unico por serie para o exists-check nao bloquear as
+            # demais variaveis da mesma carga)
+
+            dsnidpd <- garantir_datasource_pdad()
+
+            for (nm in names(series)) {
+              mdatapd <- data.frame(
+                orig_name=paste0(input$nomefonte,"_",nm),
+                data_name=paste0(input$nomefonte,"_",nm),
+                data_desc="auto import pdad via pdadr - check source")
+              mdata_extpd <- data.frame(
+                data_class_id=1,
+                data_freq_id=9,
+                data_type_id=1,
+                datasource_id=dsnidpd,
+                data_url=input$upload_file)
+              db_datawrite(list(mdatapd,mdata_extpd),series[[nm]],input$upload_file)
             }
             }
 

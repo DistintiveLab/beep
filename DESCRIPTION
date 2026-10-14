@@ -1,6 +1,6 @@
 Package: beep
 Title: Pacote de inclusão de fontes de dados, indicadores, e filtros de variáveis
-Version: 0.9.3.9036
+Version: 0.9.3.9037
 Date: 2026-10-02
 Authors@R: 
     c(person(given = "Rodrigo",
@@ -73,6 +73,7 @@ Suggests:
     testthat,
     censoagg,
     tsebr (>= 0.0.5.9013),
+    pdadr,
     usethis
 RdMacros: 
     lifecycle
@@ -85,7 +86,8 @@ Remotes:
     tomicapretto/shinymath,
     DistintiveLab/shinyGovBRstyle,
     DistintiveLab/tsebr,
-    DistintiveLab/censoagg
+    DistintiveLab/censoagg,
+    DistintiveLab/pdadr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Collate: 
@@ -154,6 +156,7 @@ Collate:
     'upload_censobr.R'
     'upload_datasus.R'
     'upload_inep.R'
+    'upload_pdadr.R'
     'upload_raispsql.R'
     'upload_sidraibge.R'
     'upload_tsebr.R'

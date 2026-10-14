@@ -29,3 +29,11 @@
     border: 1px solid #ddd;
     overflow: hidden;
  }
+
+/* Agrupa o seletor "Tipo de Fonte" por instituicao (optgroup):
+   linha cinza indicando o nome/sigla da fonte */
+select optgroup {
+  color: #8a8f98;
+  font-style: normal;
+  font-weight: 600;
+}

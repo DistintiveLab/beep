@@ -115,6 +115,7 @@ are dynamically injected inside `upload_data_module` based on `input$sourcetype`
 | 13 | INEP / IDEB | `upload_inep.R` | `educabR::le_ideb(...)` call string |
 | 14 | TSE (via `tsebr`) | `upload_tsebr.R` | call string com marcador `# tsebr-familia:` -> séries municipais/UF (`tse_resultados_municipio`, `tse_detalhe_municipio`, `tse_prestacao_uf`); `detalhe_secao` = detalhe da votação por seção agregado ao nível submunicipal via `tse_secao_bairro`; candidaturas = só CSV de referência |
 | 15 | IBGE Censo (via `censoagg`/`censobr`) | `upload_censobr.R` | call string com marcador `# censo-origem:` -> lista nomeada variável -> long; uma série (`mdata`) por variável |
+| 16 | PDAD IPE/DF (via `pdadr`) | `upload_pdadr.R` | call string (sem marcador) -> lista nomeada variável -> long em `pdad_series_long`; série anual de 1 ponto (31/12/2024); município 7d sempre, subdistrito/RA 11d exige `incorporar_subdistritos()` |
 | 1/2/9 | URL / local upload / server file | inline in `upload_data_module.R` | file path |
 
 **Key pattern:** Submodules do *not* fetch data themselves. They build an **R
