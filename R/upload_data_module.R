@@ -1147,7 +1147,9 @@ tipocarga <- reactive({
 
             readr::write_csv(combinada,narq)
 
-            ###DB DATA WRITER (uma serie por variavel)
+            ###DB DATA WRITER (uma serie por variavel; orig_name
+            # unico por serie para o exists-check nao bloquear as
+            # demais variaveis da mesma carga)
 
             dsnidc <- garantir_datasource_censo()
 
@@ -1157,7 +1159,7 @@ tipocarga <- reactive({
                 tt$local <- as.numeric(tt$local)
               }
               mdatac <- data.frame(
-                orig_name=input$nomefonte,
+                orig_name=paste0(input$nomefonte,"_",nm),
                 data_name=paste0(input$nomefonte,"_",nm),
                 data_desc="auto import censo via censoagg - check source")
               mdata_extc <- data.frame(

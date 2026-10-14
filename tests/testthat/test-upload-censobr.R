@@ -70,6 +70,12 @@ test_that("contrato do branch: lista vira serie por variavel (mirror)", {
     fill = TRUE)
   expect_setequal(combinada$variavel, c("V0001", "V0002"))
   expect_identical(nrow(combinada), 2L)
+  # espelha o loop do branch: orig_name unico por variavel (igual
+  # ao data_name), senao o exists-check do db_datawrite bloqueia
+  # as variaveis 2+ de uma mesma carga
+  orig <- paste0("censo2022_", names(dados))
+  expect_setequal(orig, c("censo2022_V0001", "censo2022_V0002"))
+  expect_identical(length(unique(orig)), length(orig))
 })
 
 test_that("UI do submodulo censo renderiza com parent_session real", {
