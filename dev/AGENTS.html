@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">beep</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9036</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.9.3.9037</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -143,6 +143,11 @@ app_server()  (R/server_app.R)
 <td>IBGE Censo (via <code>censoagg</code>/<code>censobr</code>)</td>
 <td><code>upload_censobr.R</code></td>
 <td>call string com marcador <code># censo-origem:</code> -&gt; lista nomeada variável -&gt; long; uma série (<code>mdata</code>) por variável</td>
+</tr><tr><td>16</td>
+<td>PDAD IPE/DF (via <code>pdadr</code>)</td>
+<td><code>upload_pdadr.R</code></td>
+<td>call string (sem marcador) -&gt; lista nomeada variável -&gt; long em <code>pdad_series_long</code>; série anual de 1 ponto (31/12/2024); município 7d sempre, subdistrito/RA 11d exige <code><a href="reference/incorporar_subdistritos.html">incorporar_subdistritos()</a></code>
+</td>
 </tr><tr><td>1/2/9</td>
 <td>URL / local upload / server file</td>
 <td>inline in <code>upload_data_module.R</code>
